@@ -12,10 +12,14 @@
 #include "json.hpp"
 
 #include "utilities.h"
+#include "car.h"
 
 
 int main() {
+
   uWS::Hub h;
+
+  Car my_car;
 
   // Load up map values for waypoint's x,y,s and d normalized normal vectors
   std::vector<double> map_waypoints_x;
@@ -51,7 +55,7 @@ int main() {
   	map_waypoints_dy.push_back(d_y);
   }
 
-  h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
+  h.onMessage([&my_car, &map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
                &map_waypoints_dx, &map_waypoints_dy]
                (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                 uWS::OpCode opCode) {
@@ -97,7 +101,8 @@ int main() {
           std::vector<double> next_x_vals;
           std::vector<double> next_y_vals;
 
-          // TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
+          my_car.advance();
+
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
 
@@ -116,8 +121,7 @@ int main() {
   });
 
   // We don't need this since we're not using HTTP but if it's removed the
-  // program
-  // doesn't compile :-(
+  // program doesn't compile :-(
   h.onHttpRequest([](uWS::HttpResponse *res, uWS::HttpRequest req, char *data,
                      size_t, size_t) {
     const std::string s = "<h1>Hello world!</h1>";
@@ -149,83 +153,3 @@ int main() {
 
   h.run();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
