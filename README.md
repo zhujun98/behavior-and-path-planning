@@ -28,7 +28,7 @@ The map data of the highway is listed in [highway_map.csv](data/highway_map.csv)
 
 #### Sensor fusion data  (without noise)
 
-["sensor_fusion"] A list other cars' data on the same side of the road in the format [ID, x (m), y (m), vx (m/s), vy (m/s), s (m), d] 
+["sensor_fusion"] A list other cars' data on the same side of the road in the format [[ID, x (m), y (m), vx (m/s), vy (m/s), s (m), d]]
 
 ## Details
 
