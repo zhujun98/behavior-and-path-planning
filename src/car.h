@@ -2,8 +2,8 @@
 // Created by jun on 7/16/17.
 //
 
-#ifndef BEHAVIOR_PLANNER_CAR_H
-#define BEHAVIOR_PLANNER_CAR_H
+#ifndef PATH_PLANNING_CAR_H
+#define PATH_PLANNING_CAR_H
 
 #include <iostream>
 #include <vector>
@@ -87,4 +87,4 @@ public:
 };
 
 
-#endif //BEHAVIOR_PLANNER_CAR_H
+#endif //PATH_PLANNING_CAR_H

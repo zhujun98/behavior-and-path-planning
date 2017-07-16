@@ -2,8 +2,8 @@
 // Created by jun on 7/16/17.
 //
 
-#ifndef BEHAVIOR_PLANNER_TRAFFIC_H
-#define BEHAVIOR_PLANNER_TRAFFIC_H
+#ifndef PATH_PLANNING_TRAFFIC_H
+#define PATH_PLANNING_TRAFFIC_H
 
 
 class Traffic {
@@ -35,4 +35,4 @@ public:
 };
 
 
-#endif //BEHAVIOR_PLANNER_TRAFFIC_H
+#endif //PATH_PLANNING_TRAFFIC_H
