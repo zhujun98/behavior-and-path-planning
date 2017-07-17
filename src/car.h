@@ -27,23 +27,28 @@
 //     that vehicle.
 //
 enum CarStates {KL, LCL, LCR, PLCL, PLCR};
-
+typedef std::map<int, std::vector<std::vector<int>>> state_pred;
+typedef std::pair<std::vector<double>, std::vector<double>> car_traj;
 
 class Car {
 
 private:
-  typedef std::map<int, std::vector<std::vector<int>>> state_pred;
 
-  double px_;
-  double py_;
-  double vx_;
-  double vy_;
+  bool is_initialized_;
+
+  std::vector<double> path_x_;  //
+  std::vector<double> path_y_;  //
+  int predicted_points_;
+
+  double time_step_;  //
+  double speed_;  //
+  double acceleration_;  // m^2
   int lane_id_;
 
-  double max_velocity_;
-  double max_acceleration_;
-  double max_steering_;
 
+  double max_speed_;  // maximum speed (m/s)
+  double max_acceleration_;  // maximum acceleration (m/s^2)
+  double max_steering_;  // maximum steering angle (deg)
   double target_velocity_;
 
   CarStates state_;
@@ -55,7 +60,7 @@ private:
   //
   // Update the vehicle's state
   //
-  void update_state();
+  void update_state(car_traj continued_path);
 
   //
   // Realize the planned state
@@ -83,7 +88,8 @@ public:
   //
   // Move to the next time
   //
-  void advance();
+  car_traj advance(car_traj continued_path,
+               std::map<int, std::vector<double>> sensor_fusion);
 };
 
 

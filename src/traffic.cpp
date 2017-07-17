@@ -8,6 +8,6 @@ Traffic::Traffic() {}
 
 Traffic::~Traffic() {}
 
-void Traffic::update_state() {
+void Traffic::update_state(std::map<int, std::vector<double>> sensor_fusion) {
   ;
 }

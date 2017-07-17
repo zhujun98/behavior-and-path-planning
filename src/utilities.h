@@ -19,6 +19,17 @@ inline double rad2deg(double x) { return x * 180 / pi(); }
 //
 //
 //
+template <class T>
+inline void print1DContainer(T v) {
+  for ( auto i : v ) {
+    std::cout << i << ", ";
+  }
+  std::cout << std::endl;
+}
+
+//
+//
+//
 inline double distance(double x1, double y1, double x2, double y2) {
   return sqrt((x2 - x1)*(x2 - x1)+(y2 - y1)*(y2 - y1));
 }

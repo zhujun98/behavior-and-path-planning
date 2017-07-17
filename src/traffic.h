@@ -5,17 +5,22 @@
 #ifndef PATH_PLANNING_TRAFFIC_H
 #define PATH_PLANNING_TRAFFIC_H
 
+#include <vector>
+#include <map>
+
 
 class Traffic {
 private:
 
   struct vehicle_ {
+    int id;
+
     double px_;
     double py_;
     double vx_;
     double vy_;
-
-    int lane_id_;
+    double s;
+    double d;
   };
 
 public:
@@ -31,7 +36,7 @@ public:
   virtual ~Traffic();
 
 
-  void update_state();
+  void update_state(std::map<int, std::vector<double>> sensor_fusion);
 };
 
 

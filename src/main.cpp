@@ -21,6 +21,8 @@ int main() {
 
   Car my_car;
 
+  bool is_initialized = false;
+
   // Load up map values for waypoint's x,y,s and d normalized normal vectors
   std::vector<double> map_waypoints_x;
   std::vector<double> map_waypoints_y;
@@ -55,7 +57,7 @@ int main() {
   	map_waypoints_dy.push_back(d_y);
   }
 
-  h.onMessage([&my_car, &map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
+  h.onMessage([&my_car, &is_initialized, &map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
                &map_waypoints_dx, &map_waypoints_dy]
                (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                 uWS::OpCode opCode) {
@@ -81,12 +83,15 @@ int main() {
           double car_y = j[1]["y"];
           double car_s = j[1]["s"];
           double car_d = j[1]["d"];
-          double car_yaw = j[1]["yaw"];
-          double car_speed = j[1]["speed"];
+          double car_yaw = j[1]["yaw"];  // in degree
+          double car_speed = j[1]["speed"];  // in MPH
+          car_speed *= 4.0/9;  // MPH to m/s
 
           // Previous path data passed to the planner.
           auto previous_path_x = j[1]["previous_path_x"];
           auto previous_path_y = j[1]["previous_path_y"];
+
+//          print1DContainer(previous_path_x);
 
           // End s and d values of  the previous path.
           double end_path_s = j[1]["end_path_s"];
@@ -94,17 +99,44 @@ int main() {
 
           // All other car's data on the same side of the road
           // in the format [[ID, x (m), y (m), vx (m/s), vy (m/s), s (m), d]].
-          auto sensor_fusion = j[1]["sensor_fusion"];
+          auto sensor_fusion_readout = j[1]["sensor_fusion"];
+          std::map<int, std::vector<double>> sensor_fusion;
+          for ( auto it : sensor_fusion_readout ) {
+            int key = it[0];
+            std::vector<double> value (it.begin() + 1, it.end());
+            sensor_fusion.insert(std::make_pair(key, value));
+          }
 
           nlohmann::json msgJson;
 
-          std::vector<double> next_x_vals;
-          std::vector<double> next_y_vals;
+          assert( previous_path_x.size() == previous_path_y.size() );
 
-          my_car.advance();
+          // Keep first maximum 10 points from the unfinished path
+          int keep_points = 10;
+          std::vector<double> continued_path_x;
+          std::vector<double> continued_path_y;
+          if ( previous_path_x.size() == 0 ) {
+            continued_path_x.push_back(car_x);
+            continued_path_y.push_back(car_y);
+          } else if ( previous_path_x.size() < keep_points ) {
+            for ( auto i : previous_path_x ) { continued_path_x.push_back(i); }
+            for ( auto i : previous_path_y ) { continued_path_y.push_back(i); }
+          } else {
+            for ( auto it = previous_path_x.begin();
+                  it != previous_path_x.begin() + keep_points; ++it ) {
+              continued_path_x.push_back(*it);
+            }
+            for ( auto it = previous_path_y.begin();
+                  it != previous_path_y.begin() + keep_points; ++it ) {
+              continued_path_y.push_back(*it);
+            }
+          }
 
-          msgJson["next_x"] = next_x_vals;
-          msgJson["next_y"] = next_y_vals;
+          std::pair<std::vector<double>, std::vector<double>> trajectory =
+              my_car.advance(std::make_pair(continued_path_x, continued_path_y), sensor_fusion);
+
+          msgJson["next_x"] = trajectory.first;
+          msgJson["next_y"] = trajectory.second;
 
           auto msg = "42[\"control\"," + msgJson.dump() + "]";
 
