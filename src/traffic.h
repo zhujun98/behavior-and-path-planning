@@ -9,19 +9,13 @@
 #include <map>
 
 
+class Car;  // forward declaration
+class Ego;  // forward declartion
+
+
 class Traffic {
 private:
-
-  struct vehicle_ {
-    int id;
-
-    double px_;
-    double py_;
-    double vx_;
-    double vy_;
-    double s;
-    double d;
-  };
+  std::map<int, Car> cars_;
 
 public:
 
@@ -33,10 +27,19 @@ public:
   //
   // destructor
   //
-  virtual ~Traffic();
+  ~Traffic();
 
+  void update_state(const std::map<int, std::vector<double>>& sensor_fusion);
 
-  void update_state(std::map<int, std::vector<double>> sensor_fusion);
+  //
+  // Check whether an ego car will collide with other cars in the traffic
+  //
+  bool checkCollision(Ego& ego);
+
+  //
+  // Print out the traffic
+  //
+  void printout();
 };
 
 

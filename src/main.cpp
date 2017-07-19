@@ -12,53 +12,23 @@
 #include "json.hpp"
 
 #include "utilities.h"
-#include "car.h"
+#include "vehicle.h"
+#include "map.h"
+#include "traffic.h"
 
 
 int main() {
 
   uWS::Hub h;
 
-  Car my_car;
+  Ego my_car;
+  Traffic traffic;
+  Map highway_map;
 
-  bool is_initialized = false;
-
-  // Load up map values for waypoint's x,y,s and d normalized normal vectors
-  std::vector<double> map_waypoints_x;
-  std::vector<double> map_waypoints_y;
-  std::vector<double> map_waypoints_s;
-  std::vector<double> map_waypoints_dx;
-  std::vector<double> map_waypoints_dy;
-
-  // Waypoint map to read from
-  std::string map_file_ = "../data/highway_map.csv";
   // The max s value before wrapping around the track back to 0
   double max_s = 6945.554;
 
-  std::ifstream in_map_(map_file_.c_str(), std::ifstream::in);
-
-  std::string line;
-  while (getline(in_map_, line)) {
-    std::istringstream iss(line);
-  	double x;
-  	double y;
-  	float s;
-  	float d_x;
-  	float d_y;
-  	iss >> x;
-  	iss >> y;
-  	iss >> s;
-  	iss >> d_x;
-  	iss >> d_y;
-  	map_waypoints_x.push_back(x);
-  	map_waypoints_y.push_back(y);
-  	map_waypoints_s.push_back(s);
-  	map_waypoints_dx.push_back(d_x);
-  	map_waypoints_dy.push_back(d_y);
-  }
-
-  h.onMessage([&my_car, &is_initialized, &map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
-               &map_waypoints_dx, &map_waypoints_dy]
+  h.onMessage([&my_car, &traffic, &highway_map]
                (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                 uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -81,19 +51,19 @@ int main() {
         	// Main car's localization data (without noise).
           double car_x = j[1]["x"];
           double car_y = j[1]["y"];
+          double car_speed = j[1]["speed"];  // in MPH
+          double car_yaw = j[1]["yaw"];  // in degree
+          car_speed *= 4.0/9;  // MPH to m/s
           double car_s = j[1]["s"];
           double car_d = j[1]["d"];
-          double car_yaw = j[1]["yaw"];  // in degree
-          double car_speed = j[1]["speed"];  // in MPH
-          car_speed *= 4.0/9;  // MPH to m/s
+
+          std::vector<double> localization = {car_x, car_y, car_s, car_d, car_yaw, car_speed};
 
           // Previous path data passed to the planner.
           auto previous_path_x = j[1]["previous_path_x"];
           auto previous_path_y = j[1]["previous_path_y"];
 
-//          print1DContainer(previous_path_x);
-
-          // End s and d values of  the previous path.
+          // End s and d values of the previous path.
           double end_path_s = j[1]["end_path_s"];
           double end_path_d = j[1]["end_path_d"];
 
@@ -103,6 +73,12 @@ int main() {
           std::map<int, std::vector<double>> sensor_fusion;
           for ( auto it : sensor_fusion_readout ) {
             int key = it[0];
+            double vx = it[3];
+            double vy = it[4];
+            double speed = std::sqrt(vx*vx + vy*vy);
+            double yaw = std::atan2(vy, vx);
+            it[3] = speed;
+            it[4] = yaw;
             std::vector<double> value (it.begin() + 1, it.end());
             sensor_fusion.insert(std::make_pair(key, value));
           }
@@ -111,7 +87,9 @@ int main() {
 
           assert( previous_path_x.size() == previous_path_y.size() );
 
+          //
           // Keep first maximum 10 points from the unfinished path
+          //
           int keep_points = 10;
           std::vector<double> continued_path_x;
           std::vector<double> continued_path_y;
@@ -132,11 +110,27 @@ int main() {
             }
           }
 
-          std::pair<std::vector<double>, std::vector<double>> trajectory =
-              my_car.advance(std::make_pair(continued_path_x, continued_path_y), sensor_fusion);
+          // Transfer the trajectory in Cartesian coordinate system to
+          // the corresponding one in Frenet coordinate system and pass
+          // the transformed trajectory to "my_car"
+          auto trajectory_frenet = highway_map.trajCartesianToFrenet(
+              std::make_pair(continued_path_x, continued_path_y));
 
-          msgJson["next_x"] = trajectory.first;
-          msgJson["next_y"] = trajectory.second;
+          // Update the state of the ego car
+          my_car.update_state(localization, trajectory_frenet);
+
+          // Update the states of other vehicles on the road
+          traffic.update_state(sensor_fusion);
+
+          // Path planning
+          trajectory_frenet = my_car.plan_path();
+
+          // Transfer the trajectory in Frenet coordinate system output
+          // by "my_car" and pass it to the simulator.
+          auto trajectory_cartesian = highway_map.trajFrenetToCartesian(trajectory_frenet);
+
+          msgJson["next_x"] = trajectory_cartesian.first;
+          msgJson["next_y"] = trajectory_cartesian.second;
 
           auto msg = "42[\"control\"," + msgJson.dump() + "]";
 
