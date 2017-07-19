@@ -25,9 +25,6 @@ int main() {
   Traffic traffic;
   Map highway_map;
 
-  // The max s value before wrapping around the track back to 0
-  double max_s = 6945.554;
-
   h.onMessage([&my_car, &traffic, &highway_map]
                (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                 uWS::OpCode opCode) {
@@ -49,13 +46,22 @@ int main() {
           // j[1] is the data JSON object
           
         	// Main car's localization data (without noise).
-          double car_x = j[1]["x"];
-          double car_y = j[1]["y"];
+          double car_x = j[1]["x"];  // in m
+          double car_y = j[1]["y"];  // in m
           double car_speed = j[1]["speed"];  // in MPH
           double car_yaw = j[1]["yaw"];  // in degree
           car_speed *= 4.0/9;  // MPH to m/s
-          double car_s = j[1]["s"];
-          double car_d = j[1]["d"];
+          double car_s = j[1]["s"];  // in m
+          double car_d = j[1]["d"];  // in m
+
+//          std::cout << "Cartesian: " << car_x << ", " << car_y << std::endl;
+//          std::cout << "Frenet: " << car_s << ", " << car_d << std::endl;
+//
+//          std::pair<double, double> car_frenet = highway_map.frenetToCartesian(car_s, car_d);
+//          std::cout << "Cartesian from Frenet: " << car_frenet.first << ", " << car_frenet.second << std::endl;
+//
+//          std::pair<double, double> car_cartesian = highway_map.cartesianToFrenet(car_x, car_y, car_yaw);
+//          std::cout << "Frenet from Cartesian: " << car_cartesian.first << ", " << car_cartesian.second << std::endl;
 
           std::vector<double> localization = {car_x, car_y, car_s, car_d, car_yaw, car_speed};
 

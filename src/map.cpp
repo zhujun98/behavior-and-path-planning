@@ -14,6 +14,8 @@
 Map::Map() {
   n_lanes_ = 3;
 
+  max_s_ = 6945.554;
+
   load_data();
 }
 
@@ -156,18 +158,37 @@ std::pair<double, double> Map::frenetToCartesian(double s, double d) const {
 
 }
 
-vehicle_traj Map::trajFrenetToCartesian(const vehicle_traj& traj_in_cartesian) {
-  vehicle_traj traj_in_frenet;
+vehicle_traj Map::trajFrenetToCartesian(const vehicle_traj& traj) {
+  vehicle_traj traj_cartesian;
+  std::pair<double, double> xy;
 
-  traj_in_frenet = traj_in_cartesian;
+  for ( auto is = traj.first.begin(), id = traj.second.begin();
+        is != traj.first.end(); ++is, ++id) {
+    if ( *is > max_s_ ) {
+      xy = frenetToCartesian(*is - max_s_, *id);
+    } else {
+      xy = frenetToCartesian(*is, *id);
+    }
 
-  return traj_in_frenet;
+    traj_cartesian.first.push_back(xy.first);
+    traj_cartesian.second.push_back(xy.second);
+  }
+
+  return traj_cartesian;
 }
 
-vehicle_traj Map::trajCartesianToFrenet(const vehicle_traj& traj_in_frenet) {
-  vehicle_traj traj_in_cartesian;
+vehicle_traj Map::trajCartesianToFrenet(const vehicle_traj& traj) {
 
-  traj_in_cartesian = traj_in_frenet;
+  vehicle_traj traj_frenet;
+  std::pair<double, double> sd;
 
-  return traj_in_cartesian;
+  for ( auto ix = traj.first.begin(), iy = traj.second.begin();
+        ix != traj.first.end(); ++ix, ++iy) {
+    sd = cartesianToFrenet(*ix, *iy, 0.0);
+
+    traj_frenet.first.push_back(sd.first);
+    traj_frenet.second.push_back(sd.second);
+  }
+
+  return traj_frenet;
 }

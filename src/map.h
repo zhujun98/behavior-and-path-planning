@@ -24,8 +24,11 @@ private:
   std::vector<double> dx_;
   std::vector<double> dy_;
 
+  // The max s value before wrapping around the track back to 0
+  double max_s_;
+
   //
-  // Read waypoints data from a file
+  // Read way points data from a file
   //
   void load_data();
 

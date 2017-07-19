@@ -50,7 +50,7 @@ protected:
   double py_; // m
   // current positions in Frenet-Serret coordinate system
   double ps_;  // m
-  double pd_;  // normalized to 1
+  double pd_;  // m
 
   double speed_;  // current speed (m/s)
   double acceleration_;  // current acceleration (m/s^2)

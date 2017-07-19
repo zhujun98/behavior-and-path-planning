@@ -95,18 +95,18 @@ vehicle_traj Ego::plan_path() {
 }
 
 void Ego::keep_lane() {
-  double last_x;
-  double last_y;
+  double last_s;
+  double last_d;
 
   size_t n = path_s_.size();
   while ( n < predicted_points_ ) {
-    last_x = path_s_[n-1];
-    last_y = path_d_[n-1];
+    last_s = path_s_[n-1];
+    last_d = path_d_[n-1];
 
     // We do not correct the offset from the lane center
     double forward_distance = max_speed_*time_step_;
-    path_s_.push_back(last_x + forward_distance);
-    path_d_.push_back(last_y);
+    path_s_.push_back(last_s + forward_distance);
+    path_d_.push_back(last_d);
 
     ++n;
   }
