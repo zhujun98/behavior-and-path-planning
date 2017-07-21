@@ -11,6 +11,7 @@
 #include <string>
 
 #include "traffic.h"
+#include "path_planner.h"
 #include "map.h"
 
 //
@@ -145,8 +146,7 @@ public:
   //
   // Update the vehicle's state
   //
-  void update_state(const std::vector<double>& localization,
-                    const vehicle_traj& continued_path);
+  void update_state(const std::vector<double>& localization);
 
   //
   // Realize the planned state

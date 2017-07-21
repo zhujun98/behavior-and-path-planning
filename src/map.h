@@ -48,16 +48,11 @@ public:
   //
   //
   int closestWaypoint(double x, double y) const;
-
+  int nextWaypoint(double x, double y, double theta);
   //
   //
   //
-  int nextWaypoint(double x, double y, double theta) const;
-
-  //
-  //
-  //
-  std::pair<double, double> cartesianToFrenet(double x, double y, double theta) const;
+  std::pair<double, double> cartesianToFrenet(double x, double y) const;
 
   //
   //
