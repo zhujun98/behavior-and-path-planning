@@ -19,16 +19,18 @@
 // - The vehicle will attempt to drive at its target velocity, unless
 //  there is traffic in front of it, in which case it will slow down.
 //
-//  "LCL" or "LCR" - Lane Change Left / Right
+//  "LC"  - Lane Change
 //  - The vehicle will start to change lanes and then follow longitudinal
 //    behavior for the "KL" state in the new lane.
 //
-// "PLCL" or "PLCR" - Prepare for Lane Change Left / Right
+// "PLC" - Prepare for Lane Change
 //   - The vehicle will find the nearest vehicle in the adjacent lane
 //     which is BEHIND itself and will adjust speed to try to get behind
 //     that vehicle.
 //
-enum VehicleBehavior {KL, LCL, LCR, PLCL, PLCR};
+// "LCING" - During a lane change
+//
+enum VehicleBehavior {KL, LC, PLC, LCING};
 
 typedef std::map<int, std::vector<std::vector<int>>> state_pred;
 typedef std::pair<std::vector<double>, std::vector<double>> vehicle_traj;
@@ -40,6 +42,7 @@ class Vehicle {
   friend class PathPlanner;
 
 protected:
+  bool is_initialized_;
 
   // current positions in global coordinate system
   double px_; // m
@@ -54,6 +57,7 @@ protected:
   std::vector<double> path_d_;
 
   int lane_id_;
+  int target_lane_id_;
 
 public:
 
@@ -66,6 +70,10 @@ public:
   // destructor
   //
   virtual ~Vehicle();
+
+  int getLaneID();
+
+  void setLaneID(int value);
 
   //
   // Update the vehicle's state
@@ -89,6 +97,9 @@ class Ego : public Vehicle {
 
 private:
   VehicleBehavior behavior_;
+  // Indicating whether the vehicle is in the process of performing some
+  // action, e.g. lane change.
+  bool is_active_;
 
   double max_speed_;  // maximum speed (m/s)
   double max_acceleration_;  // maximum acceleration (m/s^2)
@@ -106,10 +117,16 @@ public:
   //
   virtual ~Ego();
 
+  int getTargetLaneID();
+
+  void setTargetLaneID(int value);
+
   VehicleBehavior getBehavior();
+
   void setBehavior(VehicleBehavior value);
 
   vehicle_traj getPath();
+
 
 };
 

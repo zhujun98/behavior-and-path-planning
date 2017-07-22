@@ -58,14 +58,14 @@ int main() {
           double car_d = j[1]["d"];  // in m
           car_speed *= 4.0/9;  // MPH to m/s
 
-          std::cout << "Cartesian: " << car_x << ", " << car_y << std::endl;
-          std::cout << "Frenet: " << car_s << ", " << car_d << std::endl;
-
-          std::pair<double, double> car_frenet = highway_map.frenetToCartesian(car_s, car_d);
-          std::cout << "Cartesian from Frenet: " << car_frenet.first << ", " << car_frenet.second << std::endl;
-
-          std::pair<double, double> car_cartesian = highway_map.cartesianToFrenet(car_x, car_y);
-          std::cout << "Frenet from Cartesian: " << car_cartesian.first << ", " << car_cartesian.second << std::endl;
+//          std::cout << "Cartesian: " << car_x << ", " << car_y << std::endl;
+//          std::cout << "Frenet: " << car_s << ", " << car_d << std::endl;
+//
+//          std::pair<double, double> car_frenet = highway_map.frenetToCartesian(car_s, car_d);
+//          std::cout << "Cartesian from Frenet: " << car_frenet.first << ", " << car_frenet.second << std::endl;
+//
+//          std::pair<double, double> car_cartesian = highway_map.cartesianToFrenet(car_x, car_y);
+//          std::cout << "Frenet from Cartesian: " << car_cartesian.first << ", " << car_cartesian.second << std::endl;
 
           std::vector<double> localization = {car_x, car_y, car_yaw, car_speed, car_s, car_d};
           // Previous path data passed to the planner.
@@ -95,13 +95,14 @@ int main() {
           nlohmann::json msgJson;
           // Update the state of the ego car
           my_car.update(localization, highway_map);
-          my_car.printout();
+//          my_car.printout();
           //
 //          Traffic traffic(highway_map);
 //          traffic.populate(my_car);
 //          traffic.populate(sensor_fusion);
 
           // Update the behavior of the ego car
+
           BehaviorPlanner behavior_planner(my_car);
           behavior_planner.plan();
 

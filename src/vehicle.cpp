@@ -14,10 +14,14 @@ double kPI = std::atan(1)*4;
  */
 
 Vehicle::Vehicle() {
-  lane_id_ = -1;
+  is_initialized_ = false;
 }
 
 Vehicle::~Vehicle() {}
+
+int Vehicle::getLaneID() { return lane_id_; }
+
+void Vehicle::setLaneID(int value) { lane_id_ = value; }
 
 void Vehicle::update(const std::vector<double>& localization, const Map& map) {
   px_ = localization[0];
@@ -29,28 +33,9 @@ void Vehicle::update(const std::vector<double>& localization, const Map& map) {
 
   lane_id_ = map.compute_lane_id(pd_);
 
-  // remove the way points which has been passed (processed) and keep
-  // up to 10 way points which has not been reached.
-  if ( !path_s_.empty() ) {
-    auto it_s = std::lower_bound(path_s_.begin(), path_s_.end(), ps_);
-    long j = std::distance(path_s_.begin(), it_s);
-    auto it_d = std::next(path_d_.begin(), j);
-
-    if ( std::distance(it_s, path_s_.end()) > 5 ) {
-      std::vector<double> unprocessed_path_s(it_s, std::next(it_s, 5));
-      std::vector<double> unprocessed_path_d(it_d, std::next(it_d, 5));
-      path_s_.clear();
-      path_d_.clear();
-      for ( auto v : unprocessed_path_s ) { path_s_.push_back(v); }
-      for ( auto v : unprocessed_path_d ) { path_d_.push_back(v); }
-    } else {
-      std::vector<double> unprocessed_path_s(it_s, path_s_.end());
-      std::vector<double> unprocessed_path_d(it_d, path_d_.end());
-      path_s_.clear();
-      path_d_.clear();
-      for ( auto v : unprocessed_path_s ) { path_s_.push_back(v); }
-      for ( auto v : unprocessed_path_d ) { path_d_.push_back(v); }
-    }
+  if ( !is_initialized_) {
+    target_lane_id_ = lane_id_;
+    is_initialized_ = true;
   }
 }
 
@@ -66,14 +51,23 @@ void Vehicle::printout() const {
  */
 
 Ego::Ego() {
+  is_active_ = false;
 
   max_acceleration_ = 10;
-  max_speed_ = 22.2;
+  max_speed_ = 21.;
+
+  behavior_ = KL;
 }
 
 Ego::~Ego() {}
 
+
+int Ego::getTargetLaneID() { return target_lane_id_; }
+
+void Ego::setTargetLaneID(int value) { target_lane_id_ = value; }
+
 VehicleBehavior Ego::getBehavior() { return behavior_; }
+
 void Ego::setBehavior(VehicleBehavior value) { behavior_ = value; }
 
 vehicle_traj Ego::getPath() { return std::make_pair(path_s_, path_d_); }

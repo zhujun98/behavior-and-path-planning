@@ -45,7 +45,21 @@ public:
   //
   //
   //
+  void truncateLastPath();
+
+  void generate_path(std::vector<double> state0_s, std::vector<double> state0_d,
+                     std::vector<double> state1_s, std::vector<double> state1_d,
+                     double duration);
+
+  //
+  //
+  //
   void keep_lane();
+
+  //
+  //
+  //
+  void change_lane();
 };
 
 

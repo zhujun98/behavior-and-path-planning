@@ -78,18 +78,61 @@ void PathPlanner::plan() {
   switch (car_->getBehavior()) {
     case KL:
       keep_lane();
-    case LCL:
-      ;
-    case LCR:
-      ;
-    case PLCL:
-      ;
-    case PLCR:
-      ;
+      break;
+    case LC:
+      change_lane();
+      car_->setBehavior(LCING);
+      break;
+    case PLC:
+      break;
+    case LCING:
+      break;
+  }
+}
+
+void PathPlanner::generate_path(std::vector<double> state0_s,
+                                std::vector<double> state0_d,
+                                std::vector<double> state1_s,
+                                std::vector<double> state1_d,
+                                double duration) {
+  std::vector<double> coeff_s = jerk_minimizing_trajectory(state0_s, state1_s, duration);
+  std::vector<double> coeff_d = jerk_minimizing_trajectory(state0_d, state1_d, duration);
+  double t = 0.0;
+  while ( car_->path_s_.size() < n_path_points_ ) {
+    t += time_step_;
+    car_->path_s_.push_back(eval_trajectory(coeff_s, t));
+    car_->path_d_.push_back(eval_trajectory(coeff_d, t));
+  }
+}
+
+void PathPlanner::truncateLastPath() {
+  // remove the way points which has been passed (processed) and keep
+  // up to 10 way points which has not been reached.
+  if ( !car_->path_s_.empty() ) {
+    auto it_s = std::lower_bound(car_->path_s_.begin(), car_->path_s_.end(), car_->ps_);
+    long j = std::distance(car_->path_s_.begin(), it_s);
+    auto it_d = std::next(car_->path_d_.begin(), j);
+
+    if ( std::distance(it_s, car_->path_s_.end()) > 20 ) {
+      std::vector<double> unprocessed_path_s(it_s, std::next(it_s, 20));
+      std::vector<double> unprocessed_path_d(it_d, std::next(it_d, 20));
+      car_->path_s_.clear();
+      car_->path_d_.clear();
+      for ( auto v : unprocessed_path_s ) { car_->path_s_.push_back(v); }
+      for ( auto v : unprocessed_path_d ) { car_->path_d_.push_back(v); }
+    } else {
+      std::vector<double> unprocessed_path_s(it_s, car_->path_s_.end());
+      std::vector<double> unprocessed_path_d(it_d, car_->path_d_.end());
+      car_->path_s_.clear();
+      car_->path_d_.clear();
+      for ( auto v : unprocessed_path_s ) { car_->path_s_.push_back(v); }
+      for ( auto v : unprocessed_path_d ) { car_->path_d_.push_back(v); }
+    }
   }
 }
 
 void PathPlanner::keep_lane() {
+  truncateLastPath();
   double last_s;
   double last_d;
 
@@ -118,21 +161,55 @@ void PathPlanner::keep_lane() {
 
   double duration = time_step_* n_path_points_;
   ps1 = ps0 + car_->max_speed_*duration;
-  pd1 = (2 - 0.5)*4.0;
+  pd1 = (car_->getLaneID() - 0.5)*4.0;
 
   std::vector<double> state0_s = {ps0, vs0, as0};
   std::vector<double> state0_d = {pd0, vd0, ad0};
   std::vector<double> state1_s = {ps1, vs1, as1};
   std::vector<double> state1_d = {pd1, vd1, ad1};
 
-  std::vector<double> coeff_s = jerk_minimizing_trajectory(state0_s, state1_s, duration);
-  std::vector<double> coeff_d = jerk_minimizing_trajectory(state0_d, state1_d, duration);
-  double t = 0.0;
-  while ( car_->path_s_.size() < n_path_points_ ) {
-    t += time_step_;
-    car_->path_s_.push_back(eval_trajectory(coeff_s, t));
-    car_->path_d_.push_back(eval_trajectory(coeff_d, t));
+  generate_path(state0_s, state0_d, state1_s, state1_d, duration);
+
+}
+
+void PathPlanner::change_lane() {
+  truncateLastPath();
+
+  double last_s;
+  double last_d;
+
+  double ps0, vs0, as0;
+  double pd0, vd0, ad0;
+
+  double ps1, vs1, as1;
+  double pd1, vd1, ad1;
+
+  if ( car_->path_s_.empty() ) {
+    ps0 = car_->ps_;
+    pd0 = car_->pd_;
+  } else {
+    ps0 = *std::next(car_->path_s_.end(), -1);
+    pd0 = *std::next(car_->path_d_.end(), -1);
   }
 
+  vs0 = car_->max_speed_;
+  vd0 = 0;
+  as0 = 0;
+  ad0 = 0;
+  vs1 = car_->max_speed_;
+  vd1 = 0;
+  as1 = 0;
+  ad1 = 0;
+
+  double duration = time_step_* n_path_points_;
+  ps1 = ps0 + car_->max_speed_*duration;
+  pd1 = (car_->getTargetLaneID() - 0.5)*4.0;
+
+  std::vector<double> state0_s = {ps0, vs0, as0};
+  std::vector<double> state0_d = {pd0, vd0, ad0};
+  std::vector<double> state1_s = {ps1, vs1, as1};
+  std::vector<double> state1_d = {pd1, vd1, ad1};
+
+  generate_path(state0_s, state0_d, state1_s, state1_d, duration);
 }
 
