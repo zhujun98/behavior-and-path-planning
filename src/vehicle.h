@@ -28,108 +28,64 @@
 //     which is BEHIND itself and will adjust speed to try to get behind
 //     that vehicle.
 //
-enum VehicleStates {KL, LCL, LCR, PLCL, PLCR};
+enum VehicleBehavior {KL, LCL, LCR, PLCL, PLCR};
 
 typedef std::map<int, std::vector<std::vector<int>>> state_pred;
 typedef std::pair<std::vector<double>, std::vector<double>> vehicle_traj;
 
-/*
- * Vehicle base class (abstract class)
- */
+//class PathPlanner;
 
-class VehicleBase {
+class Vehicle {
+
+  friend class PathPlanner;
 
 protected:
-  // whether the object has been initialized
-  bool is_initialized_;
-
-  // current lane id
-  int lane_id_;
 
   // current positions in global coordinate system
   double px_; // m
   double py_; // m
+  double vx_; // m/s
+  double vy_; // m/s
   // current positions in Frenet-Serret coordinate system
   double ps_;  // m
   double pd_;  // m
 
-  double speed_;  // current speed (m/s)
-  double acceleration_;  // current acceleration (m/s^2)
-  double yaw_;  // current yaw angle (rad) in global Cartesian coordinate system
+  std::vector<double> path_s_;
+  std::vector<double> path_d_;
+
+public:
+
+  //
+  // constructor
+  //
+  Vehicle();
+
+  //
+  // destructor
+  //
+  virtual ~Vehicle();
+
+  //
+  // Update the vehicle's state
+  //
+  void update(const std::vector<double>& localization);
+};
+
+
+/*
+ * The ego car
+ */
+
+class Ego : public Vehicle {
+
+  friend class PathPlanner;
+
+private:
+  VehicleBehavior behavior_;
 
   double max_speed_;  // maximum speed (m/s)
   double max_acceleration_;  // maximum acceleration (m/s^2)
   double max_steering_;  // maximum steering angle (rad)
-
-  //
-  // constructor
-  //
-  VehicleBase();
-
-public:
-
-  //
-  // destructor
-  //
-  virtual ~VehicleBase();
-
-  virtual void printout() = 0;
-};
-
-
-/*
- * Other cars on the road
- */
-
-class Car : public VehicleBase {
-
-public:
-  //
-  // constructor
-  //
-  Car();
-
-  //
-  // destructor
-  //
-  ~Car();
-
-  void update_state(const std::vector<double>& localization);
-
-  void printout();
-};
-
-/*
- *
- */
-
-class Ego : public VehicleBase {
-
-private:
-
-  std::vector<double> path_s_;
-  std::vector<double> path_d_;
-
-  int predicted_points_;  // No. of points to predict
-
-  double time_step_;  //
-
-  VehicleStates state_;
-
-  //
-  //
-  //
-  void keep_lane();
-
-  //
-  //
-  //
-  void change_lane(std::string direction);
-
-  //
-  //
-  //
-  void prep_lane_change(std::string direction);
 
 public:
 
@@ -143,20 +99,11 @@ public:
   //
   virtual ~Ego();
 
-  //
-  // Update the vehicle's state
-  //
-  void update_state(const std::vector<double>& localization);
+  VehicleBehavior getBehavior();
+  void setBehavior(VehicleBehavior value);
 
-  //
-  // Realize the planned state
-  //
-  vehicle_traj plan_path();
+  vehicle_traj getPath();
 
-  //
-  //
-  //
-  void printout();
 };
 
 

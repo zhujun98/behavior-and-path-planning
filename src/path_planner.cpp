@@ -8,7 +8,12 @@
 #include "path_planner.h"
 
 
-PathPlanner::PathPlanner() {}
+PathPlanner::PathPlanner(Ego& car) {
+  car_ = &car;
+
+  n_path_points_ = 50;
+  time_step_ = 0.02;
+}
 
 PathPlanner::~PathPlanner() {}
 
@@ -68,3 +73,66 @@ double PathPlanner::eval_trajectory(std::vector<double> coeff, double t) const {
 
   return result;
 }
+
+void PathPlanner::plan() {
+  switch (car_->getBehavior()) {
+    case KL:
+      keep_lane();
+    case LCL:
+      ;
+    case LCR:
+      ;
+    case PLCL:
+      ;
+    case PLCR:
+      ;
+  }
+}
+
+void PathPlanner::keep_lane() {
+  double last_s;
+  double last_d;
+
+  double ps0, vs0, as0;
+  double pd0, vd0, ad0;
+
+  double ps1, vs1, as1;
+  double pd1, vd1, ad1;
+
+  if ( car_->path_s_.empty() ) {
+    ps0 = car_->ps_;
+    pd0 = car_->pd_;
+  } else {
+    ps0 = *std::next(car_->path_s_.end(), -1);
+    pd0 = *std::next(car_->path_d_.end(), -1);
+  }
+
+  vs0 = car_->max_speed_;
+  vd0 = 0;
+  as0 = 0;
+  ad0 = 0;
+  vs1 = car_->max_speed_;
+  vd1 = 0;
+  as1 = 0;
+  ad1 = 0;
+
+  double duration = time_step_* n_path_points_;
+  ps1 = ps0 + car_->max_speed_*duration;
+  pd1 = (2 - 0.5)*4.0;
+
+  std::vector<double> state0_s = {ps0, vs0, as0};
+  std::vector<double> state0_d = {pd0, vd0, ad0};
+  std::vector<double> state1_s = {ps1, vs1, as1};
+  std::vector<double> state1_d = {pd1, vd1, ad1};
+
+  std::vector<double> coeff_s = jerk_minimizing_trajectory(state0_s, state1_s, duration);
+  std::vector<double> coeff_d = jerk_minimizing_trajectory(state0_d, state1_d, duration);
+  double t = 0.0;
+  while ( car_->path_s_.size() < n_path_points_ ) {
+    t += time_step_;
+    car_->path_s_.push_back(eval_trajectory(coeff_s, t));
+    car_->path_d_.push_back(eval_trajectory(coeff_d, t));
+  }
+
+}
+

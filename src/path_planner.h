@@ -8,15 +8,23 @@
 
 #include <vector>
 
+#include "vehicle.h"
+
+
 class PathPlanner {
+
 private:
+  Ego *car_;
+
+  int n_path_points_;  // No. of path points to predict
+  double time_step_;  // time step between points
 
 public:
 
   //
   // Constructor
   //
-  PathPlanner();
+  PathPlanner(Ego& car);
 
   //
   // Destructor
@@ -28,6 +36,16 @@ public:
                              std::vector<double> state1, double dt) const;
 
   double eval_trajectory(std::vector<double> coeff, double t) const;
+
+  //
+  //
+  //
+  void plan();
+
+  //
+  //
+  //
+  void keep_lane();
 };
 
 

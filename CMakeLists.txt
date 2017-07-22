@@ -10,8 +10,9 @@ set(CMAKE_CXX_FLAGS, "${CXX_FLAGS}")
 set(sources src/main.cpp
             src/utilities.h
             src/vehicle.cpp
-            src/traffic.cpp
-            src/map.cpp src/path_planner.cpp src/path_planner.h)
+            src/map.cpp
+            src/path_planner.cpp
+            src/behavior_planner.cpp)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 

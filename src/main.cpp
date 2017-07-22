@@ -15,6 +15,8 @@
 #include "vehicle.h"
 #include "map.h"
 #include "traffic.h"
+#include "behavior_planner.h"
+#include "path_planner.h"
 
 
 int main() {
@@ -22,10 +24,9 @@ int main() {
   uWS::Hub h;
 
   Ego my_car;
-  Traffic traffic;
   Map highway_map;
 
-  h.onMessage([&my_car, &traffic, &highway_map]
+  h.onMessage([&my_car, &highway_map]
                (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                 uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -48,10 +49,13 @@ int main() {
         	// Main car's localization data (without noise).
           double car_x = j[1]["x"];  // in m
           double car_y = j[1]["y"];  // in m
-          double car_s = j[1]["s"];  // in m
-          double car_d = j[1]["d"];  // in m
           double car_speed = j[1]["speed"];  // in MPH
           double car_yaw = j[1]["yaw"];  // in degree
+          double yaw_in_rad = deg2rad(car_yaw);
+          double car_vx = car_speed*std::cos(yaw_in_rad);
+          double car_vy = car_speed*std::sin(yaw_in_rad);
+          double car_s = j[1]["s"];  // in m
+          double car_d = j[1]["d"];  // in m
           car_speed *= 4.0/9;  // MPH to m/s
 
           std::cout << "Cartesian: " << car_x << ", " << car_y << std::endl;
@@ -63,7 +67,7 @@ int main() {
           std::pair<double, double> car_cartesian = highway_map.cartesianToFrenet(car_x, car_y);
           std::cout << "Frenet from Cartesian: " << car_cartesian.first << ", " << car_cartesian.second << std::endl;
 
-          std::vector<double> localization = {car_x, car_y, car_s, car_d, car_yaw, car_speed};
+          std::vector<double> localization = {car_x, car_y, car_yaw, car_speed, car_s, car_d};
           // Previous path data passed to the planner.
           auto previous_path_x = j[1]["previous_path_x"];
           auto previous_path_y = j[1]["previous_path_y"];
@@ -73,7 +77,7 @@ int main() {
           double end_path_d = j[1]["end_path_d"];
 
           // All other car's data on the same side of the road
-          // in the format [[ID, x (m), y (m), vx (m/s), vy (m/s), s (m), d]].
+          // in the format [[ID, x (m), y (m), vx (m/s), vy (m/s), s (m), d (m)]].
           auto sensor_fusion_readout = j[1]["sensor_fusion"];
           std::map<int, std::vector<double>> sensor_fusion;
           for ( auto it : sensor_fusion_readout ) {
@@ -84,23 +88,26 @@ int main() {
             double yaw = std::atan2(vy, vx);
             it[3] = speed;
             it[4] = yaw;
-            std::vector<double> value (it.begin() + 1, it.end());
+            std::vector<double> value (std::next(it.begin(), 1), it.end());
             sensor_fusion.insert(std::make_pair(key, value));
           }
 
           nlohmann::json msgJson;
           // Update the state of the ego car
-          my_car.update_state(localization);
+          my_car.update(localization);
 
-          // Update the states of other vehicles on the road
-          traffic.update_state(sensor_fusion);
+          // Update the behavior of the ego car
+          BehaviorPlanner behavior_planner(my_car);
+          behavior_planner.plan();
 
           // Path planning
-          vehicle_traj trajectory_frenet = my_car.plan_path();
+          PathPlanner path_planner(my_car);
+          path_planner.plan();
 
           // Transfer the trajectory in Frenet coordinate system output
           // by "my_car" and pass it to the simulator.
 
+          vehicle_traj trajectory_frenet = my_car.getPath();
           vehicle_traj trajectory_cartesian = highway_map.trajFrenetToCartesian(trajectory_frenet);
 
           msgJson["next_x"] = trajectory_cartesian.first;
