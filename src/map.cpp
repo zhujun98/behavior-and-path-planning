@@ -13,6 +13,7 @@
 
 Map::Map() {
   n_lanes_ = 3;
+  lane_width_ = 4;
 
   max_s_ = 6945.554;
 
@@ -21,6 +22,17 @@ Map::Map() {
 
 
 Map::~Map() {}
+
+int Map::compute_lane_id(double d) const {
+  int id = (int)(d / lane_width_) + 1;
+
+  if ( id < 1 || id > 3 ) {
+    // out of lane
+    return -1;
+  } else {
+    return id;
+  }
+}
 
 
 void Map::load_data() {

@@ -13,17 +13,21 @@ double kPI = std::atan(1)*4;
  * Vehicle class
  */
 
-Vehicle::Vehicle() {}
+Vehicle::Vehicle() {
+  lane_id_ = -1;
+}
 
 Vehicle::~Vehicle() {}
 
-void Vehicle::update(const std::vector<double>& localization) {
+void Vehicle::update(const std::vector<double>& localization, const Map& map) {
   px_ = localization[0];
   py_ = localization[1];
   vx_ = localization[2];
   vy_ = localization[3];
   ps_ = localization[4];
   pd_ = localization[5];
+
+  lane_id_ = map.compute_lane_id(pd_);
 
   // remove the way points which has been passed (processed) and keep
   // up to 10 way points which has not been reached.
@@ -48,6 +52,13 @@ void Vehicle::update(const std::vector<double>& localization) {
       for ( auto v : unprocessed_path_d ) { path_d_.push_back(v); }
     }
   }
+}
+
+void Vehicle::printout() const {
+  std::cout << px_ << ", " << py_ << ", "
+            << vx_ << ", " << vy_ << ", "
+            << ps_ << ", " << pd_ << ", "
+            << "Lane ID: " << lane_id_ << std::endl;
 }
 
 /*

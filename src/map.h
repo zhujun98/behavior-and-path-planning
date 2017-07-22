@@ -17,6 +17,7 @@ class Map {
 private:
 
   int n_lanes_; // number of lanes
+  int lane_width_; // width of lane (m)
 
   std::vector<double> x_;
   std::vector<double> y_;
@@ -43,6 +44,11 @@ public:
   // destructor
   //
   ~Map();
+
+  //
+  //
+  //
+  int compute_lane_id(double d) const;
 
   //
   //

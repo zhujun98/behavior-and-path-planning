@@ -23,8 +23,8 @@ int main() {
 
   uWS::Hub h;
 
-  Ego my_car;
   Map highway_map;
+  Ego my_car;
 
   h.onMessage([&my_car, &highway_map]
                (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
@@ -94,7 +94,12 @@ int main() {
 
           nlohmann::json msgJson;
           // Update the state of the ego car
-          my_car.update(localization);
+          my_car.update(localization, highway_map);
+          my_car.printout();
+          //
+//          Traffic traffic(highway_map);
+//          traffic.populate(my_car);
+//          traffic.populate(sensor_fusion);
 
           // Update the behavior of the ego car
           BehaviorPlanner behavior_planner(my_car);

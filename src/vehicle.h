@@ -53,6 +53,8 @@ protected:
   std::vector<double> path_s_;
   std::vector<double> path_d_;
 
+  int lane_id_;
+
 public:
 
   //
@@ -68,7 +70,12 @@ public:
   //
   // Update the vehicle's state
   //
-  void update(const std::vector<double>& localization);
+  void update(const std::vector<double>& localization, const Map& map);
+
+  //
+  // Print out the vehicle's state
+  //
+  void printout() const;
 };
 
 
