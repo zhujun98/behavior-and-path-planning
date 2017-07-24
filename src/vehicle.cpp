@@ -13,17 +13,49 @@ double kPI = std::atan(1)*4;
  * Vehicle class
  */
 
-Vehicle::Vehicle() {
-  is_initialized_ = false;
-}
+Vehicle::Vehicle() {}
 
 Vehicle::~Vehicle() {}
+
+void Vehicle::update(const std::vector<double>& localization) {
+  px_ = localization[0];
+  py_ = localization[1];
+  vx_ = localization[2];
+  vy_ = localization[3];
+  ps_ = localization[4];
+  pd_ = localization[5];
+}
+
+void Vehicle::printout() const {
+  std::cout << px_ << ", " << py_ << ", "
+            << vx_ << ", " << vy_ << ", "
+            << ps_ << ", " << pd_ << ", " << std::endl;
+}
 
 int Vehicle::getLaneID() { return lane_id_; }
 
 void Vehicle::setLaneID(int value) { lane_id_ = value; }
 
-void Vehicle::update(const std::vector<double>& localization, const Map& map) {
+double Vehicle::getPd() { return pd_; }
+
+/*
+ * Ego class
+ */
+
+Ego::Ego() {
+
+  max_acceleration_ = 10;
+  max_speed_ = 21.;
+
+  behavior_ = KL;
+
+  lane_change_timer_ = 0;
+
+}
+
+Ego::~Ego() {}
+
+void Ego::update(const std::vector<double>& localization) {
   px_ = localization[0];
   py_ = localization[1];
   vx_ = localization[2];
@@ -31,40 +63,24 @@ void Vehicle::update(const std::vector<double>& localization, const Map& map) {
   ps_ = localization[4];
   pd_ = localization[5];
 
-  lane_id_ = map.compute_lane_id(pd_);
+  truncatePath();
+}
 
-  if ( !is_initialized_) {
-    target_lane_id_ = lane_id_;
-    is_initialized_ = true;
+void Ego::truncatePath() {
+  if ( !path_s_.empty() ) {
+
+    // first remove processed way points
+
+    auto unprocessed_s_begin = std::lower_bound(path_s_.begin(),
+                                                path_s_.end(), ps_);
+    int n_removed = std::distance(path_s_.begin(), unprocessed_s_begin);
+    auto unprocessed_d_begin = std::next(path_d_.begin(), n_removed);
+
+    path_s_.erase(path_s_.begin(), unprocessed_s_begin);
+    path_d_.erase(path_d_.begin(), unprocessed_d_begin);
+
   }
 }
-
-void Vehicle::printout() const {
-  std::cout << px_ << ", " << py_ << ", "
-            << vx_ << ", " << vy_ << ", "
-            << ps_ << ", " << pd_ << ", "
-            << "Lane ID: " << lane_id_ << std::endl;
-}
-
-/*
- * Ego class
- */
-
-Ego::Ego() {
-  is_active_ = false;
-
-  max_acceleration_ = 10;
-  max_speed_ = 21.;
-
-  behavior_ = KL;
-}
-
-Ego::~Ego() {}
-
-
-int Ego::getTargetLaneID() { return target_lane_id_; }
-
-void Ego::setTargetLaneID(int value) { target_lane_id_ = value; }
 
 VehicleBehavior Ego::getBehavior() { return behavior_; }
 
@@ -72,5 +88,14 @@ void Ego::setBehavior(VehicleBehavior value) { behavior_ = value; }
 
 vehicle_traj Ego::getPath() { return std::make_pair(path_s_, path_d_); }
 
+int Ego::getTargetLaneID() { return target_lane_id_; }
+
+void Ego::setTargetLaneID(int value) { target_lane_id_ = value; }
+
+double Ego::getLaneChangeTimer() { return lane_change_timer_; }
+
+void Ego::setLaneChangeTimer(double value) { lane_change_timer_ = value; }
+
+double Ego::getMaxSpeed() { return max_speed_; }
 
 

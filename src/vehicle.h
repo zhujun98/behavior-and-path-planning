@@ -28,21 +28,17 @@
 //     which is BEHIND itself and will adjust speed to try to get behind
 //     that vehicle.
 //
-// "LCING" - During a lane change
-//
-enum VehicleBehavior {KL, LC, PLC, LCING};
+enum VehicleBehavior {KL, LC, PLC};
 
 typedef std::map<int, std::vector<std::vector<int>>> state_pred;
 typedef std::pair<std::vector<double>, std::vector<double>> vehicle_traj;
 
-//class PathPlanner;
 
 class Vehicle {
 
   friend class PathPlanner;
 
 protected:
-  bool is_initialized_;
 
   // current positions in global coordinate system
   double px_; // m
@@ -53,11 +49,7 @@ protected:
   double ps_;  // m
   double pd_;  // m
 
-  std::vector<double> path_s_;
-  std::vector<double> path_d_;
-
   int lane_id_;
-  int target_lane_id_;
 
 public:
 
@@ -71,19 +63,21 @@ public:
   //
   virtual ~Vehicle();
 
-  int getLaneID();
-
-  void setLaneID(int value);
-
   //
   // Update the vehicle's state
   //
-  void update(const std::vector<double>& localization, const Map& map);
+  virtual void update(const std::vector<double>& localization);
 
   //
   // Print out the vehicle's state
   //
   void printout() const;
+
+  int getLaneID();
+
+  void setLaneID(int value);
+
+  double getPd();
 };
 
 
@@ -93,20 +87,19 @@ public:
 
 class Ego : public Vehicle {
 
-  friend class PathPlanner;
-
 private:
   VehicleBehavior behavior_;
-  // Indicating whether the vehicle is in the process of performing some
-  // action, e.g. lane change.
-  bool is_active_;
+
+  int target_lane_id_;
+  double lane_change_timer_;
 
   double max_speed_;  // maximum speed (m/s)
   double max_acceleration_;  // maximum acceleration (m/s^2)
   double max_steering_;  // maximum steering angle (rad)
 
 public:
-
+  std::vector<double> path_s_;
+  std::vector<double> path_d_;
   //
   // constructor
   //
@@ -117,9 +110,15 @@ public:
   //
   virtual ~Ego();
 
-  int getTargetLaneID();
+  //
+  // Update the ego car's state
+  //
+  void update(const std::vector<double>& localization);
 
-  void setTargetLaneID(int value);
+  //
+  // Remove the way points in the vehicle paths which have been processed.
+  //
+  void truncatePath();
 
   VehicleBehavior getBehavior();
 
@@ -127,6 +126,15 @@ public:
 
   vehicle_traj getPath();
 
+  int getTargetLaneID();
+
+  void setTargetLaneID(int value);
+
+  double getLaneChangeTimer();
+
+  void setLaneChangeTimer(double value);
+
+  double getMaxSpeed();
 
 };
 

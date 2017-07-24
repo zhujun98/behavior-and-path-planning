@@ -12,14 +12,14 @@ class BehaviorPlanner {
 
 private:
 
-  Ego* car_;
+  Ego* ego_;
 
 public:
 
   //
   // constructor
   //
-  BehaviorPlanner(Ego& car);
+  BehaviorPlanner(Ego& ego);
 
   //
   // destructor

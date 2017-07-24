@@ -6,29 +6,21 @@
 #include "Eigen-3.3/Eigen/Dense"
 
 #include "path_planner.h"
+#include "vehicle.h"
 
 
-PathPlanner::PathPlanner(Ego& car) {
-  car_ = &car;
+PathPlanner::PathPlanner(Ego& ego, const Map& map) {
+  ego_ = &ego;
+  map_ = &map;
 
-  n_path_points_ = 50;
+  max_prediction_points_ = 200;
   time_step_ = 0.02;
 }
 
 PathPlanner::~PathPlanner() {}
 
-//
-// Find the coefficients of a quinted polynomial which minimizes the
-// jerk between the initial state and the final state in a given period.
-// Note:: for multi-dimensional scenario, one needs to apply this
-//        function to different directions separately.
-//
-// @param state0: initial state [x, dx/dt, d^2(x)/dt^2]
-// @param state1: final state [x, dx/dt, d^2(x)/dt^2]
-// @param dt: transition time (s) between the initial and final states
-//
 std::vector<double>
-PathPlanner::jerk_minimizing_trajectory(std::vector<double> state0,
+PathPlanner::jerkMinimizingTrajectory(std::vector<double> state0,
                                         std::vector<double> state1,
                                         double dt) const {
   assert (state0.size() == 3);
@@ -63,11 +55,11 @@ PathPlanner::jerk_minimizing_trajectory(std::vector<double> state0,
   return result;
 }
 
-double PathPlanner::eval_trajectory(std::vector<double> coeff, double t) const {
+double PathPlanner::evalTrajectory(std::vector<double> p, double t) const {
   double result = 0.0;
   double t_power = 1;
-  for ( int i=0; i < coeff.size(); ++i ) {
-    result += coeff[i]*t_power;
+  for ( int i=0; i < p.size(); ++i ) {
+    result += p[i]*t_power;
     t_power *= t;
   }
 
@@ -75,105 +67,31 @@ double PathPlanner::eval_trajectory(std::vector<double> coeff, double t) const {
 }
 
 void PathPlanner::plan() {
-  switch (car_->getBehavior()) {
+  switch (ego_->getBehavior()) {
     case KL:
-      keep_lane();
+      keepLane();
       break;
     case LC:
-      change_lane();
-      car_->setBehavior(LCING);
       break;
     case PLC:
-      break;
-    case LCING:
+      prepareLaneChange();
+      ego_->setBehavior(LC);
       break;
   }
 }
 
-void PathPlanner::generate_path(std::vector<double> state0_s,
-                                std::vector<double> state0_d,
-                                std::vector<double> state1_s,
-                                std::vector<double> state1_d,
-                                double duration) {
-  std::vector<double> coeff_s = jerk_minimizing_trajectory(state0_s, state1_s, duration);
-  std::vector<double> coeff_d = jerk_minimizing_trajectory(state0_d, state1_d, duration);
+void PathPlanner::extendPath(std::vector<double> coeff_s,
+                              std::vector<double> coeff_d) {
+
   double t = 0.0;
-  while ( car_->path_s_.size() < n_path_points_ ) {
+  while ( ego_->path_s_.size() < max_prediction_points_ ) {
     t += time_step_;
-    car_->path_s_.push_back(eval_trajectory(coeff_s, t));
-    car_->path_d_.push_back(eval_trajectory(coeff_d, t));
+    ego_->path_s_.push_back(evalTrajectory(coeff_s, t));
+    ego_->path_d_.push_back(evalTrajectory(coeff_d, t));
   }
 }
 
-void PathPlanner::truncateLastPath() {
-  // remove the way points which has been passed (processed) and keep
-  // up to 10 way points which has not been reached.
-  if ( !car_->path_s_.empty() ) {
-    auto it_s = std::lower_bound(car_->path_s_.begin(), car_->path_s_.end(), car_->ps_);
-    long j = std::distance(car_->path_s_.begin(), it_s);
-    auto it_d = std::next(car_->path_d_.begin(), j);
-
-    if ( std::distance(it_s, car_->path_s_.end()) > 20 ) {
-      std::vector<double> unprocessed_path_s(it_s, std::next(it_s, 20));
-      std::vector<double> unprocessed_path_d(it_d, std::next(it_d, 20));
-      car_->path_s_.clear();
-      car_->path_d_.clear();
-      for ( auto v : unprocessed_path_s ) { car_->path_s_.push_back(v); }
-      for ( auto v : unprocessed_path_d ) { car_->path_d_.push_back(v); }
-    } else {
-      std::vector<double> unprocessed_path_s(it_s, car_->path_s_.end());
-      std::vector<double> unprocessed_path_d(it_d, car_->path_d_.end());
-      car_->path_s_.clear();
-      car_->path_d_.clear();
-      for ( auto v : unprocessed_path_s ) { car_->path_s_.push_back(v); }
-      for ( auto v : unprocessed_path_d ) { car_->path_d_.push_back(v); }
-    }
-  }
-}
-
-void PathPlanner::keep_lane() {
-  truncateLastPath();
-  double last_s;
-  double last_d;
-
-  double ps0, vs0, as0;
-  double pd0, vd0, ad0;
-
-  double ps1, vs1, as1;
-  double pd1, vd1, ad1;
-
-  if ( car_->path_s_.empty() ) {
-    ps0 = car_->ps_;
-    pd0 = car_->pd_;
-  } else {
-    ps0 = *std::next(car_->path_s_.end(), -1);
-    pd0 = *std::next(car_->path_d_.end(), -1);
-  }
-
-  vs0 = car_->max_speed_;
-  vd0 = 0;
-  as0 = 0;
-  ad0 = 0;
-  vs1 = car_->max_speed_;
-  vd1 = 0;
-  as1 = 0;
-  ad1 = 0;
-
-  double duration = time_step_* n_path_points_;
-  ps1 = ps0 + car_->max_speed_*duration;
-  pd1 = (car_->getLaneID() - 0.5)*4.0;
-
-  std::vector<double> state0_s = {ps0, vs0, as0};
-  std::vector<double> state0_d = {pd0, vd0, ad0};
-  std::vector<double> state1_s = {ps1, vs1, as1};
-  std::vector<double> state1_d = {pd1, vd1, ad1};
-
-  generate_path(state0_s, state0_d, state1_s, state1_d, duration);
-
-}
-
-void PathPlanner::change_lane() {
-  truncateLastPath();
+void PathPlanner::keepLane() {
 
   double last_s;
   double last_d;
@@ -184,32 +102,84 @@ void PathPlanner::change_lane() {
   double ps1, vs1, as1;
   double pd1, vd1, ad1;
 
-  if ( car_->path_s_.empty() ) {
-    ps0 = car_->ps_;
-    pd0 = car_->pd_;
+  if ( ego_->path_s_.empty() ) {
+    ps0 = ego_->ps_;
+    pd0 = ego_->pd_;
   } else {
-    ps0 = *std::next(car_->path_s_.end(), -1);
-    pd0 = *std::next(car_->path_d_.end(), -1);
+    ps0 = *std::next(ego_->path_s_.end(), -1);
+    pd0 = *std::next(ego_->path_d_.end(), -1);
   }
 
-  vs0 = car_->max_speed_;
+  vs0 = ego_->getMaxSpeed();
   vd0 = 0;
   as0 = 0;
   ad0 = 0;
-  vs1 = car_->max_speed_;
+  vs1 = ego_->getMaxSpeed();
   vd1 = 0;
   as1 = 0;
   ad1 = 0;
 
-  double duration = time_step_* n_path_points_;
-  ps1 = ps0 + car_->max_speed_*duration;
-  pd1 = (car_->getTargetLaneID() - 0.5)*4.0;
+  double duration = time_step_* max_prediction_points_;
+  ps1 = ps0 + ego_->getMaxSpeed()*duration;
+  pd1 = (ego_->getLaneID() - 0.5)*4.0;
 
   std::vector<double> state0_s = {ps0, vs0, as0};
   std::vector<double> state0_d = {pd0, vd0, ad0};
   std::vector<double> state1_s = {ps1, vs1, as1};
   std::vector<double> state1_d = {pd1, vd1, ad1};
 
-  generate_path(state0_s, state0_d, state1_s, state1_d, duration);
+  std::vector<double> coeff_s = jerkMinimizingTrajectory(state0_s, state1_s, duration);
+  std::vector<double> coeff_d = jerkMinimizingTrajectory(state0_d, state1_d, duration);
+
+  extendPath(coeff_s, coeff_d);
+
 }
 
+void PathPlanner::prepareLaneChange() {
+  double time_left = ego_->getLaneChangeTimer();
+
+  while ( ego_->path_s_.size() > 5 ) {
+    ego_->path_s_.pop_back();
+    ego_->path_d_.pop_back();
+  }
+
+  double last_s;
+  double last_d;
+
+  double ps0, vs0, as0;
+  double pd0, vd0, ad0;
+
+  double ps1, vs1, as1;
+  double pd1, vd1, ad1;
+
+  if ( ego_->path_s_.empty() ) {
+    ps0 = ego_->ps_;
+    pd0 = ego_->pd_;
+  } else {
+    ps0 = *std::next(ego_->path_s_.end(), -1);
+    pd0 = *std::next(ego_->path_d_.end(), -1);
+  }
+
+  vs0 = ego_->getMaxSpeed();
+  vd0 = 0;
+  as0 = 0;
+  ad0 = 0;
+  vs1 = ego_->getMaxSpeed();
+  vd1 = 0;
+  as1 = 0;
+  ad1 = 0;
+  double duration = time_step_* max_prediction_points_;
+
+  ps1 = ps0 + vs0*time_left;
+  pd1 = (ego_->getTargetLaneID() - 0.5)*4.0;
+
+  std::vector<double> state0_s = {ps0, vs0, as0};
+  std::vector<double> state0_d = {pd0, vd0, ad0};
+  std::vector<double> state1_s = {ps1, vs1, as1};
+  std::vector<double> state1_d = {pd1, vd1, ad1};
+
+  std::vector<double> coeff_s = jerkMinimizingTrajectory(state0_s, state1_s, duration);
+  std::vector<double> coeff_d = jerkMinimizingTrajectory(state0_d, state1_d, duration);
+
+  extendPath(coeff_s, coeff_d);
+}

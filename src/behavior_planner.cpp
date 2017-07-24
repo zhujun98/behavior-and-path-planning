@@ -6,33 +6,41 @@
 #include "behavior_planner.h"
 
 
-BehaviorPlanner::BehaviorPlanner(Ego& car) {
-  car_ = &car;
+BehaviorPlanner::BehaviorPlanner(Ego& ego) {
+  ego_ = &ego;
 }
 
 BehaviorPlanner::~BehaviorPlanner() {}
 
 void BehaviorPlanner::plan() {
 
-  VehicleBehavior current_behavior = car_->getBehavior();
+  VehicleBehavior current_behavior = ego_->getBehavior();
 
-  if ( current_behavior == LCING ) {
-    if ( car_->getLaneID() == car_->getTargetLaneID() ) {
+  if ( current_behavior == LC ) {
+    if ( ego_->getLaneID() == ego_->getTargetLaneID() ) {
       std::cout << "Lane change finished!" << std::endl;
-      car_->setBehavior(KL);
+      ego_->setBehavior(KL);
+      ego_->setLaneChangeTimer(0);
+      return;
+    } else if ( ego_->getLaneChangeTimer() <= 0 ) {
+      std::cout << "Lane change time up!";
+      ego_->setBehavior(KL);
+      ego_->setLaneChangeTimer(0);
       return;
     }
   }
 
   if ( current_behavior == KL && std::rand()%100 < 2 ) {
-    car_->setBehavior(LC);
+    ego_->setBehavior(PLC);
 
-    if ( car_->getLaneID() < 3 ) {
-      car_->setTargetLaneID(car_->getLaneID() + 1);
+    if ( ego_->getLaneID() < 3 ) {
+      ego_->setTargetLaneID(ego_->getLaneID() + 1);
       std::cout << "Start changing to the right lane!" << std::endl;
-    } else if (car_->getLaneID() == 3 ) {
-      car_->setTargetLaneID(car_->getLaneID() - 1);
+    } else if (ego_->getLaneID() == 3 ) {
+      ego_->setTargetLaneID(ego_->getLaneID() - 1);
       std::cout << "Start changing to the left lane!" << std::endl;
     }
+
+    ego_->setLaneChangeTimer(3);
   }
 }

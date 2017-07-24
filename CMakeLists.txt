@@ -11,6 +11,7 @@ set(sources src/main.cpp
             src/utilities.h
             src/vehicle.cpp
             src/map.cpp
+            src/traffic.cpp
             src/path_planner.cpp
             src/behavior_planner.cpp)
 

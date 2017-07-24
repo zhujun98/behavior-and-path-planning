@@ -23,10 +23,18 @@ int main() {
 
   uWS::Hub h;
 
-  Map highway_map;
   Ego my_car;
 
-  h.onMessage([&my_car, &highway_map]
+  Map highway_map;
+
+  Traffic traffic(my_car, highway_map);
+
+  BehaviorPlanner behavior_planner(my_car);
+
+  PathPlanner path_planner(my_car, highway_map);
+
+
+  h.onMessage([&my_car, &traffic, &behavior_planner, &path_planner, &highway_map]
                (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                 uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -79,8 +87,8 @@ int main() {
           // All other car's data on the same side of the road
           // in the format [[ID, x (m), y (m), vx (m/s), vy (m/s), s (m), d (m)]].
           auto sensor_fusion_readout = j[1]["sensor_fusion"];
-          std::map<int, std::vector<double>> sensor_fusion;
-          for ( auto it : sensor_fusion_readout ) {
+          std::vector<std::vector<double>> sensor_fusion;
+          for ( auto &it : sensor_fusion_readout ) {
             int key = it[0];
             double vx = it[3];
             double vy = it[4];
@@ -89,25 +97,21 @@ int main() {
             it[3] = speed;
             it[4] = yaw;
             std::vector<double> value (std::next(it.begin(), 1), it.end());
-            sensor_fusion.insert(std::make_pair(key, value));
+            sensor_fusion.push_back(value);
           }
 
           nlohmann::json msgJson;
-          // Update the state of the ego car
-          my_car.update(localization, highway_map);
-//          my_car.printout();
-          //
-//          Traffic traffic(highway_map);
-//          traffic.populate(my_car);
-//          traffic.populate(sensor_fusion);
+
+          // Update the traffic, including the ego car and other cars
+
+          traffic.update(localization, sensor_fusion);
+//          traffic.printout();
 
           // Update the behavior of the ego car
 
-          BehaviorPlanner behavior_planner(my_car);
           behavior_planner.plan();
 
           // Path planning
-          PathPlanner path_planner(my_car);
           path_planner.plan();
 
           // Transfer the trajectory in Frenet coordinate system output
