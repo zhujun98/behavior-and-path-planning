@@ -5,7 +5,9 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <assert.h>
 
+#include "Eigen-3.3/Eigen/Dense"
 
 
 #ifndef PATH_PLANNING_UTILITIES_H
@@ -51,6 +53,70 @@ inline std::string hasData(std::string s) {
   return "";
 }
 
+//
+// Find the coefficients of a quinted polynomial which minimizes the
+// jerk between the initial state and the final state in a given period.
+// Note:: for multi-dimensional scenario, one needs to apply this
+//        function to different directions separately.
+//
+// @param state0: initial state [x, dx/dt, d^2(x)/dt^2]
+// @param state1: final state [x, dx/dt, d^2(x)/dt^2]
+// @param dt: transition time (s) between the initial and final states
+//
+inline std::vector<double>
+jerkMinimizingTrajectory(const std::vector<double>& state0,
+                         const std::vector<double>& state1,
+                         double dt) {
+  assert (state0.size() == 3);
+  assert (state1.size() == 3);
 
+  double dt2 = dt*dt;
+  double dt3 = dt2*dt;
+  double dt4 = dt3*dt;
+  double dt5 = dt4*dt;
+
+  Eigen::Matrix3d a;
+  a <<  dt3,    dt4,    dt5,
+      3*dt2,  4*dt3,  5*dt4,
+      6*dt,  12*dt2, 20*dt3;
+
+  Eigen::Vector3d b;
+  b << state1[0] - (state0[0] + dt*state0[1] + 0.5*dt2*state0[2]),
+      state1[1] - (state0[1] + dt*state0[2]),
+      state1[2] -  state0[2];
+
+  Eigen::VectorXd solution = a.colPivHouseholderQr().solve(b);
+
+  std::vector<double> result(6);
+
+  result[0] = state0[0];
+  result[1] = state0[1];
+  result[2] = 0.5*state0[2];
+  result[3] = solution[0];
+  result[4] = solution[1];
+  result[5] = solution[2];
+
+  return result;
+}
+
+//
+// Evaluate the position at time t using the given polynomial coefficients
+// y = p[0] + p[1]*t + p[2]*t + ... + p[n-1]*t^(n-1)
+//
+// @param p: polynomial coefficients
+// @param t: time
+//
+// @return: position at time t
+//
+inline double evalTrajectory(const std::vector<double>& p, double t) {
+  double result = 0.0;
+  double t_power = 1;
+  for ( int i=0; i < p.size(); ++i ) {
+    result += p[i]*t_power;
+    t_power *= t;
+  }
+
+  return result;
+}
 
 #endif //PATH_PLANNING_UTILITIES_H

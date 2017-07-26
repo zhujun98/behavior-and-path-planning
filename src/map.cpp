@@ -13,9 +13,9 @@
 
 Map::Map() {
   n_lanes_ = 3;
-  lane_width_ = 4;
+  lane_width_ = 4;  // in meter
 
-  max_s_ = 6945.554;
+  max_s_ = 6945.554;  // in meter
 
   load_data();
 }
@@ -260,3 +260,7 @@ vehicle_traj Map::trajCartesianToFrenet(const vehicle_traj& traj) {
 
   return traj_frenet;
 }
+
+double Map::getLaneWidth() const { return lane_width_; }
+
+double Map::getMaxS() const { return max_s_; }

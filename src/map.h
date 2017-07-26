@@ -18,15 +18,13 @@ private:
 
   int n_lanes_; // number of lanes
   int lane_width_; // width of lane (m)
+  double max_s_; // The max s value before wrapping around the track back to 0
 
   std::vector<double> x_;
   std::vector<double> y_;
   std::vector<double> s_;
   std::vector<double> dx_;
   std::vector<double> dy_;
-
-  // The max s value before wrapping around the track back to 0
-  double max_s_;
 
   //
   // Read way points data from a file
@@ -54,6 +52,8 @@ public:
   //
   //
   int closestWaypoint(double x, double y) const;
+
+
   int nextWaypoint(double x, double y, double theta);
   //
   //
@@ -70,7 +70,14 @@ public:
   //
   vehicle_traj trajFrenetToCartesian(const vehicle_traj& traj_in_cartesian);
 
+  //
+  //
+  //
   vehicle_traj trajCartesianToFrenet(const vehicle_traj& traj_in_cartesian);
+
+  double getLaneWidth() const;
+
+  double getMaxS() const;
 };
 
 #endif //PATH_PLANNING_MAP_H

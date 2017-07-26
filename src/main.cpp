@@ -12,11 +12,8 @@
 #include "json.hpp"
 
 #include "utilities.h"
-#include "vehicle.h"
+#include "ego.h"
 #include "map.h"
-#include "traffic.h"
-#include "behavior_planner.h"
-#include "path_planner.h"
 
 
 int main() {
@@ -27,14 +24,7 @@ int main() {
 
   Map highway_map;
 
-  Traffic traffic(my_car, highway_map);
-
-  BehaviorPlanner behavior_planner(my_car);
-
-  PathPlanner path_planner(my_car, highway_map);
-
-
-  h.onMessage([&my_car, &traffic, &behavior_planner, &path_planner, &highway_map]
+  h.onMessage([&my_car, &highway_map]
                (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                 uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -102,17 +92,7 @@ int main() {
 
           nlohmann::json msgJson;
 
-          // Update the traffic, including the ego car and other cars
-
-          traffic.update(localization, sensor_fusion);
-//          traffic.printout();
-
-          // Update the behavior of the ego car
-
-          behavior_planner.plan();
-
-          // Path planning
-          path_planner.plan();
+          my_car.update(localization, sensor_fusion, highway_map);
 
           // Transfer the trajectory in Frenet coordinate system output
           // by "my_car" and pass it to the simulator.
