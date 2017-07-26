@@ -33,9 +33,7 @@ public:
 
   void onEnter(Ego& ego);
 
-  EgoState* onUpdate(Ego& ego,
-                     const std::vector<std::vector<double>>& sensor_fusion,
-                     const Map& map);
+  EgoState* onUpdate(Ego& ego, const Map& map);
 
   void onExit(Ego& ego);
 };

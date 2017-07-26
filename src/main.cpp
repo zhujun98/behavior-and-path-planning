@@ -65,7 +65,7 @@ int main() {
 //          std::pair<double, double> car_cartesian = highway_map.cartesianToFrenet(car_x, car_y);
 //          std::cout << "Frenet from Cartesian: " << car_cartesian.first << ", " << car_cartesian.second << std::endl;
 
-          std::vector<double> localization = {car_x, car_y, car_yaw, car_speed, car_s, car_d};
+          std::vector<double> localization = {car_x, car_y, car_vx, car_vy, car_s, car_d};
           // Previous path data passed to the planner.
           auto previous_path_x = j[1]["previous_path_x"];
           auto previous_path_y = j[1]["previous_path_y"];
@@ -79,13 +79,6 @@ int main() {
           auto sensor_fusion_readout = j[1]["sensor_fusion"];
           std::vector<std::vector<double>> sensor_fusion;
           for ( auto &it : sensor_fusion_readout ) {
-            int key = it[0];
-            double vx = it[3];
-            double vy = it[4];
-            double speed = std::sqrt(vx*vx + vy*vy);
-            double yaw = std::atan2(vy, vx);
-            it[3] = speed;
-            it[4] = yaw;
             std::vector<double> value (std::next(it.begin(), 1), it.end());
             sensor_fusion.push_back(value);
           }

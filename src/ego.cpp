@@ -4,7 +4,6 @@
 
 #include "ego.h"
 #include "map.h"
-#include "vehicle.h"
 #include "ego_state.h"
 #include "utilities.h"
 #include "ego_state_keep_lane.h"
@@ -21,7 +20,7 @@ Ego::Ego() {
   max_acceleration_ = 10;  // in m/s^2
   max_speed_ = 21.;  // in m/s
 
-  safe_distance_ = 20;  // in m
+  safe_ds_in_seconds_ = 1;  // in s
 }
 
 Ego::~Ego() {
@@ -31,17 +30,11 @@ Ego::~Ego() {
 void Ego::update(const std::vector<double>& localization,
                  const std::vector<std::vector<double>>& sensor_fusion,
                  const Map& map) {
-  px_ = localization[0];
-  py_ = localization[1];
-  vx_ = localization[2];
-  vy_ = localization[3];
-  ps_ = localization[4];
-  pd_ = localization[5];
-  lane_id_ = map.compute_lane_id(pd_);
-
+  updateParameters(localization, map);
+  updateSurroundings(sensor_fusion, map);
   updateUnprocessedPath();
 
-  EgoState* state = state_->onUpdate(*this, sensor_fusion, map);
+  EgoState* state = state_->onUpdate(*this, map);
   if ( state != NULL ) {
     state_->onExit(*this);
     delete state_;
@@ -63,6 +56,24 @@ void Ego::updateUnprocessedPath() {
     path_s_.erase(path_s_.begin(), unprocessed_s_begin);
     path_d_.erase(path_d_.begin(), unprocessed_d_begin);
 
+  }
+}
+
+void Ego::updateSurroundings(const std::vector<std::vector<double>>& sensor_fusion,
+                             const Map& map) {
+  surroundings_.center.clear();
+  surroundings_.left.clear();
+  surroundings_.right.clear();
+
+  for ( const auto& v : sensor_fusion ) {
+    double lane_id = map.compute_lane_id(v[5]);
+    if ( lane_id == lane_id_ ) {
+      surroundings_.center.push_back(v);
+    } else if ( lane_id == lane_id_ - 1 ) {
+      surroundings_.left.push_back(v);
+    } else if ( lane_id == lane_id_ + 1 ) {
+      surroundings_.right.push_back(v);
+    }
   }
 }
 
@@ -96,4 +107,6 @@ double Ego::getTimeStep() const { return time_step_; }
 
 unsigned int Ego::getPredictionPts() const { return prediction_pts_; }
 
-double Ego::getSafeDistance() const { return safe_distance_; }
+double Ego::getSafeDsInSeconds() const { return safe_ds_in_seconds_; }
+
+Surroundings const* Ego::getSurroundings() const { return &surroundings_; }

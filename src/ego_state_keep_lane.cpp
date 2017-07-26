@@ -21,10 +21,8 @@ void EgoStateKeepLane::onEnter(Ego& ego) {
   std::cout << "Enter state: *** KEEP LANE ***" << std::endl;
 }
 
-EgoState* EgoStateKeepLane::onUpdate(Ego& ego,
-                                     const std::vector<std::vector<double>>& sensor_fusion,
-                                     const Map& map) {
-  if ( checkFrontCollision(ego, sensor_fusion, map) ) {
+EgoState* EgoStateKeepLane::onUpdate(Ego& ego, const Map& map) {
+  if ( checkFrontCollision(ego, map) ) {
     return new EgoStatePrepareChangeLane();
   } else {
     planPath(ego, map);
@@ -51,17 +49,17 @@ void EgoStateKeepLane::planPath(Ego& ego, const Map& map) {
     pd0 = *std::next(ego.getPath().second.end(), -1);
   }
 
-  vs0 = ego.getMaxSpeed();
+  vs0 = ego.getMaxSpeed(); //std::sqrt(ego.getVx()*ego.getVx() + ego.getVy()*ego.getVy());
   vd0 = 0;
   as0 = 0;
   ad0 = 0;
-  vs1 = vs0;
+  vs1 = ego.getMaxSpeed();
   vd1 = 0;
   as1 = 0;
   ad1 = 0;
 
   double duration = ego.getTimeStep() * ego.getPredictionPts();
-  ps1 = ps0 + vs0*duration;
+  ps1 = ps0 + 0.5*(vs0 + vs1)*duration;
   pd1 = (ego.getLaneID() - 0.5) * map.getLaneWidth();
 
   std::vector<double> state0_s = {ps0, vs0, as0};
@@ -75,17 +73,11 @@ void EgoStateKeepLane::planPath(Ego& ego, const Map& map) {
   ego.extendPath(coeff_s, coeff_d);
 }
 
-bool EgoStateKeepLane::checkFrontCollision(const Ego& ego,
-                                      const std::vector<std::vector<double>>& sensor_fusion,
-                                      const Map&map) {
+bool EgoStateKeepLane::checkFrontCollision(const Ego& ego, const Map&map) {
   double min_ds = 1000;
-  for ( auto &v : sensor_fusion ) {
-    double s = v[4];
-    double d = v[5];
-    if ( map.compute_lane_id(d) == ego.getLaneID() ) {
-      double ds = s - ego.getPs();
-      if ( ds > 0 && ds < min_ds ) { min_ds = ds; }
-    }
+  for ( auto &v : ego.getSurroundings()->center ) {
+    double ds = v[4] - ego.getPs();
+    if ( ds > 0 && ds < min_ds ) { min_ds = ds; }
   }
-  return ( min_ds < ego.getSafeDistance() );
+  return ( min_ds < ego.getSafeDsInSeconds() * ego.getMaxSpeed() );
 }

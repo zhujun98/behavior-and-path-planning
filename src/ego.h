@@ -14,10 +14,19 @@ class EgoState;
 class Map;
 
 
+struct Surroundings {
+  std::vector<std::vector<double>> left;
+  std::vector<std::vector<double>> right;
+  std::vector<std::vector<double>> center;
+};
+
+
 class Ego : public Vehicle {
 
 private:
   EgoState* state_;
+
+  Surroundings surroundings_;
 
   double time_step_;
   unsigned int prediction_pts_;
@@ -25,7 +34,9 @@ private:
   std::vector<double> path_s_;
   std::vector<double> path_d_;
 
-  double safe_distance_;  // safe distance to the car on the same lane
+  // safe distance is defined as the speed of the rear car times
+  // safe_ds_in_seconds_
+  double safe_ds_in_seconds_;
 
   double max_speed_;  // maximum speed (m/s)
   double max_acceleration_;  // maximum acceleration (m/s^2)
@@ -56,6 +67,12 @@ public:
   void updateUnprocessedPath();
 
   //
+  //
+  //
+  void updateSurroundings(const std::vector<std::vector<double>>& sensor_fusion,
+                          const Map& map);
+
+  //
   // Keep a given number of way points in the current path
   //
   void truncatePath(unsigned int n_keep);
@@ -77,8 +94,9 @@ public:
 
   unsigned int getPredictionPts() const;
 
-  double getSafeDistance() const;
+  double getSafeDsInSeconds() const;
 
+  Surroundings const* getSurroundings() const;
 };
 
 

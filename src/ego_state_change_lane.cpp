@@ -21,9 +21,7 @@ void EgoStateChangeLane::onEnter(Ego& ego) {
             << " to Lane-" << target_lane_id_ << std::endl;
 }
 
-EgoState* EgoStateChangeLane::onUpdate(Ego& ego,
-                                       const std::vector<std::vector<double>>& sensor_fusion,
-                                       const Map& map) {
+EgoState* EgoStateChangeLane::onUpdate(Ego& ego, const Map& map) {
   if ( ego.getLaneID() == target_lane_id_ ) {
     return new EgoStateKeepLane();
   } else {

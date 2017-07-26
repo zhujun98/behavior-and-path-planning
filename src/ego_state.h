@@ -28,9 +28,7 @@ public:
 
   virtual void onEnter(Ego& ego) = 0;
 
-  virtual EgoState* onUpdate(Ego& ego,
-                             const std::vector<std::vector<double>>& sensor_fusion,
-                             const Map& map) = 0;
+  virtual EgoState* onUpdate(Ego& ego, const Map& map) = 0;
 
   virtual void onExit(Ego& ego) = 0;
 

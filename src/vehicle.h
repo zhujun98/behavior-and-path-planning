@@ -9,20 +9,23 @@
 #include <vector>
 
 
-class Vehicle {
+class Map;
 
-  friend class PathPlanner;
+
+class Vehicle {
 
 protected:
 
-  // current positions in global coordinate system
-  double px_; // m
-  double py_; // m
-  double vx_; // m/s
-  double vy_; // m/s
-  // current positions in Frenet-Serret coordinate system
-  double ps_;  // m
-  double pd_;  // m
+  bool is_initialized_;
+
+  // parameters in global coordinate system
+  double px_; // in m
+  double py_; // in m
+  double vx_; // in m/s
+  double vy_; // in m/s
+  // parameters in Frenet-Serret coordinate system
+  double ps_; // in m
+  double pd_; // in m
 
   int lane_id_;
 
@@ -41,7 +44,8 @@ public:
   //
   // Update the vehicle's state
   //
-  virtual void update(const std::vector<double>& localization);
+  virtual void updateParameters(const std::vector<double>& localization,
+                                const Map& map);
 
   //
   // Print out the vehicle's state
@@ -50,11 +54,16 @@ public:
 
   int getLaneID() const;
 
-  void setLaneID(int value);
+  double getPx() const;
+
+  double getPy() const;
 
   double getVx() const;
+
   double getVy() const;
+
   double getPs() const;
+
   double getPd() const;
 };
 
