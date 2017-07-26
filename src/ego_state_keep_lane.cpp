@@ -2,6 +2,7 @@
 // Created by jun on 7/24/17.
 //
 #include <iostream>
+#include <vector>
 
 #include "map.h"
 #include "vehicle.h"
@@ -23,12 +24,12 @@ void EgoStateKeepLane::onEnter(Ego& ego) {
 EgoState* EgoStateKeepLane::onUpdate(Ego& ego,
                                      const std::vector<std::vector<double>>& sensor_fusion,
                                      const Map& map) {
-  if ( std::rand()%100 < 5 ) {
+  if ( checkFrontCollision(ego, sensor_fusion, map) ) {
     return new EgoStatePrepareChangeLane();
   } else {
     planPath(ego, map);
-    return nullptr;
   }
+
 }
 
 void EgoStateKeepLane::onExit(Ego& ego) {
@@ -72,4 +73,19 @@ void EgoStateKeepLane::planPath(Ego& ego, const Map& map) {
   std::vector<double> coeff_d = jerkMinimizingTrajectory(state0_d, state1_d, duration);
 
   ego.extendPath(coeff_s, coeff_d);
+}
+
+bool EgoStateKeepLane::checkFrontCollision(const Ego& ego,
+                                      const std::vector<std::vector<double>>& sensor_fusion,
+                                      const Map&map) {
+  double min_ds = 1000;
+  for ( auto &v : sensor_fusion ) {
+    double s = v[4];
+    double d = v[5];
+    if ( map.compute_lane_id(d) == ego.getLaneID() ) {
+      double ds = s - ego.getPs();
+      if ( ds > 0 && ds < min_ds ) { min_ds = ds; }
+    }
+  }
+  return ( min_ds < ego.getSafeDistance() );
 }

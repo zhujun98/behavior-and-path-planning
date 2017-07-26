@@ -15,11 +15,13 @@ Ego::Ego() {
   state_ = new EgoStateKeepLane();
   state_->onEnter(*this);
 
-  time_step_ = 0.02; // 20 ms
+  time_step_ = 0.02; // in s
   prediction_pts_ = 100; // No. of prediction points
 
-  max_acceleration_ = 10;
-  max_speed_ = 21.;
+  max_acceleration_ = 10;  // in m/s^2
+  max_speed_ = 21.;  // in m/s
+
+  safe_distance_ = 20;  // in m
 }
 
 Ego::~Ego() {
@@ -93,3 +95,5 @@ double Ego::getMaxSteering() const { return max_steering_; }
 double Ego::getTimeStep() const { return time_step_; }
 
 unsigned int Ego::getPredictionPts() const { return prediction_pts_; }
+
+double Ego::getSafeDistance() const { return safe_distance_; }

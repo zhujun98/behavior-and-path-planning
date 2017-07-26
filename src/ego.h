@@ -25,6 +25,8 @@ private:
   std::vector<double> path_s_;
   std::vector<double> path_d_;
 
+  double safe_distance_;  // safe distance to the car on the same lane
+
   double max_speed_;  // maximum speed (m/s)
   double max_acceleration_;  // maximum acceleration (m/s^2)
   double max_steering_;  // maximum steering angle (rad)
@@ -74,6 +76,8 @@ public:
   double getTimeStep() const;
 
   unsigned int getPredictionPts() const;
+
+  double getSafeDistance() const;
 
 };
 
