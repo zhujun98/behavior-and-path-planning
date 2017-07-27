@@ -89,10 +89,16 @@ void Ego::extendPath(std::vector<double> coeff_s, std::vector<double> coeff_d) {
   double t = 0.0;
   while ( path_s_.size() < prediction_pts_ ) {
     t += time_step_;
-    double s = evalTrajectory(coeff_s, t);
-    if ( s > map_->getMaxS() ) { s -= map_->getMaxS(); }
-    path_s_.push_back(s);
+    path_s_.push_back(evalTrajectory(coeff_s, t));
     path_d_.push_back(evalTrajectory(coeff_d, t));
+  }
+
+  // Reset path when the car is about to finish a lap!
+  // At this moment, the car should sit in between the first way point
+  // and the last way point.
+  double max_s = map_->getMaxS();
+  if ( path_s_[0] > max_s ) {
+    for ( auto &v : path_s_ ) { v -= max_s; }
   }
 }
 
