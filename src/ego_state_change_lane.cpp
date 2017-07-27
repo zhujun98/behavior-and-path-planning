@@ -37,6 +37,7 @@ void EgoStateChangeLane::onExit(Ego& egop) {
 }
 
 void EgoStateChangeLane::planPath(Ego &ego) {
+
   double ps0, vs0, as0;
   double pd0, vd0, ad0;
 

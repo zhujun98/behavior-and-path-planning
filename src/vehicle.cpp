@@ -34,13 +34,13 @@ void Vehicle::updateParameters(const std::vector<double>& localization) {
 }
 
 void Vehicle::printout() const {
-  std::cout << "Lane ID = " << map_->compute_lane_id(pd_) << ", "
+  std::cout << "Lane ID = " << map_->computerLaneID(pd_) << ", "
             << "px = " << px_ << ", " << "py = " << py_ << ", "
             << "speed = " << speed_ << ", " << "yaw = " << yaw_ << ", "
             << "ps = " << ps_ << ", " << "pd = " << pd_ << ", " << std::endl;
 }
 
-int Vehicle::getLaneID() const { return map_->compute_lane_id(pd_); }
+int Vehicle::getLaneID() const { return map_->computerLaneID(pd_); }
 
 double Vehicle::getPx() const { return px_; }
 

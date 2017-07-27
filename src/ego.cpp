@@ -9,6 +9,9 @@
 #include "ego_state_constant_speed.h"
 
 
+struct compare_s;
+
+
 Ego::Ego(const Map& map) : Vehicle(map) {
   time_step_ = 0.02; // in s
   prediction_pts_ = 100; // No. of prediction points
@@ -44,10 +47,9 @@ void Ego::update(const std::vector<double>& localization,
 void Ego::updateUnprocessedPath() {
   if ( !path_s_.empty() ) {
 
-    // first remove processed way points
+    // remove processed way points
+    auto unprocessed_s_begin = std::lower_bound(path_s_.begin(), path_s_.end(), ps_);
 
-    auto unprocessed_s_begin = std::lower_bound(path_s_.begin(),
-                                                path_s_.end(), ps_);
     int n_removed = std::distance(path_s_.begin(), unprocessed_s_begin);
     auto unprocessed_d_begin = std::next(path_d_.begin(), n_removed);
 
@@ -62,9 +64,9 @@ void Ego::updateSurroundings(const std::vector<std::vector<double>>& sensor_fusi
   surroundings_.left.clear();
   surroundings_.right.clear();
 
-  int ego_lane_id = map_->compute_lane_id(pd_);
+  int ego_lane_id = map_->computerLaneID(pd_);
   for ( const auto& v : sensor_fusion ) {
-    int lane_id = map_->compute_lane_id(v[5]);
+    int lane_id = map_->computerLaneID(v[5]);
     if ( lane_id == ego_lane_id ) {
       surroundings_.center.push_back(v);
     } else if ( lane_id == ego_lane_id - 1 ) {
@@ -87,7 +89,9 @@ void Ego::extendPath(std::vector<double> coeff_s, std::vector<double> coeff_d) {
   double t = 0.0;
   while ( path_s_.size() < prediction_pts_ ) {
     t += time_step_;
-    path_s_.push_back(evalTrajectory(coeff_s, t));
+    double s = evalTrajectory(coeff_s, t);
+    if ( s > map_->getMaxS() ) { s -= map_->getMaxS(); }
+    path_s_.push_back(s);
     path_d_.push_back(evalTrajectory(coeff_d, t));
   }
 }

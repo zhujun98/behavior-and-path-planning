@@ -52,7 +52,7 @@ public:
   //
   // Computer the lane id using Frenet d value
   //
-  int compute_lane_id(double d) const;
+  int computerLaneID(double d) const;
 
   //
   // Calculate the index of the closest waypoint to (x, y)

@@ -21,21 +21,12 @@ Map::Map() {
 
   loadData();
 
-  auto it = std::max_element(x_.begin(), x_.end());
-  i_max_x_ = std::distance(x_.begin(), it);
-  it = std::max_element(x_.begin(), x_.end(), std::greater<int>());
-  i_min_x_ = std::distance(x_.begin(), it);
 
-  it = std::max_element(y_.begin(), y_.end());
-  i_max_y_ = std::distance(y_.begin(), it);
-  it = std::max_element(y_.begin(), y_.end(), std::greater<int>());
-  i_min_y_ = std::distance(y_.begin(), it);
 }
-
 
 Map::~Map() {}
 
-int Map::compute_lane_id(double d) const {
+int Map::computerLaneID(double d) const {
   int id = (int)(d / lane_width_) + 1;
 
   if ( id < 1 || id > 3 ) {
