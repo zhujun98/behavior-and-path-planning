@@ -12,13 +12,22 @@
 #include "ego_state_prepare_change_lane.h"
 #include "utilities.h"
 
-
-EgoStateConstantSpeed::EgoStateConstantSpeed() {}
+EgoStateConstantSpeed::EgoStateConstantSpeed() {
+  target_speed_ = -1.0;
+}
+EgoStateConstantSpeed::EgoStateConstantSpeed(double speed) {
+  target_speed_ = speed;
+}
 
 EgoStateConstantSpeed::~EgoStateConstantSpeed() {}
 
 void EgoStateConstantSpeed::onEnter(Ego& ego) {
-  std::cout << "Enter state: *** KEEP LANE ***" << std::endl;
+  if ( target_speed_ > ego.getMaxSpeed() || target_speed_ <= 0) {
+    target_speed_ = ego.getMaxSpeed();
+  }
+
+  std::cout << "Enter state: *** CONSTANT SPEED *** " << target_speed_*2.25
+            << " MPH" << std::endl;
 }
 
 EgoState* EgoStateConstantSpeed::onUpdate(Ego& ego, const Map& map) {
@@ -31,7 +40,7 @@ EgoState* EgoStateConstantSpeed::onUpdate(Ego& ego, const Map& map) {
 }
 
 void EgoStateConstantSpeed::onExit(Ego& ego) {
-  std::cout << "Exit state: *** KEEP LANE ***" << std::endl;
+  std::cout << "Exit state: *** CONSTANT SPEED ***" << std::endl;
 }
 
 void EgoStateConstantSpeed::planPath(Ego& ego, const Map& map) {

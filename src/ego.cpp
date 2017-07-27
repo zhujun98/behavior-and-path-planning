@@ -10,17 +10,17 @@
 
 
 Ego::Ego() {
-  // initialize state
-  state_ = new EgoStateConstantSpeed();
-  state_->onEnter(*this);
-
   time_step_ = 0.02; // in s
   prediction_pts_ = 100; // No. of prediction points
 
   max_acceleration_ = 10;  // in m/s^2
-  max_speed_ = 21.;  // in m/s
+  max_speed_ = 22;  // in m/s
 
   safe_ds_in_seconds_ = 1;  // in s
+
+  // initialize state
+  state_ = new EgoStateConstantSpeed();
+  state_->onEnter(*this);
 }
 
 Ego::~Ego() {

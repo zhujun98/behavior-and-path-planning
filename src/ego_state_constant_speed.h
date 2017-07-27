@@ -16,6 +16,8 @@ class Map;
 class EgoStateConstantSpeed : public EgoState {
 private:
 
+  double target_speed_;
+
   void planPath(Ego& ego, const Map& map);
 
   bool checkFrontCollision(const Ego& ego, const Map& map);
@@ -25,6 +27,7 @@ public:
   // constructor
   //
   EgoStateConstantSpeed();
+  EgoStateConstantSpeed(double speed);
 
   //
   // destructor
