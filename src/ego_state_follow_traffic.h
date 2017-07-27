@@ -6,8 +6,37 @@
 #define PATH_PLANNING_EGO_STATE_FOLLOW_TRAFFIC_H
 
 
-class ego_state_follow_traffic {
+#include <vector>
 
+#include "ego_state.h"
+
+class Ego;
+class Map;
+
+
+class EgoStateFollowTraffic : public EgoState {
+private:
+
+  void planPath(Ego& ego, const Map& map);
+
+  bool checkCollision(const Ego& ego, const Map& map);
+
+public:
+  //
+  // constructor
+  //
+  EgoStateFollowTraffic();
+
+  //
+  // destructor
+  //
+  ~EgoStateFollowTraffic();
+
+  void onEnter(Ego& ego);
+
+  EgoState* onUpdate(Ego& ego, const Map& map);
+
+  void onExit(Ego& ego);
 };
 
 
