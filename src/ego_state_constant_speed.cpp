@@ -45,6 +45,7 @@ void EgoStateConstantSpeed::onExit(Ego& ego) {
 }
 
 void EgoStateConstantSpeed::planPath(Ego& ego) {
+
   double ps0, vs0, as0;
   double pd0, vd0, ad0;
 
@@ -55,8 +56,8 @@ void EgoStateConstantSpeed::planPath(Ego& ego) {
     ps0 = ego.getPs();
     pd0 = ego.getPd();
   } else {
-    ps0 = *std::next(ego.getPath().first.end(), -1);
-    pd0 = *std::next(ego.getPath().second.end(), -1);
+    ps0 = ego.getPath().first.back();
+    pd0 = ego.getPath().second.back();
   }
 
   vs0 = target_speed_;

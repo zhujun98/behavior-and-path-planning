@@ -41,8 +41,8 @@ void EgoStateFollowTraffic::planPath(Ego& ego) {
     ps0 = ego.getPs();
     pd0 = ego.getPd();
   } else {
-    ps0 = *std::next(ego.getPath().first.end(), -1);
-    pd0 = *std::next(ego.getPath().second.end(), -1);
+    ps0 = ego.getPath().first.back();
+    pd0 = ego.getPath().second.back();
   }
 
   // get the distance and the speed of the front car

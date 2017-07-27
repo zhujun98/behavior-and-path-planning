@@ -56,14 +56,15 @@ int main() {
           double car_d = j[1]["d"];  // in m
           car_speed *= 4.0/9;  // MPH to m/s
 
-//          std::cout << "Cartesian: " << car_x << ", " << car_y << std::endl;
-//          std::cout << "Frenet: " << car_s << ", " << car_d << std::endl;
-//
-//          std::pair<double, double> car_frenet = highway_map.frenetToCartesian(car_s, car_d);
-//          std::cout << "Cartesian from Frenet: " << car_frenet.first << ", " << car_frenet.second << std::endl;
-//
-//          std::pair<double, double> car_cartesian = highway_map.cartesianToFrenet(car_x, car_y);
-//          std::cout << "Frenet from Cartesian: " << car_cartesian.first << ", " << car_cartesian.second << std::endl;
+//          std::pair<double, double> car_cartesian = my_car.getMap()->frenetToCartesian(car_s, car_d);
+//          std::cout << "Difference in Cartesian from Frenet: "
+//                    << "dx: " << car_x - car_cartesian.first << ", "
+//                    << "dy: " << car_y - car_cartesian.second << std::endl;
+
+//          std::pair<double, double> car_frenet = my_car.getMap()->cartesianToFrenet(car_x, car_y);
+//          std::cout << "Difference in Cartesian from Frenet: "
+//                    << "ds: " << car_s - car_frenet.first << ", "
+//                    << "dd: " << car_d - car_frenet.second << std::endl;
 
           std::vector<double> localization = {car_x, car_y, car_speed, car_yaw, car_s, car_d};
           // Previous path data passed to the planner.
@@ -94,8 +95,9 @@ int main() {
           // Transfer the trajectory in Frenet coordinate system output
           // by "my_car" and pass it to the simulator.
 
-          vehicle_traj trajectory_frenet = my_car.getPath();
-          vehicle_traj trajectory_cartesian = my_car.getMap()->trajFrenetToCartesian(trajectory_frenet);
+          vehicle_trajectory trajectory_frenet = my_car.getPath();
+          vehicle_trajectory trajectory_cartesian =
+              my_car.getMap()->trajFrenetToCartesian(trajectory_frenet);
 
           msgJson["next_x"] = trajectory_cartesian.first;
           msgJson["next_y"] = trajectory_cartesian.second;
