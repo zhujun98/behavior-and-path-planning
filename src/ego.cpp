@@ -6,12 +6,12 @@
 #include "map.h"
 #include "ego_state.h"
 #include "utilities.h"
-#include "ego_state_keep_lane.h"
+#include "ego_state_constant_speed.h"
 
 
 Ego::Ego() {
   // initialize state
-  state_ = new EgoStateKeepLane();
+  state_ = new EgoStateConstantSpeed();
   state_->onEnter(*this);
 
   time_step_ = 0.02; // in s

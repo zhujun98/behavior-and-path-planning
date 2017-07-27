@@ -8,20 +8,20 @@
 #include "vehicle.h"
 #include "ego.h"
 #include "ego_state.h"
-#include "ego_state_keep_lane.h"
+#include "ego_state_constant_speed.h"
 #include "ego_state_prepare_change_lane.h"
 #include "utilities.h"
 
 
-EgoStateKeepLane::EgoStateKeepLane() {}
+EgoStateConstantSpeed::EgoStateConstantSpeed() {}
 
-EgoStateKeepLane::~EgoStateKeepLane() {}
+EgoStateConstantSpeed::~EgoStateConstantSpeed() {}
 
-void EgoStateKeepLane::onEnter(Ego& ego) {
+void EgoStateConstantSpeed::onEnter(Ego& ego) {
   std::cout << "Enter state: *** KEEP LANE ***" << std::endl;
 }
 
-EgoState* EgoStateKeepLane::onUpdate(Ego& ego, const Map& map) {
+EgoState* EgoStateConstantSpeed::onUpdate(Ego& ego, const Map& map) {
   if ( checkFrontCollision(ego, map) ) {
     return new EgoStatePrepareChangeLane();
   } else {
@@ -30,11 +30,11 @@ EgoState* EgoStateKeepLane::onUpdate(Ego& ego, const Map& map) {
 
 }
 
-void EgoStateKeepLane::onExit(Ego& ego) {
+void EgoStateConstantSpeed::onExit(Ego& ego) {
   std::cout << "Exit state: *** KEEP LANE ***" << std::endl;
 }
 
-void EgoStateKeepLane::planPath(Ego& ego, const Map& map) {
+void EgoStateConstantSpeed::planPath(Ego& ego, const Map& map) {
   double ps0, vs0, as0;
   double pd0, vd0, ad0;
 
@@ -73,7 +73,7 @@ void EgoStateKeepLane::planPath(Ego& ego, const Map& map) {
   ego.extendPath(coeff_s, coeff_d);
 }
 
-bool EgoStateKeepLane::checkFrontCollision(const Ego& ego, const Map&map) {
+bool EgoStateConstantSpeed::checkFrontCollision(const Ego& ego, const Map&map) {
   double min_ds = 1000;
   for ( auto &v : ego.getSurroundings()->center ) {
     double ds = v[4] - ego.getPs();

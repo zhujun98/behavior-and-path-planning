@@ -6,7 +6,7 @@
 #include "vehicle.h"
 #include "ego.h"
 #include "ego_state_change_lane.h"
-#include "ego_state_keep_lane.h"
+#include "ego_state_constant_speed.h"
 #include "map.h"
 
 
@@ -23,7 +23,7 @@ void EgoStateChangeLane::onEnter(Ego& ego) {
 
 EgoState* EgoStateChangeLane::onUpdate(Ego& ego, const Map& map) {
   if ( ego.getLaneID() == target_lane_id_ ) {
-    return new EgoStateKeepLane();
+    return new EgoStateConstantSpeed();
   } else {
     return nullptr;
   }

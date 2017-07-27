@@ -2,8 +2,8 @@
 // Created by jun on 7/24/17.
 //
 
-#ifndef PATH_PLANNING_EGO_STATE_KEEP_LANE_H
-#define PATH_PLANNING_EGO_STATE_KEEP_LANE_H
+#ifndef PATH_PLANNING_EGO_STATE_CONSTANT_SPEED_H
+#define PATH_PLANNING_EGO_STATE_CONSTANT_SPEED_H
 
 #include <vector>
 
@@ -13,7 +13,7 @@ class Ego;
 class Map;
 
 
-class EgoStateKeepLane : public EgoState {
+class EgoStateConstantSpeed : public EgoState {
 private:
 
   void planPath(Ego& ego, const Map& map);
@@ -24,12 +24,12 @@ public:
   //
   // constructor
   //
-  EgoStateKeepLane();
+  EgoStateConstantSpeed();
 
   //
   // destructor
   //
-  ~EgoStateKeepLane();
+  ~EgoStateConstantSpeed();
 
   void onEnter(Ego& ego);
 
@@ -39,4 +39,4 @@ public:
 };
 
 
-#endif //PATH_PLANNING_EGO_STATE_KEEP_LANE_H
+#endif //PATH_PLANNING_EGO_STATE_CONSTANT_SPEED_H
