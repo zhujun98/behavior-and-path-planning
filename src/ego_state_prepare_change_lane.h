@@ -18,13 +18,11 @@ private:
 
   int target_lane_id_;
 
-  int target_speed_; // in m/s
+  void planPath(Ego& ego);
 
-  void planPath(Ego& ego, const Map& map);
+  bool checkCollision(const Ego& ego);
 
-  void followAhead(Ego& ego, const Map& map);
-
-  bool checkSideCollision(const Ego& ego, const Map&map, bool left);
+  bool checkSideCollision(const Ego& ego, std::vector<std::vector<double>> cars);
 
 public:
   //
@@ -39,7 +37,7 @@ public:
 
   void onEnter(Ego& ego);
 
-  EgoState* onUpdate(Ego& ego, const Map& map);
+  EgoState* onUpdate(Ego& ego);
 
   void onExit(Ego& ego);
 

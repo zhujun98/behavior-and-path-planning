@@ -9,16 +9,15 @@
 #include "ego_state_constant_speed.h"
 
 
-Ego::Ego() {
+Ego::Ego(const Map& map) : Vehicle(map) {
   time_step_ = 0.02; // in s
   prediction_pts_ = 100; // No. of prediction points
 
   max_acceleration_ = 10;  // in m/s^2
   max_speed_ = 22;  // in m/s
 
-  safe_ds_in_seconds_ = 1;  // in s
+  min_safe_distance_ = 15; // in m
 
-  // initialize state
   state_ = new EgoStateConstantSpeed();
   state_->onEnter(*this);
 }
@@ -28,13 +27,12 @@ Ego::~Ego() {
 }
 
 void Ego::update(const std::vector<double>& localization,
-                 const std::vector<std::vector<double>>& sensor_fusion,
-                 const Map& map) {
-  updateParameters(localization, map);
-  updateSurroundings(sensor_fusion, map);
+                 const std::vector<std::vector<double>>& sensor_fusion) {
+  updateParameters(localization);
+  updateSurroundings(sensor_fusion);
   updateUnprocessedPath();
 
-  EgoState* state = state_->onUpdate(*this, map);
+  EgoState* state = state_->onUpdate(*this);
   if ( state != NULL ) {
     state_->onExit(*this);
     delete state_;
@@ -59,19 +57,19 @@ void Ego::updateUnprocessedPath() {
   }
 }
 
-void Ego::updateSurroundings(const std::vector<std::vector<double>>& sensor_fusion,
-                             const Map& map) {
+void Ego::updateSurroundings(const std::vector<std::vector<double>>& sensor_fusion) {
   surroundings_.center.clear();
   surroundings_.left.clear();
   surroundings_.right.clear();
 
+  int ego_lane_id = map_->compute_lane_id(pd_);
   for ( const auto& v : sensor_fusion ) {
-    double lane_id = map.compute_lane_id(v[5]);
-    if ( lane_id == lane_id_ ) {
+    int lane_id = map_->compute_lane_id(v[5]);
+    if ( lane_id == ego_lane_id ) {
       surroundings_.center.push_back(v);
-    } else if ( lane_id == lane_id_ - 1 ) {
+    } else if ( lane_id == ego_lane_id - 1 ) {
       surroundings_.left.push_back(v);
-    } else if ( lane_id == lane_id_ + 1 ) {
+    } else if ( lane_id == ego_lane_id + 1 ) {
       surroundings_.right.push_back(v);
     }
   }
@@ -107,6 +105,8 @@ double Ego::getTimeStep() const { return time_step_; }
 
 unsigned int Ego::getPredictionPts() const { return prediction_pts_; }
 
-double Ego::getSafeDsInSeconds() const { return safe_ds_in_seconds_; }
+double Ego::getMinSafeDistance() const { return min_safe_distance_; }
 
 Surroundings const* Ego::getSurroundings() const { return &surroundings_; }
+
+Map const* Ego::getMap() const { return map_; }

@@ -21,20 +21,20 @@ protected:
   // parameters in global coordinate system
   double px_; // in m
   double py_; // in m
-  double vx_; // in m/s
-  double vy_; // in m/s
+  double speed_; // in m/s
+  double yaw_; // in m/s
   // parameters in Frenet-Serret coordinate system
   double ps_; // in m
   double pd_; // in m
 
-  int lane_id_;
+  const Map* map_;
 
 public:
 
   //
   // constructor
   //
-  Vehicle();
+  Vehicle(const Map& map);
 
   //
   // destructor
@@ -44,8 +44,7 @@ public:
   //
   // Update the vehicle's state
   //
-  virtual void updateParameters(const std::vector<double>& localization,
-                                const Map& map);
+  virtual void updateParameters(const std::vector<double>& localization);
 
   //
   // Print out the vehicle's state
@@ -58,9 +57,9 @@ public:
 
   double getPy() const;
 
-  double getVx() const;
+  double getSpeed() const;
 
-  double getVy() const;
+  double getYaw() const;
 
   double getPs() const;
 

@@ -19,8 +19,9 @@ void EgoStateFollowTraffic::onEnter(Ego& ego) {
   std::cout << "Enter state: *** FOLLOW TRAFFIC ***" << std::endl;
 }
 
-EgoState* EgoStateFollowTraffic::onUpdate(Ego& ego, const Map& map) {
-  planPath(ego, map);
+EgoState* EgoStateFollowTraffic::onUpdate(Ego& ego) {
+  ego.truncatePath(5);
+  planPath(ego);
 
   return new EgoStatePrepareChangeLane();
 }
@@ -29,7 +30,7 @@ void EgoStateFollowTraffic::onExit(Ego& ego) {
   std::cout << "Exit state: *** FOLLOW TRAFFIC ***" << std::endl;
 }
 
-void EgoStateFollowTraffic::planPath(Ego& ego, const Map& map) {
+void EgoStateFollowTraffic::planPath(Ego& ego) {
   double ps0, vs0, as0;
   double pd0, vd0, ad0;
 
@@ -44,27 +45,32 @@ void EgoStateFollowTraffic::planPath(Ego& ego, const Map& map) {
     pd0 = *std::next(ego.getPath().second.end(), -1);
   }
 
-  vs0 = ego.getMaxSpeed();
-  double min_ds = 1000;
+  // get the distance and the speed of the front car
+  double ds_front = 1000;
+  double vs_front = 1000;
   for ( auto &v : ego.getSurroundings()->center ) {
     double ds = v[4] - ego.getPs();
-    if ( ds > 0 && ds < min_ds ) {
-      min_ds = ds;
-      vs0 = v[2];
+    if ( ds > 0 && ds < ds_front ) {
+      ds_front = ds;
+      vs_front = v[2];
     }
   }
 
+  double duration = 1.0;
+
+  vs0 = vs_front + (ds_front - ego.getMinSafeDistance())/duration;
+  if ( vs0 > ego.getMaxSpeed() ) { vs0 = ego.getMaxSpeed(); }
   vd0 = 0;
   as0 = 0;
   ad0 = 0;
+
   vs1 = vs0;
   vd1 = 0;
   as1 = 0;
   ad1 = 0;
 
-  double duration = ego.getTimeStep() * ego.getPredictionPts();
   ps1 = ps0 + 0.5*(vs0 + vs1)*duration;
-  pd1 = (ego.getLaneID() - 0.5) * map.getLaneWidth();
+  pd1 = (ego.getLaneID() - 0.5) * ego.getMap()->getLaneWidth();
 
   std::vector<double> state0_s = {ps0, vs0, as0};
   std::vector<double> state0_d = {pd0, vd0, ad0};
@@ -77,11 +83,6 @@ void EgoStateFollowTraffic::planPath(Ego& ego, const Map& map) {
   ego.extendPath(coeff_s, coeff_d);
 }
 
-bool EgoStateFollowTraffic::checkCollision(const Ego& ego, const Map&map) {
-  double min_ds = 1000;
-  for ( auto &v : ego.getSurroundings()->center ) {
-    double ds = v[4] - ego.getPs();
-    if ( ds > 0 && ds < min_ds ) { min_ds = ds; }
-  }
-  return ( min_ds < ego.getSafeDsInSeconds() * ego.getMaxSpeed() );
+bool EgoStateFollowTraffic::checkCollision(const Ego& ego) {
+  ;
 }

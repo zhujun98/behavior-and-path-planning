@@ -34,9 +34,7 @@ private:
   std::vector<double> path_s_;
   std::vector<double> path_d_;
 
-  // safe distance is defined as the speed of the rear car times
-  // safe_ds_in_seconds_
-  double safe_ds_in_seconds_;
+  double min_safe_distance_;
 
   double max_speed_;  // maximum speed (m/s)
   double max_acceleration_;  // maximum acceleration (m/s^2)
@@ -47,7 +45,7 @@ public:
   //
   // constructor
   //
-  Ego();
+  Ego(const Map& map);
 
   //
   // destructor
@@ -58,8 +56,7 @@ public:
   // Update the ego car's state
   //
   void update(const std::vector<double>& localization,
-              const std::vector<std::vector<double>>& sensor_fusion,
-              const Map& map);
+              const std::vector<std::vector<double>>& sensor_fusion);
 
   //
   // Remove the way points in the vehicle paths which have been processed.
@@ -69,8 +66,7 @@ public:
   //
   //
   //
-  void updateSurroundings(const std::vector<std::vector<double>>& sensor_fusion,
-                          const Map& map);
+  void updateSurroundings(const std::vector<std::vector<double>>& sensor_fusion);
 
   //
   // Keep a given number of way points in the current path
@@ -94,9 +90,11 @@ public:
 
   unsigned int getPredictionPts() const;
 
-  double getSafeDsInSeconds() const;
+  double getMinSafeDistance() const;
 
   Surroundings const* getSurroundings() const;
+
+  Map const* getMap() const;
 };
 
 

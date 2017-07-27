@@ -16,7 +16,9 @@ private:
 
   int target_lane_id_;
 
-  void planPath(Ego& ego, const Map& map);
+  void planPath(Ego& ego);
+
+  bool checkCollision(const Ego& ego);
 
 public:
   //
@@ -33,7 +35,7 @@ public:
 
   void onEnter(Ego& ego);
 
-  EgoState* onUpdate(Ego& ego, const Map& map);
+  EgoState* onUpdate(Ego& ego);
 
   void onExit(Ego& ego);
 };

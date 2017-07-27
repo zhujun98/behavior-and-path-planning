@@ -12,8 +12,9 @@
 #include "ego_state_prepare_change_lane.h"
 #include "utilities.h"
 
+
 EgoStateConstantSpeed::EgoStateConstantSpeed() {
-  target_speed_ = -1.0;
+  target_speed_ = 0;
 }
 EgoStateConstantSpeed::EgoStateConstantSpeed(double speed) {
   target_speed_ = speed;
@@ -30,20 +31,20 @@ void EgoStateConstantSpeed::onEnter(Ego& ego) {
             << " MPH" << std::endl;
 }
 
-EgoState* EgoStateConstantSpeed::onUpdate(Ego& ego, const Map& map) {
-  if ( checkFrontCollision(ego, map) ) {
+EgoState* EgoStateConstantSpeed::onUpdate(Ego& ego) {
+  if ( checkCollision(ego) ) {
     return new EgoStatePrepareChangeLane();
   } else {
-    planPath(ego, map);
+    planPath(ego);
+    return nullptr;
   }
-
 }
 
 void EgoStateConstantSpeed::onExit(Ego& ego) {
   std::cout << "Exit state: *** CONSTANT SPEED ***" << std::endl;
 }
 
-void EgoStateConstantSpeed::planPath(Ego& ego, const Map& map) {
+void EgoStateConstantSpeed::planPath(Ego& ego) {
   double ps0, vs0, as0;
   double pd0, vd0, ad0;
 
@@ -58,18 +59,18 @@ void EgoStateConstantSpeed::planPath(Ego& ego, const Map& map) {
     pd0 = *std::next(ego.getPath().second.end(), -1);
   }
 
-  vs0 = ego.getMaxSpeed(); //std::sqrt(ego.getVx()*ego.getVx() + ego.getVy()*ego.getVy());
+  vs0 = target_speed_;
   vd0 = 0;
   as0 = 0;
   ad0 = 0;
-  vs1 = ego.getMaxSpeed();
+  vs1 = target_speed_;
   vd1 = 0;
   as1 = 0;
   ad1 = 0;
 
   double duration = ego.getTimeStep() * ego.getPredictionPts();
   ps1 = ps0 + 0.5*(vs0 + vs1)*duration;
-  pd1 = (ego.getLaneID() - 0.5) * map.getLaneWidth();
+  pd1 = (ego.getLaneID() - 0.5) * ego.getMap()->getLaneWidth();
 
   std::vector<double> state0_s = {ps0, vs0, as0};
   std::vector<double> state0_d = {pd0, vd0, ad0};
@@ -82,11 +83,23 @@ void EgoStateConstantSpeed::planPath(Ego& ego, const Map& map) {
   ego.extendPath(coeff_s, coeff_d);
 }
 
-bool EgoStateConstantSpeed::checkFrontCollision(const Ego& ego, const Map&map) {
-  double min_ds = 1000;
+bool EgoStateConstantSpeed::checkCollision(const Ego& ego) {
+
+  double prediction_time = 1; // in s
+  double min_ds = 1000; // initialize with a large number
+  double dv = 0; // speed difference
+
+  // we only check the collision with the front car
   for ( auto &v : ego.getSurroundings()->center ) {
     double ds = v[4] - ego.getPs();
-    if ( ds > 0 && ds < min_ds ) { min_ds = ds; }
+    if ( ds > 0 && ds < min_ds ) {
+      min_ds = ds;
+      dv = ego.getSpeed() - v[2];
+    }
   }
-  return ( min_ds < ego.getSafeDsInSeconds() * ego.getMaxSpeed() );
+
+  double safe_distance = ego.getMinSafeDistance();
+  if ( dv > 0 ) { safe_distance += prediction_time*dv; }
+
+  return ( min_ds <= safe_distance );
 }

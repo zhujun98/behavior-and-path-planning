@@ -18,9 +18,9 @@ private:
 
   double target_speed_;
 
-  void planPath(Ego& ego, const Map& map);
+  void planPath(Ego& ego);
 
-  bool checkFrontCollision(const Ego& ego, const Map& map);
+  bool checkCollision(const Ego& ego);
 
 public:
   //
@@ -36,7 +36,7 @@ public:
 
   void onEnter(Ego& ego);
 
-  EgoState* onUpdate(Ego& ego, const Map& map);
+  EgoState* onUpdate(Ego& ego);
 
   void onExit(Ego& ego);
 };

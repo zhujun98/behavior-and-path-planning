@@ -54,7 +54,7 @@ public:
   int closestWaypoint(double x, double y) const;
 
 
-  int nextWaypoint(double x, double y, double theta);
+  int nextWaypoint(double x, double y, double theta) const;
   //
   //
   //
@@ -68,12 +68,12 @@ public:
   //
   //
   //
-  vehicle_traj trajFrenetToCartesian(const vehicle_traj& traj_in_cartesian);
+  vehicle_traj trajFrenetToCartesian(const vehicle_traj& traj_in_cartesian) const;
 
   //
   //
   //
-  vehicle_traj trajCartesianToFrenet(const vehicle_traj& traj_in_cartesian);
+  vehicle_traj trajCartesianToFrenet(const vehicle_traj& traj_in_cartesian) const;
 
   double getLaneWidth() const;
 

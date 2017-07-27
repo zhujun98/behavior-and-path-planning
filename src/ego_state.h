@@ -14,12 +14,12 @@ class Map;
 class EgoState {
 protected:
 
-  int lane_id_;
-
   // constructor
   EgoState();
 
-  virtual void planPath(Ego& ego, const Map& map) = 0;
+  virtual void planPath(Ego& ego) = 0;
+
+  virtual bool checkCollision(const Ego& ego) = 0;
 
 public:
 
@@ -28,7 +28,7 @@ public:
 
   virtual void onEnter(Ego& ego) = 0;
 
-  virtual EgoState* onUpdate(Ego& ego, const Map& map) = 0;
+  virtual EgoState* onUpdate(Ego& ego) = 0;
 
   virtual void onExit(Ego& ego) = 0;
 

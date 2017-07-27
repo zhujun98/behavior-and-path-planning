@@ -34,7 +34,6 @@ int Map::compute_lane_id(double d) const {
   }
 }
 
-
 void Map::load_data() {
   // Read waypoints data
   std::string map_file_ = "../data/highway_map.csv";
@@ -62,6 +61,9 @@ void Map::load_data() {
     dx_.push_back(dx);
     dy_.push_back(dy);
   }
+
+  ifs.close();
+
 }
 
 int Map::closestWaypoint(double x, double y) const
@@ -87,7 +89,7 @@ int Map::closestWaypoint(double x, double y) const
 
 }
 
-int Map::nextWaypoint(double x, double y, double theta)
+int Map::nextWaypoint(double x, double y, double theta) const
 {
 
   int closest_waypoint = closestWaypoint(x, y);
@@ -208,7 +210,6 @@ std::pair<double, double> Map::frenetToCartesian(double s, double d) const
   {
     prev_wp++;
   }
-
   int wp2 = (prev_wp+1)%x_.size();
 
   double heading = atan2((y_[wp2]-y_[prev_wp]),(x_[wp2]-x_[prev_wp]));
@@ -227,7 +228,7 @@ std::pair<double, double> Map::frenetToCartesian(double s, double d) const
 
 }
 
-vehicle_traj Map::trajFrenetToCartesian(const vehicle_traj& traj) {
+vehicle_traj Map::trajFrenetToCartesian(const vehicle_traj& traj) const {
   vehicle_traj traj_cartesian;
   std::pair<double, double> xy;
 
@@ -246,7 +247,7 @@ vehicle_traj Map::trajFrenetToCartesian(const vehicle_traj& traj) {
   return traj_cartesian;
 }
 
-vehicle_traj Map::trajCartesianToFrenet(const vehicle_traj& traj) {
+vehicle_traj Map::trajCartesianToFrenet(const vehicle_traj& traj) const {
   vehicle_traj traj_frenet;
   std::pair<double, double> sd;
 
