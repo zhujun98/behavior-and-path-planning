@@ -6,7 +6,9 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <functional>
 
+#include "spline/spline.h"
 #include "map.h"
 #include "utilities.h"
 
@@ -17,7 +19,17 @@ Map::Map() {
 
   max_s_ = 6945.554;  // in meter
 
-  load_data();
+  loadData();
+
+  auto it = std::max_element(x_.begin(), x_.end());
+  i_max_x_ = std::distance(x_.begin(), it);
+  it = std::max_element(x_.begin(), x_.end(), std::greater<int>());
+  i_min_x_ = std::distance(x_.begin(), it);
+
+  it = std::max_element(y_.begin(), y_.end());
+  i_max_y_ = std::distance(y_.begin(), it);
+  it = std::max_element(y_.begin(), y_.end(), std::greater<int>());
+  i_min_y_ = std::distance(y_.begin(), it);
 }
 
 
@@ -34,7 +46,7 @@ int Map::compute_lane_id(double d) const {
   }
 }
 
-void Map::load_data() {
+void Map::loadData() {
   // Read waypoints data
   std::string map_file_ = "../data/highway_map.csv";
   std::ifstream ifs(map_file_.c_str(), std::ifstream::in);
@@ -66,27 +78,19 @@ void Map::load_data() {
 
 }
 
-int Map::closestWaypoint(double x, double y) const
-{
+int Map::closestWaypoint(double x, double y) const {
 
-  double closestLen = 100000; //large number
-  int closest_waypoint = 0;
-
-  for(int i = 0; i < x_.size(); i++)
-  {
-    double map_x = x_[i];
-    double map_y = y_[i];
-    double dist = distance(x,y,map_x,map_y);
-    if(dist < closestLen)
-    {
-      closestLen = dist;
-      closest_waypoint = i;
-    }
-
+  std::vector<double> l2;
+  for ( int i=0; i < x_.size(); ++ i) {
+    double dx = x - x_[i];
+    double dy = y - y_[i];
+    l2.push_back( dx*dx + dy*dy );
   }
 
-  return closest_waypoint;
+  auto it = std::max_element(l2.begin(), l2.end(), std::greater<double>());
+  int closest_waypoint = std::distance(l2.begin(), it);
 
+  return closest_waypoint;
 }
 
 int Map::nextWaypoint(double x, double y, double theta) const
@@ -109,32 +113,6 @@ int Map::nextWaypoint(double x, double y, double theta) const
   return closest_waypoint;
 
 }
-
-
-//std::pair<int, int> Map::closestWaypoints(double x, double y) const {
-//
-//  double min_dist = 100000; //large number
-//  int closest_wp = 0;
-//
-//  for(int i = 0; i < x_.size(); i++) {
-//    double map_x = x_[i];
-//    double map_y = y_[i];
-//    double dist = distance(x, y, map_x, map_y);
-//    if (dist < min_dist) {
-//      min_dist = dist;
-//      closest_wp = i;
-//    }
-//  }
-//
-//  int i_minus = closest_wp - 1;
-//  if ( i_minus < 0 ) { i_minus = x_.size(); }
-//
-//  int i_plus = closest_wp + 1;
-//  if ( i_plus > x_.size() ) { i_plus = 0; }
-//
-//  return std::make_pair(i_minus, i_plus);
-//
-//}
 
 //
 // Transform from Cartesian x,y coordinates to Frenet s,d coordinates
@@ -178,88 +156,81 @@ std::pair<double, double> Map::cartesianToFrenet(double x, double y) const {
   return {};
 }
 
-//
-// Transform from Frenet s,d coordinates to Cartesian x,y
-//
-//std::pair<double, double> Map::frenetToCartesian(double s, double d) const {
-//
-//  auto wp0 = std::lower_bound(s_.begin(), s_.end(), s);
-//  long i0 = std::distance(s_.begin(), std::next(wp0, -1));
-//  long i1 = std::distance(s_.begin(), std::next(wp0, 1));
-//
-//  double heading = atan2((y_[i1] - y_[i0]), (x_[i1] - x_[i0]));
-//
-//  // the x,y,s along the segment
-//  double seg_s = (s - s_[i0]);
-//  double seg_x = x_[i0] + seg_s * cos(heading);
-//  double seg_y = y_[i0] + seg_s * sin(heading);
-//
-//  double perp_heading = heading - pi() / 2;
-//
-//  double x = seg_x + d * cos(perp_heading);
-//  double y = seg_y + d * sin(perp_heading);
-//
-//  return std::make_pair(x, y);
-//}
+std::pair<double, double> Map::frenetToCartesian(double s, double d) const {
 
-std::pair<double, double> Map::frenetToCartesian(double s, double d) const
-{
-  int prev_wp = -1;
+  if ( s > max_s_ ) { s -= max_s_; }
+  // index of the next way point
+  int closest_waypoint = std::distance(s_.begin(), std::lower_bound(s_.begin(), s_.end(), s));
 
-  while(s > s_[prev_wp+1] && (prev_wp < (int)(s_.size()-1) ))
-  {
-    prev_wp++;
+  std::vector<double> local_s;
+  std::vector<double> local_x;
+  std::vector<double> local_y;
+  for ( int i = -5; i < 6; ++i ) {
+    int index = closest_waypoint + i;
+    if ( index < 0 ) {
+      index += s_.size();
+      local_s.push_back(s_[index] - max_s_);
+    } else if ( index >= s_.size() ) {
+      index -= s_.size();
+      local_s.push_back(s_[index] + max_s_);
+    } else {
+      local_s.push_back(s_[index]);
+    }
+    local_x.push_back(x_[index]);
+    local_y.push_back(y_[index]);
   }
-  int wp2 = (prev_wp+1)%x_.size();
 
-  double heading = atan2((y_[wp2]-y_[prev_wp]),(x_[wp2]-x_[prev_wp]));
-  // the x,y,s along the segment
-  double seg_s = (s-s_[prev_wp]);
+  tk::spline spline_sx;
+  spline_sx.set_points(local_s, local_x);
 
-  double seg_x = x_[prev_wp]+seg_s*cos(heading);
-  double seg_y = y_[prev_wp]+seg_s*sin(heading);
+  tk::spline spline_sy;
+  spline_sy.set_points(local_s, local_y);
 
-  double perp_heading = heading-pi()/2;
+  double x = spline_sx(s);
+  double y = spline_sy(s);
 
-  double x = seg_x + d*cos(perp_heading);
-  double y = seg_y + d*sin(perp_heading);
+  double dx = spline_sx(s + 0.1) - spline_sx(s - 0.1);
+  double dy = spline_sy(s + 0.1) - spline_sy(s - 0.1);
+  double yaw = std::atan2(dy, dx) - pi()/2;
+
+  x += d*cos(yaw);
+  y += d*sin(yaw);
 
   return std::make_pair(x, y);
-
 }
 
-vehicle_traj Map::trajFrenetToCartesian(const vehicle_traj& traj) const {
-  vehicle_traj traj_cartesian;
+vehicle_trajectory Map::trajFrenetToCartesian(const vehicle_trajectory& trajectory) const {
+  vehicle_trajectory trajectory_cartesian;
   std::pair<double, double> xy;
 
-  for ( auto is = traj.first.begin(), id = traj.second.begin();
-        is != traj.first.end(); ++is, ++id) {
+  for ( auto is = trajectory.first.begin(), id = trajectory.second.begin();
+        is != trajectory.first.end(); ++is, ++id) {
     if ( *is > max_s_ ) {
       xy = frenetToCartesian(*is - max_s_, *id);
     } else {
       xy = frenetToCartesian(*is, *id);
     }
 
-    traj_cartesian.first.push_back(xy.first);
-    traj_cartesian.second.push_back(xy.second);
+    trajectory_cartesian.first.push_back(xy.first);
+    trajectory_cartesian.second.push_back(xy.second);
   }
 
-  return traj_cartesian;
+  return trajectory_cartesian;
 }
 
-vehicle_traj Map::trajCartesianToFrenet(const vehicle_traj& traj) const {
-  vehicle_traj traj_frenet;
+vehicle_trajectory Map::trajCartesianToFrenet(const vehicle_trajectory& trajectory) const {
+  vehicle_trajectory trajectory_frenet;
   std::pair<double, double> sd;
 
-  for ( auto ix = traj.first.begin(), iy = traj.second.begin();
-        ix != traj.first.end(); ++ix, ++iy) {
+  for ( auto ix = trajectory.first.begin(), iy = trajectory.second.begin();
+        ix != trajectory.first.end(); ++ix, ++iy) {
     sd = cartesianToFrenet(*ix, *iy);
 
-    traj_frenet.first.push_back(sd.first);
-    traj_frenet.second.push_back(sd.second);
+    trajectory_frenet.first.push_back(sd.first);
+    trajectory_frenet.second.push_back(sd.second);
   }
 
-  return traj_frenet;
+  return trajectory_frenet;
 }
 
 double Map::getLaneWidth() const { return lane_width_; }

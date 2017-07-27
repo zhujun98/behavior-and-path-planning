@@ -9,7 +9,8 @@
 #include <vector>
 
 
-typedef std::pair<std::vector<double>, std::vector<double>> vehicle_traj;
+typedef std::pair<std::vector<double>, std::vector<double>> vehicle_trajectory;
+typedef std::vector<std::vector<double>> local_waypoints;
 
 
 class Map {
@@ -29,7 +30,12 @@ private:
   //
   // Read way points data from a file
   //
-  void load_data();
+  void loadData();
+
+  long i_min_x_; // way point index having the min x value
+  long i_max_x_; // way point index having the max x value
+  long i_min_y_; // way point index having the min y value
+  long i_max_y_; // way point index having the max y value
 
 public:
 
@@ -44,36 +50,39 @@ public:
   ~Map();
 
   //
-  //
+  // Computer the lane id using Frenet d value
   //
   int compute_lane_id(double d) const;
 
   //
-  //
+  // Calculate the index of the closest waypoint to (x, y)
   //
   int closestWaypoint(double x, double y) const;
 
-
+  //
+  //
+  //
   int nextWaypoint(double x, double y, double theta) const;
-  //
-  //
-  //
-  std::pair<double, double> cartesianToFrenet(double x, double y) const;
 
   //
-  //
+  // Convert a point from Frenet to Cartesian coordinate system
   //
   std::pair<double, double> frenetToCartesian(double s, double d) const;
 
   //
+  // Convert a point from Cartesian to Frenet coordinate system
   //
-  //
-  vehicle_traj trajFrenetToCartesian(const vehicle_traj& traj_in_cartesian) const;
+  std::pair<double, double> cartesianToFrenet(double x, double y) const;
 
   //
+  // Convert a trajectory from Frenet to Cartesian coordinate system
   //
+  vehicle_trajectory trajFrenetToCartesian(const vehicle_trajectory& trajectory) const;
+
   //
-  vehicle_traj trajCartesianToFrenet(const vehicle_traj& traj_in_cartesian) const;
+  // Convert a trajectory from Cartesian to Frenet coordinate system
+  //
+  vehicle_trajectory trajCartesianToFrenet(const vehicle_trajectory& trajectory) const;
 
   double getLaneWidth() const;
 
