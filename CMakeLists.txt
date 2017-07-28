@@ -12,12 +12,16 @@ set(sources
         src/utilities.h
         src/vehicle.cpp
         src/map.cpp
-        src/ego_state_constant_speed.cpp
-        src/ego_state_prepare_change_lane.cpp
-        src/ego_state_change_lane.cpp
-        src/ego_state.cpp
         src/ego.cpp
-        src/ego_state_follow_traffic.cpp)
+        src/ego_state.cpp
+        src/ego_state_constant_speed.cpp
+        src/ego_state_change_lane.cpp
+        src/ego_state_follow_traffic.cpp
+        src/ego_transition_state.cpp
+        src/ego_transition_CS_to_FT.cpp
+        src/ego_transition_CL_to_FT.cpp
+        src/ego_transition_FT_to_CS.cpp
+        src/ego_transition_FT_to_CL.cpp)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 

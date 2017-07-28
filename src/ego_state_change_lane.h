@@ -8,34 +8,24 @@
 #include "ego_state.h"
 
 class Ego;
-class Map;
 
 
 class EgoStateChangeLane : public EgoState {
 private:
 
-  int target_lane_id_;
-
   void planPath(Ego& ego);
 
-  bool checkCollision(const Ego& ego);
-
 public:
-  //
-  // constructor
-  //
-  // @param target_lane_id: target lane ID
-  //
-  EgoStateChangeLane(int target_lane_id);
 
-  //
+  // constructor
+  EgoStateChangeLane();
+
   // destructor
-  //
   ~EgoStateChangeLane();
 
   void onEnter(Ego& ego);
 
-  EgoState* onUpdate(Ego& ego);
+  void onUpdate(Ego& ego);
 
   void onExit(Ego& ego);
 };

@@ -10,8 +10,8 @@
 
 #include "ego_state.h"
 
+
 class Ego;
-class Map;
 
 
 class EgoStateFollowTraffic : public EgoState {
@@ -19,22 +19,17 @@ private:
 
   void planPath(Ego& ego);
 
-  bool checkCollision(const Ego& ego);
-
 public:
-  //
+
   // constructor
-  //
   EgoStateFollowTraffic();
 
-  //
   // destructor
-  //
   ~EgoStateFollowTraffic();
 
   void onEnter(Ego& ego);
 
-  EgoState* onUpdate(Ego& ego);
+  void onUpdate(Ego& ego);
 
   void onExit(Ego& ego);
 };

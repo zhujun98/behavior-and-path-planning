@@ -7,36 +7,27 @@
 
 #include <vector>
 
-#include "ego_state.h"
 
 class Ego;
-class Map;
+class EgoState;
 
 
 class EgoStateConstantSpeed : public EgoState {
 private:
 
-  double target_speed_;
-
   void planPath(Ego& ego);
 
-  bool checkCollision(const Ego& ego);
-
 public:
-  //
-  // constructor
-  //
-  EgoStateConstantSpeed();
-  EgoStateConstantSpeed(double speed);
 
-  //
+  // constructor
+  EgoStateConstantSpeed();
+
   // destructor
-  //
   ~EgoStateConstantSpeed();
 
   void onEnter(Ego& ego);
 
-  EgoState* onUpdate(Ego& ego);
+  void onUpdate(Ego& ego);
 
   void onExit(Ego& ego);
 };

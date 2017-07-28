@@ -30,6 +30,8 @@ void Vehicle::updateParameters(const std::vector<double>& localization) {
   ps_ = localization[4];
   pd_ = localization[5];
 
+  lane_id_ = map_->computerLaneID(pd_);
+
   is_initialized_ = true;
 }
 
@@ -40,7 +42,7 @@ void Vehicle::printout() const {
             << "ps = " << ps_ << ", " << "pd = " << pd_ << ", " << std::endl;
 }
 
-int Vehicle::getLaneID() const { return map_->computerLaneID(pd_); }
+int Vehicle::getLaneID() const { return lane_id_; }
 
 double Vehicle::getPx() const { return px_; }
 

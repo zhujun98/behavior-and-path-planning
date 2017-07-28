@@ -28,6 +28,9 @@ private:
 
   Surroundings surroundings_;
 
+  int target_lane_id_;
+  double target_speed_;
+
   double time_step_;
   unsigned int prediction_pts_;
 
@@ -95,6 +98,14 @@ public:
   Surroundings const* getSurroundings() const;
 
   Map const* getMap() const;
+
+  int getTargetLaneID() const;
+
+  void setTargetLaneID(int value);
+
+  double getTargetSpeed() const;
+
+  void setTargetSpeed(double value);
 };
 
 

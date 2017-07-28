@@ -1,15 +1,10 @@
 //
 // Created by jun on 7/25/17.
 //
-
 #include "ego.h"
 #include "map.h"
 #include "ego_state.h"
 #include "utilities.h"
-#include "ego_state_constant_speed.h"
-
-
-struct compare_s;
 
 
 Ego::Ego(const Map& map) : Vehicle(map) {
@@ -21,7 +16,9 @@ Ego::Ego(const Map& map) : Vehicle(map) {
 
   min_safe_distance_ = 15; // in m
 
-  state_ = new EgoStateConstantSpeed();
+  target_speed_ = max_speed_;
+
+  state_ = EgoStateFactory::createState(FT);
   state_->onEnter(*this);
 }
 
@@ -35,12 +32,16 @@ void Ego::update(const std::vector<double>& localization,
   updateSurroundings(sensor_fusion);
   updateUnprocessedPath();
 
-  EgoState* state = state_->onUpdate(*this);
+  EgoState* state = state_->checkTransition(*this);
   if ( state != NULL ) {
+    truncatePath(5);  // remove most of the planned path from the last state
+
     state_->onExit(*this);
     delete state_;
     state_ = state;
     state_->onEnter(*this);
+  } else {
+    state_->onUpdate(*this);
   }
 }
 
@@ -120,3 +121,23 @@ double Ego::getMinSafeDistance() const { return min_safe_distance_; }
 Surroundings const* Ego::getSurroundings() const { return &surroundings_; }
 
 Map const* Ego::getMap() const { return map_; }
+
+int Ego::getTargetLaneID() const { return target_lane_id_; }
+
+void Ego::setTargetLaneID(int value) {
+  if ( value <= 3 or value >= 1 ) {
+    target_lane_id_ = value;
+  }
+}
+
+double Ego::getTargetSpeed() const { return target_speed_; }
+
+void Ego::setTargetSpeed(double value) {
+  if ( value > max_speed_ ) {
+    target_speed_ = max_speed_;
+  } else if ( value < 0 ) {
+    target_speed_ = 0;
+  } else {
+    target_speed_ = value;
+  }
+}

@@ -20,8 +20,6 @@ Map::Map() {
   max_s_ = 6945.554;  // in meter
 
   loadData();
-
-
 }
 
 Map::~Map() {}

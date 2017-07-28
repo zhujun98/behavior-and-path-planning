@@ -9,35 +9,23 @@
 #include "ego.h"
 #include "ego_state.h"
 #include "ego_state_constant_speed.h"
-#include "ego_state_prepare_change_lane.h"
 #include "utilities.h"
+#include "ego_transition_state.h"
 
 
 EgoStateConstantSpeed::EgoStateConstantSpeed() {
-  target_speed_ = 0;
-}
-EgoStateConstantSpeed::EgoStateConstantSpeed(double speed) {
-  target_speed_ = speed;
+  transition_states_.push_back(EgoTransitionStateFactory::createState(CS_TO_FT));
 }
 
 EgoStateConstantSpeed::~EgoStateConstantSpeed() {}
 
 void EgoStateConstantSpeed::onEnter(Ego& ego) {
-  if ( target_speed_ > ego.getMaxSpeed() || target_speed_ <= 0) {
-    target_speed_ = ego.getMaxSpeed();
-  }
-
-  std::cout << "Enter state: *** CONSTANT SPEED *** " << target_speed_*2.25
+  std::cout << "Enter state: *** CONSTANT SPEED *** " << ego.getTargetSpeed()*2.25
             << " MPH" << std::endl;
 }
 
-EgoState* EgoStateConstantSpeed::onUpdate(Ego& ego) {
-  if ( checkCollision(ego) ) {
-    return new EgoStatePrepareChangeLane();
-  } else {
-    planPath(ego);
-    return nullptr;
-  }
+void EgoStateConstantSpeed::onUpdate(Ego &ego) {
+  planPath(ego);
 }
 
 void EgoStateConstantSpeed::onExit(Ego& ego) {
@@ -60,11 +48,11 @@ void EgoStateConstantSpeed::planPath(Ego& ego) {
     pd0 = ego.getPath().second.back();
   }
 
-  vs0 = target_speed_;
+  vs0 = ego.getTargetSpeed();
   vd0 = 0;
   as0 = 0;
   ad0 = 0;
-  vs1 = target_speed_;
+  vs1 = ego.getTargetSpeed();
   vd1 = 0;
   as1 = 0;
   ad1 = 0;
@@ -82,25 +70,4 @@ void EgoStateConstantSpeed::planPath(Ego& ego) {
   std::vector<double> coeff_d = jerkMinimizingTrajectory(state0_d, state1_d, duration);
 
   ego.extendPath(coeff_s, coeff_d);
-}
-
-bool EgoStateConstantSpeed::checkCollision(const Ego& ego) {
-
-  double prediction_time = 1; // in s
-  double min_ds = 1000; // initialize with a large number
-  double dv = 0; // speed difference
-
-  // we only check the collision with the front car
-  for ( auto &v : ego.getSurroundings()->center ) {
-    double ds = v[4] - ego.getPs();
-    if ( ds > 0 && ds < min_ds ) {
-      min_ds = ds;
-      dv = ego.getSpeed() - v[2];
-    }
-  }
-
-  double safe_distance = ego.getMinSafeDistance();
-  if ( dv > 0 ) { safe_distance += prediction_time*dv; }
-
-  return ( min_ds <= safe_distance );
 }

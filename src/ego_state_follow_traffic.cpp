@@ -7,11 +7,14 @@
 #include "ego.h"
 #include "map.h"
 #include "ego_state_follow_traffic.h"
-#include "ego_state_prepare_change_lane.h"
 #include "utilities.h"
+#include "ego_transition_state.h"
 
 
-EgoStateFollowTraffic::EgoStateFollowTraffic() {}
+EgoStateFollowTraffic::EgoStateFollowTraffic() {
+  transition_states_.push_back(EgoTransitionStateFactory::createState(FT_TO_CS));
+  transition_states_.push_back(EgoTransitionStateFactory::createState(FT_TO_CL));
+}
 
 EgoStateFollowTraffic::~EgoStateFollowTraffic() {}
 
@@ -19,11 +22,8 @@ void EgoStateFollowTraffic::onEnter(Ego& ego) {
   std::cout << "Enter state: *** FOLLOW TRAFFIC ***" << std::endl;
 }
 
-EgoState* EgoStateFollowTraffic::onUpdate(Ego& ego) {
-  ego.truncatePath(5);
+void EgoStateFollowTraffic::onUpdate(Ego &ego) {
   planPath(ego);
-
-  return new EgoStatePrepareChangeLane();
 }
 
 void EgoStateFollowTraffic::onExit(Ego& ego) {
@@ -81,8 +81,4 @@ void EgoStateFollowTraffic::planPath(Ego& ego) {
   std::vector<double> coeff_d = jerkMinimizingTrajectory(state0_d, state1_d, duration);
 
   ego.extendPath(coeff_s, coeff_d);
-}
-
-bool EgoStateFollowTraffic::checkCollision(const Ego& ego) {
-  ;
 }

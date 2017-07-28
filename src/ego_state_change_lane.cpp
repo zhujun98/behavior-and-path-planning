@@ -6,30 +6,25 @@
 #include "vehicle.h"
 #include "ego.h"
 #include "ego_state_change_lane.h"
-#include "ego_state_constant_speed.h"
 #include "map.h"
 #include "utilities.h"
+#include "ego_transition_state.h"
 
 
-EgoStateChangeLane::EgoStateChangeLane(int target_lane_id) {
-  target_lane_id_ = target_lane_id;
+EgoStateChangeLane::EgoStateChangeLane() {
+  transition_states_.push_back(EgoTransitionStateFactory::createState(CL_TO_FT));
 }
 
 EgoStateChangeLane::~EgoStateChangeLane() {}
 
 void EgoStateChangeLane::onEnter(Ego& ego) {
-  ego.truncatePath(5);
   planPath(ego);
   std::cout << "Enter state: *** CHANGE LANE *** from Lane-" << ego.getLaneID()
-            << " to Lane-" << target_lane_id_ << std::endl;
+            << " to Lane-" << ego.getTargetLaneID() << std::endl;
 }
 
-EgoState* EgoStateChangeLane::onUpdate(Ego& ego) {
-  if ( ego.getLaneID() == target_lane_id_ ) {
-    return new EgoStateConstantSpeed();
-  } else {
-    return nullptr;
-  }
+void EgoStateChangeLane::onUpdate(Ego &ego) {
+  ;
 }
 
 void EgoStateChangeLane::onExit(Ego& egop) {
@@ -63,7 +58,7 @@ void EgoStateChangeLane::planPath(Ego &ego) {
   double duration = ego.getTimeStep() * ego.getPredictionPts();
 
   ps1 = ps0 + 0.5*(vs0 + vs1)*duration;
-  pd1 = (target_lane_id_ - 0.5) * ego.getMap()->getLaneWidth();
+  pd1 = (ego.getTargetLaneID() - 0.5) * ego.getMap()->getLaneWidth();
 
   std::vector<double> state0_s = {ps0, vs0, as0};
   std::vector<double> state0_d = {pd0, vd0, ad0};
@@ -74,8 +69,4 @@ void EgoStateChangeLane::planPath(Ego &ego) {
   std::vector<double> coeff_d = jerkMinimizingTrajectory(state0_d, state1_d, duration);
 
   ego.extendPath(coeff_s, coeff_d);
-}
-
-bool EgoStateChangeLane::checkCollision(const Ego &ego) {
-  ;
 }

@@ -7,9 +7,17 @@
 
 #include <vector>
 
+
 class Ego;
 class Map;
+class EgoTransitionState;
 
+//
+// CL: change lane
+// CS: constant speed
+// FT: follow traffic
+//
+enum States { CL, CS, FT };
 
 class EgoState {
 protected:
@@ -17,21 +25,37 @@ protected:
   // constructor
   EgoState();
 
-  virtual void planPath(Ego& ego) = 0;
+  // Storing the transition states which is belong to this state.
+  // The order of the states matter!
+  std::vector<EgoTransitionState *> transition_states_;
 
-  virtual bool checkCollision(const Ego& ego) = 0;
+  virtual void planPath(Ego& ego) = 0;
 
 public:
 
   // destructor
   virtual ~EgoState();
 
+  EgoState* checkTransition(Ego& ego);
+
   virtual void onEnter(Ego& ego) = 0;
 
-  virtual EgoState* onUpdate(Ego& ego) = 0;
+  virtual void onUpdate(Ego& ego) = 0;
 
   virtual void onExit(Ego& ego) = 0;
 
+};
+
+
+class EgoStateFactory {
+
+public:
+
+  EgoStateFactory();
+
+  ~EgoStateFactory();
+
+  static EgoState* createState(States name);
 };
 
 

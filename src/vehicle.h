@@ -29,6 +29,8 @@ protected:
 
   const Map* map_;
 
+  int lane_id_;
+
 public:
 
   //
