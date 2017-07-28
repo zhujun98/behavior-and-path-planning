@@ -81,7 +81,9 @@ public:
   //
   void extendPath(std::vector<double> coeff_s, std::vector<double> coeff_d);
 
-  std::pair<std::vector<double>, std::vector<double>> getPath() const;
+  std::vector<double> const* getPathS() const;
+
+  std::vector<double> const* getPathD() const;
 
   double getMaxSpeed() const;
 

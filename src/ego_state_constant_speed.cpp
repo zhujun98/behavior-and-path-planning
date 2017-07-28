@@ -40,12 +40,12 @@ void EgoStateConstantSpeed::planPath(Ego& ego) {
   double ps1, vs1, as1;
   double pd1, vd1, ad1;
 
-  if ( ego.getPath().first.empty() ) {
+  if ( ego.getPathS()->empty() ) {
     ps0 = ego.getPs();
     pd0 = ego.getPd();
   } else {
-    ps0 = ego.getPath().first.back();
-    pd0 = ego.getPath().second.back();
+    ps0 = ego.getPathS()->back();
+    pd0 = ego.getPathD()->back();
   }
 
   vs0 = ego.getTargetSpeed();

@@ -15,7 +15,7 @@ class EgoState;
 class EgoTransitionCSToFT : public EgoTransitionState {
 private:
 
-
+  bool checkPreCollision(const Ego& ego) const;
 
 public:
   // constructor

@@ -18,8 +18,6 @@ private:
 
   bool checkPostCollision(Ego& ego);
 
-  bool checkPreCollision(const Ego& ego) const;
-
   bool checkSideCollision(const Ego& ego, std::vector<std::vector<double>> cars) const;
 
 public:

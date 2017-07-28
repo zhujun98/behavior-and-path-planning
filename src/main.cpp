@@ -95,7 +95,7 @@ int main() {
           // Transfer the trajectory in Frenet coordinate system output
           // by "my_car" and pass it to the simulator.
 
-          vehicle_trajectory trajectory_frenet = my_car.getPath();
+          vehicle_trajectory trajectory_frenet = std::make_pair(*my_car.getPathS(), *my_car.getPathD());
           vehicle_trajectory trajectory_cartesian =
               my_car.getMap()->trajFrenetToCartesian(trajectory_frenet);
 

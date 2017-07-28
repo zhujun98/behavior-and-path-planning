@@ -28,13 +28,17 @@ EgoTransitionStateFactory::~EgoTransitionStateFactory() {}
 EgoTransitionState* EgoTransitionStateFactory::createState(TransitionStates name) {
   switch (name) {
     case CS_TO_FT:
-      return new EgoTransitionCSToFT;
+      static EgoTransitionCSToFT cs_to_ft;
+      return &cs_to_ft;
     case CL_TO_FT:
-      return new EgoTransitionCLToFT;
+      static EgoTransitionCLToFT cl_to_ft;
+      return &cl_to_ft;
     case FT_TO_CL:
-      return new EgoTransitionFTToCL;
+      static EgoTransitionFTToCL ft_to_cl;
+      return &ft_to_cl;
     case FT_TO_CS:
-      return new EgoTransitionFTToCS;
+      static EgoTransitionFTToCS ft_to_cs;
+      return &ft_to_cs;
     default:
       throw std::invalid_argument("Unknown transition state!");
   }

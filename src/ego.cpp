@@ -19,6 +19,7 @@ Ego::Ego(const Map& map) : Vehicle(map) {
   target_speed_ = max_speed_;
 
   state_ = EgoStateFactory::createState(FT);
+//  state_ = EgoStateFactory::createState(CS);
   state_->onEnter(*this);
 }
 
@@ -103,8 +104,9 @@ void Ego::extendPath(std::vector<double> coeff_s, std::vector<double> coeff_d) {
   }
 }
 
-std::pair<std::vector<double>, std::vector<double>>
-Ego::getPath() const { return std::make_pair(path_s_, path_d_); }
+std::vector<double> const* Ego::getPathS() const { return &path_s_; }
+
+std::vector<double> const* Ego::getPathD() const { return &path_d_; }
 
 double Ego::getMaxSpeed() const { return max_speed_; }
 
@@ -125,9 +127,7 @@ Map const* Ego::getMap() const { return map_; }
 int Ego::getTargetLaneID() const { return target_lane_id_; }
 
 void Ego::setTargetLaneID(int value) {
-  if ( value <= 3 or value >= 1 ) {
-    target_lane_id_ = value;
-  }
+  if ( value >= 1 && value <= 3 ) { target_lane_id_ = value; }
 }
 
 double Ego::getTargetSpeed() const { return target_speed_; }

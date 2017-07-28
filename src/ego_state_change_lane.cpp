@@ -39,12 +39,12 @@ void EgoStateChangeLane::planPath(Ego &ego) {
   double ps1, vs1, as1;
   double pd1, vd1, ad1;
 
-  if ( ego.getPath().first.empty() ) {
+  if ( ego.getPathS()->empty() ) {
     ps0 = ego.getPs();
     pd0 = ego.getPd();
   } else {
-    ps0 = *std::next(ego.getPath().first.end(), -1);
-    pd0 = *std::next(ego.getPath().second.end(), -1);
+    ps0 = ego.getPathS()->back();
+    pd0 = ego.getPathD()->back();
   }
 
   vs0 = ego.getMaxSpeed();
