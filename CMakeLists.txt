@@ -21,7 +21,7 @@ set(sources
         src/ego_transition_CS_to_FT.cpp
         src/ego_transition_CL_to_FT.cpp
         src/ego_transition_FT_to_CS.cpp
-        src/ego_transition_FT_to_CL.cpp)
+        src/ego_transition_FT_to_CL.cpp src/path_planner.cpp src/path_planner.h)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 

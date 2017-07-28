@@ -31,9 +31,6 @@ private:
   int target_lane_id_;
   double target_speed_;
 
-  double time_step_;
-  unsigned int prediction_pts_;
-
   std::vector<double> path_s_;
   std::vector<double> path_d_;
 
@@ -79,7 +76,7 @@ public:
   //
   //
   //
-  void extendPath(std::vector<double> coeff_s, std::vector<double> coeff_d);
+  void extendPath(std::vector<double> coeff_s, std::vector<double> coeff_d, double duration);
 
   std::vector<double> const* getPathS() const;
 
@@ -90,10 +87,6 @@ public:
   double getMaxAcceleration() const;
 
   double getMaxSteering() const;
-
-  double getTimeStep() const;
-
-  unsigned int getPredictionPts() const;
 
   double getMinSafeDistance() const;
 

@@ -1,6 +1,9 @@
 //
 // Created by jun on 7/16/17.
 //
+#ifndef PATH_PLANNING_UTILITIES_H
+#define PATH_PLANNING_UTILITIES_H
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -9,9 +12,7 @@
 
 #include "Eigen-3.3/Eigen/Dense"
 
-
-#ifndef PATH_PLANNING_UTILITIES_H
-#define PATH_PLANNING_UTILITIES_H
+#include "ego.h"
 
 //
 // For converting back and forth between radians and degrees.
@@ -117,6 +118,48 @@ inline double evalTrajectory(const std::vector<double>& p, double t) {
   }
 
   return result;
+}
+
+//
+// Estimate the state vector (s, d) at the end of the current path
+//
+inline std::pair<std::vector<double>, std::vector<double>> getState0(const Ego& ego) {
+  double ps0, vs0, as0;
+  double pd0, vd0, ad0;
+
+  if ( ego.getPathS()->empty() || ego.getPathS()->size() < 3 ) {
+    ps0 = ego.getPs();
+    pd0 = ego.getPd();
+    vs0 = ego.getVs();
+    vd0 = ego.getVd();
+    as0 = ego.getAs();
+    ad0 = ego.getAd();
+
+  } else {
+    auto it_s = ego.getPathS()->rbegin();
+    auto it_d = ego.getPathD()->rbegin();
+    ps0 = *it_s;
+    pd0 = *it_d;
+    std::advance(it_s, 1);
+    std::advance(it_d, 1);
+    double ps0_1 = *it_s;
+    double pd0_1 = *it_d;
+    std::advance(it_s, 1);
+    std::advance(it_d, 1);
+    double ps0_2 = *it_s;
+    double pd0_2 = *it_d;
+    vs0 = (ps0 - ps0_1) / ego.getTimeStep();
+    vd0 = (pd0 - pd0_1) / ego.getTimeStep();
+    double vs0_1 = (ps0_1 - ps0_2) / ego.getTimeStep();
+    double vd0_1 = (pd0_1 - pd0_2) / ego.getTimeStep();
+    as0 = (vs0 - vs0_1) / ego.getTimeStep();
+    ad0 = (vd0 - vd0_1) / ego.getTimeStep();
+  }
+
+  std::vector<double> state0_s {ps0, vs0, as0};
+  std::vector<double> state0_d {pd0, vd0, ad0};
+
+  return std::make_pair(state0_s, state0_d);
 }
 
 #endif //PATH_PLANNING_UTILITIES_H

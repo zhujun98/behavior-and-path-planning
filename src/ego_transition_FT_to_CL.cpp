@@ -17,11 +17,6 @@ EgoState* EgoTransitionFTToCL::getNextState(Ego& ego) const {
 }
 
 bool EgoTransitionFTToCL::isValid(Ego &ego) const {
-  return false;
-}
-
-
-bool EgoTransitionFTToCL::checkPostCollision(Ego &ego) {
   if (ego.getLaneID() > 1 && !checkSideCollision(ego, ego.getSurroundings()->left)) {
     ego.setTargetLaneID(ego.getLaneID() - 1);
     return true;

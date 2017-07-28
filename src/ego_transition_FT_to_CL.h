@@ -16,8 +16,6 @@ class EgoTransitionFTToCL : public EgoTransitionState {
 
 private:
 
-  bool checkPostCollision(Ego& ego);
-
   bool checkSideCollision(const Ego& ego, std::vector<std::vector<double>> cars) const;
 
 public:

@@ -20,6 +20,7 @@ EgoStateConstantSpeed::EgoStateConstantSpeed() {
 EgoStateConstantSpeed::~EgoStateConstantSpeed() {}
 
 void EgoStateConstantSpeed::onEnter(Ego& ego) {
+  ego.truncatePath(5);
   std::cout << "Enter state: *** CONSTANT SPEED *** " << ego.getTargetSpeed()*2.25
             << " MPH" << std::endl;
 }
@@ -34,40 +35,28 @@ void EgoStateConstantSpeed::onExit(Ego& ego) {
 
 void EgoStateConstantSpeed::planPath(Ego& ego) {
 
-  double ps0, vs0, as0;
-  double pd0, vd0, ad0;
+  auto state0_sd = getState0(ego);
+  std::vector<double> state0_s = state0_sd.first;
+  std::vector<double> state0_d = state0_sd.second;
+  double ps0 = state0_s[0];
+  double vs0 = state0_s[1];
 
   double ps1, vs1, as1;
   double pd1, vd1, ad1;
+  double prediction_time = 2.0; // in s
 
-  if ( ego.getPathS()->empty() ) {
-    ps0 = ego.getPs();
-    pd0 = ego.getPd();
-  } else {
-    ps0 = ego.getPathS()->back();
-    pd0 = ego.getPathD()->back();
-  }
-
-  vs0 = ego.getTargetSpeed();
-  vd0 = 0;
-  as0 = 0;
-  ad0 = 0;
   vs1 = ego.getTargetSpeed();
   vd1 = 0;
   as1 = 0;
   ad1 = 0;
-
-  double duration = ego.getTimeStep() * ego.getPredictionPts();
-  ps1 = ps0 + 0.5*(vs0 + vs1)*duration;
+  ps1 = ps0 + 0.5*(vs0 + vs1)*prediction_time;
   pd1 = (ego.getLaneID() - 0.5) * ego.getMap()->getLaneWidth();
 
-  std::vector<double> state0_s = {ps0, vs0, as0};
-  std::vector<double> state0_d = {pd0, vd0, ad0};
   std::vector<double> state1_s = {ps1, vs1, as1};
   std::vector<double> state1_d = {pd1, vd1, ad1};
 
-  std::vector<double> coeff_s = jerkMinimizingTrajectory(state0_s, state1_s, duration);
-  std::vector<double> coeff_d = jerkMinimizingTrajectory(state0_d, state1_d, duration);
+  std::vector<double> coeff_s = jerkMinimizingTrajectory(state0_s, state1_s, prediction_time);
+  std::vector<double> coeff_d = jerkMinimizingTrajectory(state0_d, state1_d, prediction_time);
 
-  ego.extendPath(coeff_s, coeff_d);
+  ego.extendPath(coeff_s, coeff_d, prediction_time);
 }

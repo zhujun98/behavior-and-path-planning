@@ -16,25 +16,33 @@ EgoState* EgoTransitionCSToFT::getNextState(Ego& ego) const {
 }
 
 bool EgoTransitionCSToFT::isValid(Ego &ego) const {
-  return ( ego.getSpeed() < 0.95*ego.getTargetSpeed() );
-}
-
-bool EgoTransitionCSToFT::checkPreCollision(const Ego& ego) const {
-  double prediction_time = 1; // in s
+  // find the closest front car
   double min_ds = 1000; // initialize with a large number
-  double dv = 0; // speed difference
-
-  // we only check the collision with the front car
+  double v_front = 1000; // speed of the front car
+  double s_front = 1000; // location of the front car
   for ( auto &v : ego.getSurroundings()->center ) {
-    double ds = v[4] - ego.getPathS()->back();
+    double ds;
+    if (ego.getPathS()->empty()) {
+      ds = v[4] - ego.getPs();
+    } else {
+      ds = v[4] - ego.getPathS()->front();
+    }
+
     if ( ds > 0 && ds < min_ds ) {
       min_ds = ds;
-      dv = ego.getSpeed() - v[2];
+      s_front = v[4];
+      v_front = v[2];
     }
   }
 
-  double safe_distance = ego.getMinSafeDistance();
-  if ( dv > 0 ) { safe_distance += prediction_time*dv; }
+  // check whether the front car can be catched at the path end
+  double duration = ego.getPathS()->size()*ego.getTimeStep();
+  double distance_at_path_end;
+  if ( ego.getPathS()->empty() ) {
+    distance_at_path_end = s_front + duration * v_front - ego.getPs();
+  } else {
+    distance_at_path_end = s_front + duration * v_front - ego.getPathS()->back();
+  }
 
-  return ( min_ds <= safe_distance );
+  return ( distance_at_path_end < ego.getMinSafeDistance() );
 }

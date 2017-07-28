@@ -8,9 +8,6 @@
 
 
 Ego::Ego(const Map& map) : Vehicle(map) {
-  time_step_ = 0.02; // in s
-  prediction_pts_ = 100; // No. of prediction points
-
   max_acceleration_ = 10;  // in m/s^2
   max_speed_ = 22;  // in m/s
 
@@ -18,8 +15,7 @@ Ego::Ego(const Map& map) : Vehicle(map) {
 
   target_speed_ = max_speed_;
 
-  state_ = EgoStateFactory::createState(FT);
-//  state_ = EgoStateFactory::createState(CS);
+  state_ = EgoStateFactory::createState(CS);
   state_->onEnter(*this);
 }
 
@@ -30,20 +26,20 @@ Ego::~Ego() {
 void Ego::update(const std::vector<double>& localization,
                  const std::vector<std::vector<double>>& sensor_fusion) {
   updateParameters(localization);
+  // do nothing until collecting enough data
+  if ( hvs_.size() < history_length_ ) { return; }
+
   updateSurroundings(sensor_fusion);
   updateUnprocessedPath();
 
   EgoState* state = state_->checkTransition(*this);
   if ( state != NULL ) {
-    truncatePath(5);  // remove most of the planned path from the last state
-
     state_->onExit(*this);
     delete state_;
     state_ = state;
     state_->onEnter(*this);
-  } else {
-    state_->onUpdate(*this);
   }
+  state_->onUpdate(*this);
 }
 
 void Ego::updateUnprocessedPath() {
@@ -86,10 +82,10 @@ void Ego::truncatePath(unsigned int n_keep) {
   }
 }
 
-void Ego::extendPath(std::vector<double> coeff_s, std::vector<double> coeff_d) {
+void Ego::extendPath(std::vector<double> coeff_s, std::vector<double> coeff_d, double duration) {
 
   double t = 0.0;
-  while ( path_s_.size() < prediction_pts_ ) {
+  while ( path_s_.size() < duration / time_step_  ) {
     t += time_step_;
     path_s_.push_back(evalTrajectory(coeff_s, t));
     path_d_.push_back(evalTrajectory(coeff_d, t));
@@ -113,10 +109,6 @@ double Ego::getMaxSpeed() const { return max_speed_; }
 double Ego::getMaxAcceleration() const { return max_acceleration_; }
 
 double Ego::getMaxSteering() const { return max_steering_; }
-
-double Ego::getTimeStep() const { return time_step_; }
-
-unsigned int Ego::getPredictionPts() const { return prediction_pts_; }
 
 double Ego::getMinSafeDistance() const { return min_safe_distance_; }
 
