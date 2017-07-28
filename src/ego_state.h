@@ -29,6 +29,8 @@ protected:
   // The order of the states matter!
   std::vector<EgoTransitionState *> transition_states_;
 
+  double timer_;  // track how long the state lasts
+
   virtual void planPath(Ego& ego) = 0;
 
 public:

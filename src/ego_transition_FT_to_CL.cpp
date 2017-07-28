@@ -36,7 +36,6 @@ checkSideCollision(const Ego& ego, std::vector<std::vector<double>> cars) const 
     double ds_before = v[4] - ego.getPs();
     double ds_after = ds_before + prediction_time*dv;
     double safe_distance = ego.getMinSafeDistance();
-    std::cout << ds_before << ", " << ds_after << std::endl;
     if ( ds_before * ds_after <= 0 ) {
       return true;
     } else if ( std::abs(ds_after) < safe_distance ) {

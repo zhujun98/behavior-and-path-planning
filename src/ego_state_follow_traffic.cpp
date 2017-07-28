@@ -19,11 +19,11 @@ EgoStateFollowTraffic::EgoStateFollowTraffic() {
 EgoStateFollowTraffic::~EgoStateFollowTraffic() {}
 
 void EgoStateFollowTraffic::onEnter(Ego& ego) {
-  ego.truncatePath(5);
   std::cout << "Enter state: *** FOLLOW TRAFFIC ***" << std::endl;
 }
 
 void EgoStateFollowTraffic::onUpdate(Ego &ego) {
+  ego.truncatePath(5);
   planPath(ego);
 }
 
@@ -52,19 +52,17 @@ void EgoStateFollowTraffic::planPath(Ego& ego) {
     }
   }
 
-  double duration = ego.getPathS()->size()*ego.getTimeStep();
-  if ( duration == 0 ) {
-    vs1 = vs_front;
-  } else {
-    vs1 = 2*(vs_front + (ds_front - ego.getMinSafeDistance())/duration) - vs0;
-  }
-  if ( vs1 > ego.getMaxSpeed() ) { vs1 = ego.getMaxSpeed(); }
+  vs1 = vs_front;
   vd1 = 0;
   as1 = 0;
   ad1 = 0;
 
-  double prediction_time = 0.4;
-  ps1 = ps0 + 0.5*(vs0 + vs1)*prediction_time;
+  double prediction_time = 2.0;
+
+  ps1 = ps0 + ds_front + vs_front*prediction_time - ego.getMinSafeDistance();
+  vs1 = 2*(ps1 - ps0) - vs0;
+  if ( vs1 > ego.getMaxSpeed() ) { vs1 = ego.getMaxSpeed(); }
+
   pd1 = (ego.getLaneID() - 0.5) * ego.getMap()->getLaneWidth();
 
   std::vector<double> state1_s = {ps1, vs1, as1};

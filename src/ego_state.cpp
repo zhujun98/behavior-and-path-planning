@@ -14,11 +14,17 @@
 /*
  * EgoState class
  */
-EgoState::EgoState() {}
+EgoState::EgoState() {
+  timer_ = 0;
+}
 
 EgoState::~EgoState() {}
 
 EgoState* EgoState::checkTransition(Ego &ego) {
+  ++ timer_;
+  // avoid frequently switching between states
+  if ( timer_ < 25 ) { return nullptr; }
+
   for ( const auto& v : transition_states_ ) {
     if ( v->isValid(ego) ) { return v->getNextState(ego); }
   }
