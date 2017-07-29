@@ -5,12 +5,18 @@
 #ifndef PATH_PLANNING_EGO_TRANSITION_CS_TO_CLL_H
 #define PATH_PLANNING_EGO_TRANSITION_CS_TO_CLL_H
 
+#include "ego_transition_FT_to_CLL.h"
 
+class EgoTransitionCSToCLL : public EgoTransitionFTToCLL {
 
-class ego_transition_CS_to_CLL {
+public:
+  // constructor
+  EgoTransitionCSToCLL();
+
+  // destructor
+  ~EgoTransitionCSToCLL();
 
 };
-
 
 
 #endif //PATH_PLANNING_EGO_TRANSITION_CS_TO_CLL_H

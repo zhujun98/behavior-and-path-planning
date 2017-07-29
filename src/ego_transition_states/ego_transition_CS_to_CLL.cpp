@@ -3,3 +3,7 @@
 //
 
 #include "ego_transition_CS_to_CLL.h"
+
+EgoTransitionCSToCLL::EgoTransitionCSToCLL() {}
+
+EgoTransitionCSToCLL::~EgoTransitionCSToCLL() {}

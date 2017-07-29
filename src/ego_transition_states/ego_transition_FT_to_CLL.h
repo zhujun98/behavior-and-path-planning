@@ -14,7 +14,7 @@ public:
   EgoTransitionFTToCLL();
 
   // destructor
-  ~EgoTransitionFTToCLL();
+  virtual ~EgoTransitionFTToCLL();
 
   bool isValid(Ego& ego) const;
 
