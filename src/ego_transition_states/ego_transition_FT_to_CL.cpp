@@ -7,7 +7,6 @@
 #include "../map.h"
 #include "../ego.h"
 #include "../ego_states/ego_state.h"
-#include "../utilities.h"
 
 
 EgoTransitionFTToCL::EgoTransitionFTToCL() {}
@@ -80,12 +79,10 @@ bool EgoTransitionFTToCL::isOptimal(const Ego &ego, int direction) const {
     }
   }
 
-  print1DContainer(ds_finals);
-
-  if ( ego.getTicker() % 20  == 0 ) {
-    std::cout << "Current lane ID: " << ego.getLaneID()
-              << ", Best land ID: " << max_distance_lane_id << std::endl;
-  }
+//  if ( ego.getTicker() % 20  == 0 ) {
+//    std::cout << "Current lane ID: " << ego.getLaneID()
+//              << ", Best land ID: " << max_distance_lane_id << std::endl;
+//  }
 
   // if the lane which has the most space is on the same direction as the
   // current planned lane-changing direction. Then do it!
