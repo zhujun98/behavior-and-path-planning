@@ -13,6 +13,7 @@ Ego::Ego(const Map& map) : Vehicle(map) {
   max_acceleration_ = 10; // in m/s^2
   max_jerk_ = 10; // in m/s^3
   min_safe_distance_ = 15; // in m
+  max_evaluation_distance_ = 100; // in m
 
   target_speed_ = max_speed_*0.95;
 
@@ -88,7 +89,8 @@ std::vector<double> Ego::getClosestVehicle(int lane_id, int direction) const {
   if ( direction != 1 && direction != -1 ) { return {};}
 
   // get the distance and the speed of the front car
-  double min_ds = 1000;
+  // Ignore the vehicle beyond the max_evaluation_distance_
+  double min_ds = max_evaluation_distance_;
   double ps;
   double vs;
   bool is_found = false;
@@ -121,13 +123,13 @@ void Ego::truncatePath(unsigned int n_keep) {
   }
 }
 
-void Ego::extendPath(std::vector<double> coeff_s, std::vector<double> coeff_d, double duration) {
+void Ego::extendPath(vehicle_trajectory new_path) {
 
-  double t = 0.0;
-  while ( path_s_.size() < duration / time_step_  ) {
-    t += time_step_;
-    path_s_.push_back(evalTrajectory(coeff_s, t));
-    path_d_.push_back(evalTrajectory(coeff_d, t));
+  int i = 0;
+  while (path_s_.size() < new_path.first.size() - 1 ) {
+    ++i;
+    path_s_.push_back(new_path.first[i]);
+    path_d_.push_back(new_path.second[i]);
   }
 
   // Reset path when the car just finishes a lap!
@@ -174,6 +176,8 @@ double Ego::getMaxJerk() const { return max_jerk_; }
 double Ego::getMaxSteering() const { return max_steering_; }
 
 double Ego::getMinSafeDistance() const { return min_safe_distance_; }
+
+double Ego::getMaxEvaluationDistance() const { return max_evaluation_distance_; }
 
 typedef std::vector<std::vector<std::vector<double>>> Surroundings;
 Surroundings const* Ego::getSurroundings() const { return &surroundings_; }

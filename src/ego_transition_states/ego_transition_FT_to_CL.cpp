@@ -7,6 +7,7 @@
 #include "../map.h"
 #include "../ego.h"
 #include "../ego_states/ego_state.h"
+#include "../utilities.h"
 
 
 EgoTransitionFTToCL::EgoTransitionFTToCL() {}
@@ -45,32 +46,41 @@ bool EgoTransitionFTToCL::willCollision(const Ego& ego, int direction) const {
 bool EgoTransitionFTToCL::isOptimal(const Ego &ego, int direction) const {
   if ( direction != 1 && direction != -1 ) { return false; }
 
-  double prediction_time = 5.0;
+  // A small prediction time here unless we know the front vehicle
+  // dynamics very well.
+  double prediction_time = 1.0;
 
-  std::vector<double> ps_finals;
+  std::vector<double> ds_finals;
   // lane ID starts from 1
   for ( int i = 1; i <= ego.getMap()->getNoLanes(); ++i ) {
     auto front_vehicle = ego.getClosestVehicle(i, 1);
-    double ps_final = 1000; // a large number
+    double ds_final;
     if ( !front_vehicle.empty() ) {
       double ps = front_vehicle[0];
       double vs = front_vehicle[1];
-      ps_final = ps + ( ego.getVs() - vs ) * prediction_time;
+
+      ds_final = ps - ego.getPs() + ( vs - ego.getVs() ) * prediction_time;
+    } else {
+      ds_final = 1000; // a very large number if there no car on the lane
     }
 
-    ps_finals.push_back(ps_final);
+    ds_finals.push_back(ds_final);
   }
 
   double max_distance_lane_id = ego.getLaneID();
-  double max_ps_final = ps_finals[max_distance_lane_id - 1];
+  double max_ps_final = ds_finals[max_distance_lane_id - 1];
   // be careful since land ID starts from 1
-  for ( int i = 0; i < ps_finals.size(); ++i ) {
-    // shift the lane is there is enough gain
-    if ( ps_finals[i] > max_ps_final + 10 ) {
-      max_ps_final = ps_finals[i];
+  for ( int i = 0; i < ds_finals.size(); ++i ) {
+    // Shift the lane unless there is some gap.
+    // Also ensure that the current lane is the best when having the
+    // same cost.
+    if ( ds_finals[i] > max_ps_final + 20 ) {
+      max_ps_final = ds_finals[i];
       max_distance_lane_id = i + 1;
     }
   }
+
+  print1DContainer(ds_finals);
 
   if ( ego.getTicker() % 20  == 0 ) {
     std::cout << "Current lane ID: " << ego.getLaneID()

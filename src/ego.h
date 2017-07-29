@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "vehicle.h"
+#include "path_planner.h"
 
 class EgoState;
 class Map;
@@ -28,11 +29,12 @@ private:
   std::vector<double> path_s_;
   std::vector<double> path_d_;
 
-  double max_speed_;  // maximum speed (m/s)
-  double max_acceleration_;  // maximum acceleration (m/s^2)
+  double max_speed_; // maximum speed (m/s)
+  double max_acceleration_; // maximum acceleration (m/s^2)
   double max_jerk_; // maximum jerk (m/s^3)
-  double max_steering_;  // maximum steering angle (rad)
+  double max_steering_; // maximum steering angle (rad)
   double min_safe_distance_;
+  double max_evaluation_distance_; // we care about traffic within this distance (m)
 
   long ticker_;  // a timer controlling output
 
@@ -73,11 +75,7 @@ public:
   //
   // Extend the current path to a given duration
   //
-  // @param coeff_s: polynomial coefficents for s coordinate
-  // @param coeff_d: polynomial coefficients for d coordinate
-  // @param duration: max time duration. The max number of points is duration/time step.
-  //
-  void extendPath(std::vector<double> coeff_s, std::vector<double> coeff_d, double duration);
+  void extendPath(vehicle_trajectory new_path);
 
   // Print out the vehicle information around the ego car
   void printTraffic();
@@ -95,6 +93,8 @@ public:
   double getMaxSteering() const;
 
   double getMinSafeDistance() const;
+
+  double getMaxEvaluationDistance() const;
 
   Surroundings const* getSurroundings() const;
 
