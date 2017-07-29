@@ -55,9 +55,13 @@ void Ego::update(const std::vector<double>& localization,
 void Ego::updateUnprocessedPath() {
   if ( !path_s_.empty() ) {
 
-    // remove processed way points
-    auto unprocessed_s_begin = std::lower_bound(path_s_.begin(), path_s_.end(), ps_);
+    // important to start another lap
+    if ( path_s_.back() > map_->getMaxS() && ps_ < path_s_.front() ) {
+      ps_ += map_->getMaxS();
+    }
 
+    auto unprocessed_s_begin = std::lower_bound(path_s_.begin(), path_s_.end(), ps_);
+    // remove processed way points
     int n_removed = std::distance(path_s_.begin(), unprocessed_s_begin);
     auto unprocessed_d_begin = std::next(path_d_.begin(), n_removed);
 
@@ -134,7 +138,7 @@ void Ego::extendPath(vehicle_trajectory new_path) {
 
   // Reset path when the car just finishes a lap!
   double max_s = map_->getMaxS();
-  if ( path_s_[0] > max_s ) {
+  if ( path_s_[0] >= max_s ) {
     for ( auto &v : path_s_ ) { v -= max_s; }
   }
 }
