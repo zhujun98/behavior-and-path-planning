@@ -14,6 +14,8 @@
 
 
 EgoStateConstantSpeed::EgoStateConstantSpeed() {
+  transition_states_.push_back(EgoTransitionStateFactory::createState(CS_TO_CLL));
+  transition_states_.push_back(EgoTransitionStateFactory::createState(CS_TO_CLR));
   transition_states_.push_back(EgoTransitionStateFactory::createState(CS_TO_FT));
 }
 
@@ -35,11 +37,9 @@ void EgoStateConstantSpeed::onExit(Ego& ego) {
 
 void EgoStateConstantSpeed::planPath(Ego& ego) {
 
-  auto state0_sd = getState0(ego);
-  std::vector<double> state0_s = state0_sd.first;
-  std::vector<double> state0_d = state0_sd.second;
-  double ps0 = state0_s[0];
-  double vs0 = state0_s[1];
+  auto state0 = getState0(ego);
+  double ps0 = state0.first[0];
+  double vs0 = state0.first[1];
 
   double ps1, vs1, as1;
   double pd1, vd1, ad1;
@@ -54,9 +54,11 @@ void EgoStateConstantSpeed::planPath(Ego& ego) {
 
   std::vector<double> state1_s = {ps1, vs1, as1};
   std::vector<double> state1_d = {pd1, vd1, ad1};
+  vehicle_state state1 = std::make_pair(state1_s, state1_d);
 
-  std::vector<double> coeff_s = jerkMinimizingTrajectory(state0_s, state1_s, prediction_time);
-  std::vector<double> coeff_d = jerkMinimizingTrajectory(state0_d, state1_d, prediction_time);
+  PathPlanner planner(ego.getMaxSpeed(), ego.getMaxAcceleration(), ego.getMaxJerk());
 
-  ego.extendPath(coeff_s, coeff_d, prediction_time);
+  vehicle_trajectory new_path = planner.plan(state0, state1, prediction_time);
+
+  ego.extendPath(new_path);
 }
