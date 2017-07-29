@@ -26,6 +26,7 @@ protected:
   double py_; // in m
   double speed_; // in m/s
   double yaw_; // in m/s
+
   // parameters in Frenet-Serret coordinate system
   double ps_; // in m
   double pd_; // in m
@@ -46,29 +47,16 @@ protected:
 
 public:
 
-  //
   // constructor
-  //
   Vehicle(const Map& map);
 
-  //
   // destructor
-  //
   virtual ~Vehicle();
 
-  //
-  //
-  //
-  void updateVelocityHistory(const std::list<double>& p, std::list<double>& v);
-
-  //
   // Update the vehicle's state
-  //
   virtual void updateParameters(const std::vector<double>& localization);
 
-  //
   // Print out the vehicle's state
-  //
   void printout() const;
 
   double getTimeStep() const;

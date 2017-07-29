@@ -25,5 +25,4 @@ public:
   EgoState* getNextState(Ego& ego) const;
 };
 
-
 #endif //PATH_PLANNING_EGO_TRANSITION_CS_TO_CL_H

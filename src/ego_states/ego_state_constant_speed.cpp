@@ -4,13 +4,13 @@
 #include <iostream>
 #include <vector>
 
-#include "map.h"
-#include "vehicle.h"
-#include "ego.h"
+#include "../map.h"
+#include "../vehicle.h"
+#include "../ego.h"
 #include "ego_state.h"
 #include "ego_state_constant_speed.h"
-#include "utilities.h"
-#include "ego_transition_state.h"
+#include "../utilities.h"
+#include "../ego_transition_states/ego_transition_state.h"
 
 
 EgoStateConstantSpeed::EgoStateConstantSpeed() {

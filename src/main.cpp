@@ -92,6 +92,8 @@ int main() {
 
           my_car.update(localization, sensor_fusion);
 
+//          my_car.printTraffic();
+
           // Transfer the trajectory in Frenet coordinate system output
           // by "my_car" and pass it to the simulator.
 

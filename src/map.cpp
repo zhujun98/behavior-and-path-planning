@@ -225,3 +225,5 @@ vehicle_trajectory Map::trajCartesianToFrenet(const vehicle_trajectory& trajecto
 double Map::getLaneWidth() const { return lane_width_; }
 
 double Map::getMaxS() const { return max_s_; }
+
+size_t Map::getNoLanes() const { return n_lanes_; }

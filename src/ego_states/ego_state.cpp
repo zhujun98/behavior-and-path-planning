@@ -3,10 +3,11 @@
 //
 #include <iostream>
 
-#include "ego.h"
+#include "../ego.h"
 #include "ego_state.h"
-#include "ego_transition_state.h"
-#include "ego_state_change_lane.h"
+#include "../ego_transition_states/ego_transition_state.h"
+#include "ego_state_change_lane_right.h"
+#include "ego_state_change_lane_left.h"
 #include "ego_state_constant_speed.h"
 #include "ego_state_follow_traffic.h"
 
@@ -23,7 +24,7 @@ EgoState::~EgoState() {}
 EgoState* EgoState::checkTransition(Ego &ego) {
   ++ timer_;
   // avoid frequently switching between states
-  if ( timer_ < 25 ) { return nullptr; }
+  if ( timer_ < 10 ) { return nullptr; }
 
   for ( const auto& v : transition_states_ ) {
     if ( v->isValid(ego) ) { return v->getNextState(ego); }
@@ -42,8 +43,10 @@ EgoStateFactory::~EgoStateFactory() {}
 
 EgoState* EgoStateFactory::createState(States name) {
   switch(name) {
-    case CL:
-      return new EgoStateChangeLane;
+    case CLR:
+      return new EgoStateChangeLaneRight;
+    case CLL:
+      return new EgoStateChangeLaneLeft;
     case CS:
       return new EgoStateConstantSpeed;
     case FT:

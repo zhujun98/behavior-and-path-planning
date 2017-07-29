@@ -10,18 +10,7 @@
 
 double kPI = std::atan(1)*4;
 
-/*
- * Vehicle class
- */
-
 Vehicle::Vehicle(const Map& map) {
-  vs_ = 0;
-  vd_ = 0;
-  as_ = 0;
-  ad_ = 0;
-  speed_ = 0;
-  yaw_ = 0;
-
   time_step_ = 0.02; // in s
 
   is_initialized_ = false;

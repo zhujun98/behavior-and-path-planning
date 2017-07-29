@@ -7,7 +7,8 @@
 #include "ego_transition_CS_to_FT.h"
 #include "ego_transition_CL_to_FT.h"
 #include "ego_transition_FT_to_CS.h"
-#include "ego_transition_FT_to_CL.h"
+#include "ego_transition_FT_to_CLR.h"
+#include "ego_transition_FT_to_CLL.h"
 
 /*
  * EgoTransitionState class
@@ -33,9 +34,12 @@ EgoTransitionState* EgoTransitionStateFactory::createState(TransitionStates name
     case CL_TO_FT:
       static EgoTransitionCLToFT cl_to_ft;
       return &cl_to_ft;
-    case FT_TO_CL:
-      static EgoTransitionFTToCL ft_to_cl;
-      return &ft_to_cl;
+    case FT_TO_CLR:
+      static EgoTransitionFTToCLR ft_to_clr;
+      return &ft_to_clr;
+    case FT_TO_CLL:
+      static EgoTransitionFTToCLL ft_to_cll;
+      return &ft_to_cll;
     case FT_TO_CS:
       static EgoTransitionFTToCS ft_to_cs;
       return &ft_to_cs;

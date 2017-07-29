@@ -3,34 +3,17 @@
 //
 #include <iostream>
 
-#include "vehicle.h"
-#include "ego.h"
+#include "../vehicle.h"
+#include "../ego.h"
 #include "ego_state_change_lane.h"
-#include "map.h"
-#include "utilities.h"
-#include "ego_transition_state.h"
+#include "../map.h"
+#include "../utilities.h"
+#include "../ego_transition_states/ego_transition_state.h"
 
 
-EgoStateChangeLane::EgoStateChangeLane() {
-  transition_states_.push_back(EgoTransitionStateFactory::createState(CL_TO_FT));
-}
+EgoStateChangeLane::EgoStateChangeLane() {}
 
 EgoStateChangeLane::~EgoStateChangeLane() {}
-
-void EgoStateChangeLane::onEnter(Ego& ego) {
-  ego.truncatePath(5);
-  planPath(ego);
-  std::cout << "Enter state: *** CHANGE LANE *** from Lane-" << ego.getLaneID()
-            << " to Lane-" << ego.getTargetLaneID() << std::endl;
-}
-
-void EgoStateChangeLane::onUpdate(Ego &ego) {
-  ;
-}
-
-void EgoStateChangeLane::onExit(Ego& egop) {
-  std::cout << "Exit state: *** CHANGE LANE *** " << std::endl;
-}
 
 void EgoStateChangeLane::planPath(Ego &ego) {
   auto state0_sd = getState0(ego);
@@ -42,7 +25,13 @@ void EgoStateChangeLane::planPath(Ego &ego) {
   double ps1, vs1, as1;
   double pd1, vd1, ad1;
 
-  vs1 = ego.getMaxSpeed();
+  auto vehicle_side_front = ego.getClosestVehicle(ego.getTargetLaneID(), 1);
+  if ( vehicle_side_front.empty() ) {
+    vs1 = ego.getMaxSpeed();
+  } else {
+    vs1 = vehicle_side_front[1];
+  }
+
   vd1 = 0;
   as1 = 0;
   ad1 = 0;

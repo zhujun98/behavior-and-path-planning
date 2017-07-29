@@ -4,16 +4,17 @@
 #include <iostream>
 #include <vector>
 
-#include "ego.h"
-#include "map.h"
+#include "../ego.h"
+#include "../map.h"
 #include "ego_state_follow_traffic.h"
-#include "utilities.h"
-#include "ego_transition_state.h"
+#include "../utilities.h"
+#include "../ego_transition_states/ego_transition_state.h"
 
 
 EgoStateFollowTraffic::EgoStateFollowTraffic() {
   transition_states_.push_back(EgoTransitionStateFactory::createState(FT_TO_CS));
-  transition_states_.push_back(EgoTransitionStateFactory::createState(FT_TO_CL));
+  transition_states_.push_back(EgoTransitionStateFactory::createState(FT_TO_CLR));
+  transition_states_.push_back(EgoTransitionStateFactory::createState(FT_TO_CLL));
 }
 
 EgoStateFollowTraffic::~EgoStateFollowTraffic() {}
@@ -23,7 +24,6 @@ void EgoStateFollowTraffic::onEnter(Ego& ego) {
 }
 
 void EgoStateFollowTraffic::onUpdate(Ego &ego) {
-  ego.truncatePath(5);
   planPath(ego);
 }
 
@@ -42,28 +42,27 @@ void EgoStateFollowTraffic::planPath(Ego& ego) {
   double pd1, vd1, ad1;
 
   // get the distance and the speed of the front car
-  double ds_front = 1000;
-  double vs_front = 1000;
-  for ( auto &v : ego.getSurroundings()->center ) {
-    double ds = v[4] - ego.getPs();
-    if ( ds > 0 && ds < ds_front ) {
-      ds_front = ds;
-      vs_front = v[2];
+  std::vector<double> front_vehicle = ego.getClosestVehicle(ego.getLaneID(), 1);
+  double prediction_time = 2.0;
+
+  vs1 = ego.getTargetSpeed();
+  ps1 = ps0 + 0.5*(vs0 + vs1)*prediction_time;
+  if ( !front_vehicle.empty() ) {
+    double ps_front = front_vehicle[0];
+    double vs_front = front_vehicle[1];
+
+    double ps1_tmp = ps_front + vs_front*prediction_time - ego.getMinSafeDistance();
+    double vs1_tmp = 2*(ps1_tmp - ps0) - vs0;
+    if ( vs1_tmp < ego.getTargetSpeed() ) {
+      vs1 = vs1_tmp;
+      ps1 = ps1_tmp;
     }
   }
 
-  vs1 = vs_front;
+  pd1 = (ego.getLaneID() - 0.5) * ego.getMap()->getLaneWidth();
   vd1 = 0;
   as1 = 0;
   ad1 = 0;
-
-  double prediction_time = 2.0;
-
-  ps1 = ps0 + ds_front + vs_front*prediction_time - ego.getMinSafeDistance();
-  vs1 = 2*(ps1 - ps0) - vs0;
-  if ( vs1 > ego.getMaxSpeed() ) { vs1 = ego.getMaxSpeed(); }
-
-  pd1 = (ego.getLaneID() - 0.5) * ego.getMap()->getLaneWidth();
 
   std::vector<double> state1_s = {ps1, vs1, as1};
   std::vector<double> state1_d = {pd1, vd1, ad1};

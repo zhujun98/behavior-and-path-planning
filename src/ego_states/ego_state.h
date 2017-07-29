@@ -13,11 +13,12 @@ class Map;
 class EgoTransitionState;
 
 //
-// CL: change lane
+// CLR: change to the right lane
+// CLL: change to the left lane
 // CS: constant speed
 // FT: follow traffic
 //
-enum States { CL, CS, FT };
+enum States { CLR, CLL, CS, FT };
 
 class EgoState {
 protected:

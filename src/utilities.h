@@ -33,13 +33,6 @@ inline void print1DContainer(T v) {
 }
 
 //
-// Calculate the distance between two points (x1, y1) and (x2, y2)
-//
-inline double distance(double x1, double y1, double x2, double y2) {
-  return sqrt((x2 - x1)*(x2 - x1)+(y2 - y1)*(y2 - y1));
-}
-
-//
 // Checks if the SocketIO event has JSON data.
 //
 inline std::string hasData(std::string s) {

@@ -3,8 +3,8 @@
 //
 
 #include "ego_transition_CL_to_FT.h"
-#include "ego.h"
-#include "ego_state.h"
+#include "../ego.h"
+#include "../ego_states/ego_state.h"
 
 
 EgoTransitionCLToFT::EgoTransitionCLToFT() {}
