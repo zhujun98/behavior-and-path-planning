@@ -24,6 +24,7 @@ void EgoStateFollowTraffic::onEnter(Ego& ego) {
 }
 
 void EgoStateFollowTraffic::onUpdate(Ego &ego) {
+  ego.truncatePath(20);
   planPath(ego);
 }
 
@@ -32,44 +33,36 @@ void EgoStateFollowTraffic::onExit(Ego& ego) {
 }
 
 void EgoStateFollowTraffic::planPath(Ego& ego) {
-
   auto state0 = getState0(ego);
   double ps0 = state0.first[0];
   double vs0 = state0.first[1];
 
-  double ps1, vs1, as1;
-  double pd1, vd1, ad1;
-
   // get the distance and the speed of the front car
   std::vector<double> front_vehicle = ego.getClosestVehicle(ego.getLaneID(), 1);
-  double prediction_time = 2.0;
+  double prediction_time = 2.0 - ego.getPathS()->size()*ego.getTimeStep();
 
-  vs1 = ego.getTargetSpeed();
-  ps1 = ps0 + 0.5*(vs0 + vs1)*prediction_time;
+  double vs1 = ego.getTargetSpeed();
   if ( !front_vehicle.empty() ) {
     double ps_front = front_vehicle[0];
     double vs_front = front_vehicle[1];
-
-    double ps1_tmp = ps_front + vs_front*prediction_time - ego.getMinSafeDistance();
-    double vs1_tmp = 2*(ps1_tmp - ps0) - vs0;
-    if ( vs1_tmp < ego.getTargetSpeed() ) {
-      vs1 = vs1_tmp;
-      ps1 = ps1_tmp;
-    }
+    double ds1_safe = ps_front - ps0 + vs_front*prediction_time - ego.getMinSafeDistance();
+    double vs1_safe = 2*ds1_safe / prediction_time - vs0;
+    if ( vs1_safe < ego.getTargetSpeed() ) { vs1 = vs1_safe; }
   }
+  double ds1 = 0.5*(vs0 + vs1)*prediction_time;
 
-  pd1 = (ego.getLaneID() - 0.5) * ego.getMap()->getLaneWidth();
-  vd1 = 0;
-  as1 = 0;
-  ad1 = 0;
+  double pd1 = (ego.getLaneID() - 0.5) * ego.getMap()->getLaneWidth();
 
-  std::vector<double> state1_s = {ps1, vs1, as1};
-  std::vector<double> state1_d = {pd1, vd1, ad1};
-  vehicle_state state1 = std::make_pair(state1_s, state1_d);
+  PathPlanner planner(ego.getTargetSpeed(), ego.getMaxAcceleration(), ego.getMaxJerk());
 
-  PathPlanner planner(ego.getMaxSpeed(), ego.getMaxAcceleration(), ego.getMaxJerk());
+  planner.setDsBoundary(0.9*ds1, ds1);
+  planner.setVsBoundary(0.9*vs1, vs1);
+  planner.setAsBoundary(0, 0);
+  planner.setPdBoundary(pd1, pd1);
+  planner.setVdBoundary(0, 0);
+  planner.setAdBoundary(0, 0);
 
-  vehicle_trajectory new_path = planner.plan(state0, state1, prediction_time);
+  vehicle_trajectory new_path = planner.plan(state0, prediction_time);
 
   ego.extendPath(new_path);
 }

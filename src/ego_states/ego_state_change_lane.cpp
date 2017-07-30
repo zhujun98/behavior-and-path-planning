@@ -18,35 +18,30 @@ EgoStateChangeLane::~EgoStateChangeLane() {}
 
 void EgoStateChangeLane::planPath(Ego &ego) {
   auto state0 = getState0(ego);
-  double ps0 = state0.first[0];
   double vs0 = state0.first[1];
 
-  double ps1, vs1, as1;
-  double pd1, vd1, ad1;
-
   auto vehicle_side_front = ego.getClosestVehicle(ego.getTargetLaneID(), 1);
-  if ( vehicle_side_front.empty()) {
-    vs1 = ego.getTargetSpeed();
-  } else {
-    vs1 = vehicle_side_front[1];
-    if ( vs1 > ego.getTargetSpeed() ) { vs1 = ego.getTargetSpeed(); }
-  }
 
-  vd1 = 0;
-  as1 = 0;
-  ad1 = 0;
-  double prediction_time = 3.0; // in s
+  // extend the current path
+  double prediction_time = 4.0 - ego.getPathS()->size()*ego.getTimeStep(); // in s
 
-  ps1 = ps0 + 0.5*(vs0 + vs1)*prediction_time;
-  pd1 = (ego.getTargetLaneID() - 0.5) * ego.getMap()->getLaneWidth();
+  double vs1 = vs0 + ego.getMaxAcceleration()*prediction_time;
+  if ( vs1 > ego.getTargetSpeed() ) { vs1 = ego.getTargetSpeed(); }
+  double ds1 = 0.5*(vs0 + vs1)*prediction_time;
 
-  std::vector<double> state1_s = {ps1, vs1, as1};
-  std::vector<double> state1_d = {pd1, vd1, ad1};
-  vehicle_state state1 = std::make_pair(state1_s, state1_d);
+  double pd1 = (ego.getTargetLaneID() - 0.5) * ego.getMap()->getLaneWidth();
 
-  PathPlanner planner(ego.getMaxSpeed(), ego.getMaxAcceleration(), ego.getMaxJerk());
+  PathPlanner planner(ego.getTargetSpeed(), ego.getMaxAcceleration(), ego.getMaxJerk());
 
-  vehicle_trajectory new_path = planner.plan(state0, state1, prediction_time);
+  planner.setDsBoundary(0.95*ds1, 1.05*ds1);
+  planner.setVsBoundary(0.95*vs1, 1.05*vs1);
+  planner.setAsBoundary(0, 0);
+
+  planner.setPdBoundary(pd1, pd1);
+  planner.setVdBoundary(0, 0);
+  planner.setAdBoundary(0, 0);
+
+  vehicle_trajectory new_path = planner.plan(state0, prediction_time);
 
   ego.extendPath(new_path);
 }

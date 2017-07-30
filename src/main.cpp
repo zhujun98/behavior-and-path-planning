@@ -19,7 +19,7 @@
 
 int main() {
 
-  testPathPlanner();
+//  testPathPlanner();
 
   uWS::Hub h;
 

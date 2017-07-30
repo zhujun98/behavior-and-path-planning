@@ -16,7 +16,7 @@ EgoTransitionFTToCL::~EgoTransitionFTToCL() {}
 bool EgoTransitionFTToCL::willCollision(const Ego& ego, int direction) const {
   if ( direction != 1 && direction != -1 ) { return true; }
 
-  double prediction_time = 3; // in s
+  double prediction_time = 1.5; // in s
 
   std::vector<double> side_front_vehicle = ego.getClosestVehicle(ego.getLaneID() + direction, 1);
   std::vector<double> side_rear_vehicle = ego.getClosestVehicle(ego.getLaneID() + direction, -1);
@@ -79,10 +79,10 @@ bool EgoTransitionFTToCL::isOptimal(const Ego &ego, int direction) const {
     }
   }
 
-//  if ( ego.getTicker() % 20  == 0 ) {
-//    std::cout << "Current lane ID: " << ego.getLaneID()
-//              << ", Best land ID: " << max_distance_lane_id << std::endl;
-//  }
+  if ( ego.getTicker() % 20  == 0 ) {
+    std::cout << "Current lane ID: " << ego.getLaneID()
+              << ", Best land ID: " << max_distance_lane_id << std::endl;
+  }
 
   // if the lane which has the most space is on the same direction as the
   // current planned lane-changing direction. Then do it!

@@ -15,7 +15,7 @@ EgoStateChangeLaneRight::EgoStateChangeLaneRight() {
 EgoStateChangeLaneRight::~EgoStateChangeLaneRight() {}
 
 void EgoStateChangeLaneRight::onEnter(Ego& ego) {
-  ego.truncatePath(5);
+  ego.truncatePath(15);
   planPath(ego);
   std::cout << "Enter state: *** CHANGE TO THE RIGHT LANE *** from Lane-" << ego.getLaneID()
             << " to Lane-" << ego.getTargetLaneID() << std::endl;

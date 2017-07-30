@@ -52,6 +52,7 @@ inline std::pair<std::vector<double>, std::vector<double>> getState0(const Ego& 
   double ps0, vs0, as0;
   double pd0, vd0, ad0;
 
+  // we need at least 3 points to calculate acceleration
   if ( ego.getPathS()->empty() || ego.getPathS()->size() < 3 ) {
     ps0 = ego.getPs();
     pd0 = ego.getPd();

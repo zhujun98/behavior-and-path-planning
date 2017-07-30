@@ -18,10 +18,10 @@ class Map;
 class Ego : public Vehicle {
 
 private:
-  EgoState* state_;
+  EgoState* state_; // vehicle state
 
   typedef std::vector<std::vector<std::vector<double>>> Surroundings;
-  Surroundings surroundings_;
+  Surroundings surroundings_; // surrounding vehicles information
 
   int target_lane_id_;
   double target_speed_;
@@ -34,7 +34,9 @@ private:
   double max_jerk_; // maximum jerk (m/s^3)
   double max_steering_; // maximum steering angle (rad)
   double min_safe_distance_;
-  double max_evaluation_distance_; // we care about traffic within this distance (m)
+  // We care about traffic within this distance (m). Also, in reality,
+  // the detector has its own range.
+  double max_evaluation_distance_;
 
   long ticker_;  // a timer controlling output
 

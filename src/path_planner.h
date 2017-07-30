@@ -7,6 +7,7 @@
 
 #include <vector>
 
+
 typedef std::pair<std::vector<double>, std::vector<double>> path_coefficients;
 typedef std::pair<std::vector<double>, std::vector<double>> vehicle_state;
 typedef std::pair<std::vector<double>, std::vector<double>> vehicle_trajectory;
@@ -14,11 +15,37 @@ typedef std::pair<std::vector<double>, std::vector<double>> vehicle_trajectory;
 
 class PathPlanner {
 private:
-  double time_step_;
+  double time_step_; // in t
 
-  double max_speed_;
-  double max_acceleration_;
-  double max_jerk_;
+  double max_speed_; // in m/s
+  double max_acceleration_; // in m/s^2
+  double max_jerk_; // in m/s^3
+
+  /*
+   * Boundary conditions
+   * We are only using ds, vs now for brute force search. However, this
+   * is a good interface for high-level optimization.
+   */
+
+  double goal_ds_upper_;
+  double goal_ds_lower_;
+
+  double goal_vs_upper_;
+  double goal_vs_lower_;
+
+  double goal_as_upper_;
+  double goal_as_lower_;
+
+  double goal_pd_upper_;
+  double goal_pd_lower_;
+
+  double goal_vd_upper_;
+  double goal_vd_lower_;
+
+  double goal_ad_upper_;
+  double goal_ad_lower_;
+
+  int search_steps_;
 
   //
   // Evaluate the ith derivative of a polynomial
@@ -26,6 +53,7 @@ private:
   //
   // @param p: polynomial coefficients
   // @param t: time
+  // @param deriv: order of derivative
   //
   // @return: value at time t
   //
@@ -39,11 +67,12 @@ private:
   //
   // @param state0: initial state [x, dx/dt, d^2(x)/dt^2]
   // @param state1: final state [x, dx/dt, d^2(x)/dt^2]
-  // @param dt: transition time (s) between the initial and final states
+  // @param duration: transition time (s) between the initial and final states
   //
   std::vector<double> jerkMinimizingTrajectory(const std::vector<double>& state0,
                                                const std::vector<double>& state1,
                                                double duration) ;
+
   //
   // Evaluate the position at time t using the given polynomial coefficients
   // y = p[0] + p[1]*t + p[2]*t + ... + p[n-1]*t^(n-1)
@@ -55,26 +84,48 @@ private:
   //
   double evalTrajectory(const std::vector<double>& p, double t) const;
 
+  // Evaluate the velocity at time t using the given polynomial coefficients
   double evalVelocity(const std::vector<double>& p, double t) const;
 
+  // Evaluate the acceleration at time t using the given polynomial coefficients
   double evalAcceleration(const std::vector<double>& p, double t) const;
 
+  // Evaluate the jerk at time t using the given polynomial coefficients
   double evalJerk(const std::vector<double>& p, double t) const;
 
-  double analyzePath(const vehicle_trajectory& path, double duration);
+  //
+  // calculate the cost of a path
+  //
+  // @param path: path
+  // @param duration: duration
+  //
+  // @return: a vector of costs from different terms.
+  //          (It is convenient for debug)
+  //
+  std::vector<double> analyzePath(const vehicle_trajectory& path, double duration);
 
 public:
 
   // consturctor
   PathPlanner(double max_speed, double max_acceleration, double max_jerk);
 
-  //
+  // destructor
   ~PathPlanner();
 
   // Find the optimized path
-  vehicle_trajectory plan(const vehicle_state& state0, const vehicle_state& state1, double duration);
+  vehicle_trajectory plan(const vehicle_state& state0, double duration);
 
-  void setTimeStep(double value);
+  double setVsBoundary(double lower, double upper);
+
+  double setAsBoundary(double lower, double upper);
+
+  double setDsBoundary(double lower, double upper);
+
+  double setVdBoundary(double lower, double upper);
+
+  double setAdBoundary(double lower, double upper);
+
+  double setPdBoundary(double lower, double upper);
 
 };
 

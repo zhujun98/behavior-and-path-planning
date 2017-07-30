@@ -9,7 +9,10 @@
 #include "Eigen-3.3/Eigen/Dense"
 
 #include "path_planner.h"
+#include "utilities.h"
 
+
+const double INF_D = std::numeric_limits<double>::max();
 
 PathPlanner::PathPlanner(double max_speed, double max_acceleration, double max_jerk) {
   time_step_ = 0.02; // in s
@@ -17,104 +20,163 @@ PathPlanner::PathPlanner(double max_speed, double max_acceleration, double max_j
   max_speed_ = max_speed;
   max_acceleration_ = max_acceleration;
   max_jerk_ = max_jerk;
+
+  search_steps_ = 5;
+
+  goal_ds_upper_ = 0;
+  goal_ds_lower_ = 0;
+
+  goal_vs_upper_ = max_speed_;
+  goal_vs_lower_ = max_speed_;
+
+  goal_as_upper_ = 0;
+  goal_as_lower_ = 0;
+
+  goal_pd_upper_ = 0;
+  goal_pd_lower_ = 0;
+
+  goal_vd_upper_ = 0;
+  goal_vd_lower_ = 0;
+
+  goal_ad_upper_ = 0;
+  goal_ad_lower_ = 0;
 }
 
 PathPlanner::~PathPlanner() {}
 
-
-double PathPlanner::analyzePath(const path_coefficients& coefficients, double duration) {
-  double cost = 0;
+std::vector<double> PathPlanner::analyzePath(const path_coefficients& coefficients, double duration) {
+  std::vector<double> costs;
 
   double t = 0;
   double max_velocity_sqr = 0;
-  double ave_velocity_sqr = 0;
-  double max_acceleration_sqr = 0;
-  double ave_acceleration_sqr = 0;
-  double max_jerk_sqr = 0;
-  double ave_jerk_sqr = 0;
+  double max_as = 0;
+  double max_ad = 0;
+  double max_js = 0;
+  double max_jd = 0;
+  double min_vs = 0;
+
   double count = 0;
   while ( t < duration ) {
     double vs = evalVelocity(coefficients.first, t);
+    if ( vs < min_vs ) { min_vs = vs; }
     double vd = evalVelocity(coefficients.second, t);
     double v_sqr = vs*vs + vd*vd;
-    ave_velocity_sqr += v_sqr;
     if ( v_sqr > max_velocity_sqr ) { max_velocity_sqr = v_sqr; }
 
-    double as = evalAcceleration(coefficients.first, t);
-    double ad = evalAcceleration(coefficients.second, t);
-    double a_sqr = as*as + ad*ad;
-    ave_acceleration_sqr += a_sqr;
-    if ( a_sqr > max_acceleration_sqr ) { max_acceleration_sqr = a_sqr; }
+    double abs_as = std::abs(evalAcceleration(coefficients.first, t));
+    if ( abs_as > max_as ) { max_as = abs_as; }
 
-    double js = evalJerk(coefficients.first, t);
-    double jd = evalJerk(coefficients.second, t);
-    double j_sqr = js*js + jd*jd;
-    ave_jerk_sqr += j_sqr;
-    if ( j_sqr > max_jerk_sqr ) { max_jerk_sqr = j_sqr; }
+    double abs_ad = std::abs(evalAcceleration(coefficients.second, t));
+    if ( abs_ad > max_ad ) { max_ad = abs_ad; }
+
+    double abs_js = std::abs(evalJerk(coefficients.first, t));
+    if ( abs_js > max_js ) { max_js = abs_js; }
+
+    double abs_jd = std::abs(evalJerk(coefficients.second, t));
+    if ( abs_jd > max_jd ) { max_jd = abs_jd; }
 
     t += time_step_;
     ++count;
   }
 
+  /*
+   * Forbid to go backward
+   */
+  if ( min_vs < 0 ) {
+    costs.push_back(1000000);
+  } else {
+    costs.push_back(0);
+  }
+
+  /*
+   * Heavily penalize when exceeding maximum speed, acceleration and jerk
+   */
+
   double max_speed = std::sqrt(max_velocity_sqr);
-  double ave_speed = std::sqrt(ave_velocity_sqr / count);
-  if ( max_speed > 0.95*max_speed_ ) {
-    cost += max_speed*10;
+  if ( max_speed > max_speed_ ) {
+    costs.push_back(max_speed*10);
   } else {
-    cost -= ave_speed;
+    costs.push_back(0);
   }
 
-  double max_acceleration = std::sqrt(max_acceleration_sqr);
-  double ave_acceleration = std::sqrt(ave_acceleration_sqr / count);
-  if ( max_acceleration > 0.95*max_acceleration_ ) {
-    cost += max_acceleration*10;
-  } else {
-    cost += ave_acceleration;
+  if ( max_as > max_acceleration_ ) {
+    costs.push_back(max_as*5);
+  }  else {
+    costs.push_back(0);
   }
 
-  double max_jerk = std::sqrt(max_jerk_sqr);
-  double ave_jerk = std::sqrt(ave_jerk_sqr / count);
-  if ( max_jerk > 0.95*max_jerk_ ) {
-    cost += max_jerk*10;
-  } else {
-    cost += ave_jerk;
+  if ( max_ad > max_acceleration_ ) {
+    costs.push_back(max_ad*5);
+  }  else {
+    costs.push_back(0);
   }
 
-  std::cout << "cost: " << cost
-            << "max speed: " << max_speed
-            << "max acceleration: " << max_acceleration
-            << "max jerk: " << max_jerk << std::endl;
+  if ( max_js > max_jerk_ ) {
+    costs.push_back(max_js*5);
+  }  else {
+    costs.push_back(0);
+  }
 
-  return cost;
+  if ( max_jd > max_jerk_ ) {
+    costs.push_back(max_jd*5);
+  }  else {
+    costs.push_back(0);
+  }
+
+  /*
+   * Awarding average speed
+   */
+  double distance = evalTrajectory(coefficients.first, duration) -
+                    evalTrajectory(coefficients.first, 0);
+  costs.push_back(-distance/duration);
+
+  return costs;
 }
 
-vehicle_trajectory PathPlanner::plan(const vehicle_state& state0,
-                                     const vehicle_state& state1,
-                                     double duration) {
-  double min_cost = 1000;
+vehicle_trajectory PathPlanner::plan(const vehicle_state& state0, double duration) {
+
+  double min_cost = INF_D;
+  std::vector<double> best_costs;
   path_coefficients best_coefficients;
 
-  int count = 0;
-  vehicle_state state1_jittered = state1;
+  double ds_step = (goal_ds_upper_ - goal_ds_lower_) / search_steps_;
+  double vs_step = (goal_vs_upper_ - goal_vs_lower_) / search_steps_;
 
-  while ( count < 10 ) {
-    state1_jittered.first[0] = state1.first[0] + 0.5*(count - 5);
-    std::vector<double> coeff_s = jerkMinimizingTrajectory(
-        state0.first, state1_jittered.first, duration);
-    std::vector<double> coeff_d = jerkMinimizingTrajectory(
-        state0.second, state1_jittered.second, duration);
+  double goal_as = goal_as_lower_;
+  double goal_pd = goal_pd_lower_;
+  double goal_vd = goal_vd_lower_;
+  double goal_ad = goal_ad_lower_;
 
-    path_coefficients coefficients = std::make_pair(coeff_s, coeff_d);
+  // optimization using brute force
+  double goal_vs = goal_vs_lower_;
+  for ( int i = 0; i <= search_steps_; ++i) {
+    double goal_ds = goal_ds_lower_;
+    for ( int j = 0; j <= search_steps_; ++j ) {
+      vehicle_state state1 = {{goal_ds + state0.first[0], goal_vs, goal_as},
+                              {goal_pd, goal_vd, goal_ad}};
 
-    double cost = analyzePath(coefficients, duration);
+      std::vector<double> coeff_s = jerkMinimizingTrajectory(
+          state0.first, state1.first, duration);
+      std::vector<double> coeff_d = jerkMinimizingTrajectory(
+          state0.second, state1.second, duration);
 
-    if ( cost < min_cost ) {
-      min_cost = cost;
-      best_coefficients = coefficients;
+      // empty coefficients result in an all zero trajectory, which could
+      // have the best cost.
+      if ( coeff_s.empty() || coeff_d.empty() ) { continue; }
+
+      path_coefficients coefficients = std::make_pair(coeff_s, coeff_d);
+
+      std::vector<double> costs = analyzePath(coefficients, duration);
+      double total_cost = std::accumulate(costs.begin(), costs.end(), 0);
+      if ( total_cost < min_cost ) {
+        min_cost = total_cost;
+        best_costs = costs;
+        best_coefficients = coefficients;
+      }
+      goal_ds += ds_step;
     }
-    ++count;
+    goal_vs += vs_step;
   }
-
   double t = 0.0;
   std::vector<double> best_path_s;
   std::vector<double> best_path_d;
@@ -124,6 +186,9 @@ vehicle_trajectory PathPlanner::plan(const vehicle_state& state0,
 
     t += time_step_;
   }
+
+//  std::cout << "Best costs: ";
+//  print1DContainer(best_costs);
 
   return std::make_pair(best_path_s, best_path_d);
 }
@@ -199,4 +264,46 @@ double PathPlanner::evalJerk(const std::vector<double>& p, double t) const {
   return evalPolynomialDeriv(p, t, 3);
 }
 
-void PathPlanner::setTimeStep(double value) { time_step_ = value; }
+double PathPlanner::setDsBoundary(double lower, double upper) {
+  if ( upper < lower ) { upper = lower; }
+  goal_ds_lower_ = lower;
+  goal_ds_upper_ = upper;
+}
+
+double PathPlanner::setVsBoundary(double lower, double upper) {
+  if ( lower > max_speed_ ) { lower = max_speed_; }
+  if ( upper > max_speed_ ) { upper = max_speed_; }
+  if ( upper < lower ) { upper = lower; }
+  goal_vs_lower_ = lower;
+  goal_vs_upper_ = upper;
+}
+
+double PathPlanner::setAsBoundary(double lower, double upper) {
+  if ( lower > max_acceleration_ ) { lower = max_acceleration_; }
+  if ( upper > max_acceleration_ ) { upper = max_acceleration_; }
+  if ( upper < lower ) { upper = lower; }
+  goal_as_lower_ = lower;
+  goal_as_upper_ = upper;
+}
+
+double PathPlanner::setPdBoundary(double lower, double upper) {
+  if ( upper < lower ) { upper = lower; }
+  goal_pd_lower_ = lower;
+  goal_pd_upper_ = upper;
+}
+
+double PathPlanner::setVdBoundary(double lower, double upper) {
+  if ( lower > max_speed_ ) { lower = max_speed_; }
+  if ( upper > max_speed_ ) { upper = max_speed_; }
+  if ( upper < lower ) { upper = lower; }
+  goal_vd_lower_ = lower;
+  goal_vd_upper_ = upper;
+}
+
+double PathPlanner::setAdBoundary(double lower, double upper) {
+  if ( lower > max_speed_ ) { lower = max_speed_; }
+  if ( upper > max_speed_ ) { upper = max_speed_; }
+  if ( upper < lower ) { upper = lower; }
+  goal_ad_lower_ = lower;
+  goal_ad_upper_ = upper;
+}

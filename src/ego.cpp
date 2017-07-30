@@ -17,7 +17,7 @@ Ego::Ego(const Map& map) : Vehicle(map) {
 
   target_speed_ = max_speed_*0.95;
 
-  state_ = EgoStateFactory::createState(CS);
+  state_ = EgoStateFactory::createState(FT);
   state_->onEnter(*this);
 
   // ugly?!
@@ -129,9 +129,9 @@ void Ego::truncatePath(unsigned int n_keep) {
 
 void Ego::extendPath(vehicle_trajectory new_path) {
 
-  int i = 0;
-  while (path_s_.size() < new_path.first.size() - 1 ) {
-    ++i;
+  // the last point of the old path and the first point of the new
+  // path are the same.
+  for ( int i=1; i < new_path.first.size(); ++i ) {
     path_s_.push_back(new_path.first[i]);
     path_d_.push_back(new_path.second[i]);
   }
