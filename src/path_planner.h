@@ -7,7 +7,7 @@
 
 #include <vector>
 
-
+typedef std::pair<std::vector<double>, std::vector<double>> path_coefficients;
 typedef std::pair<std::vector<double>, std::vector<double>> vehicle_state;
 typedef std::pair<std::vector<double>, std::vector<double>> vehicle_trajectory;
 
@@ -61,6 +61,8 @@ private:
 
   double evalJerk(const std::vector<double>& p, double t) const;
 
+  double analyzePath(const vehicle_trajectory& path, double duration);
+
 public:
 
   // consturctor
@@ -70,7 +72,7 @@ public:
   ~PathPlanner();
 
   // Find the optimized path
-  vehicle_trajectory plan(vehicle_state state0, vehicle_state state1, double duration);
+  vehicle_trajectory plan(const vehicle_state& state0, const vehicle_state& state1, double duration);
 
   void setTimeStep(double value);
 

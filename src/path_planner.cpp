@@ -22,23 +22,110 @@ PathPlanner::PathPlanner(double max_speed, double max_acceleration, double max_j
 PathPlanner::~PathPlanner() {}
 
 
-vehicle_trajectory
-PathPlanner::plan(vehicle_state state0, vehicle_state state1, double duration) {
+double PathPlanner::analyzePath(const path_coefficients& coefficients, double duration) {
+  double cost = 0;
 
-  std::vector<double> coeff_s = jerkMinimizingTrajectory(state0.first, state1.first, duration);
-  std::vector<double> coeff_d = jerkMinimizingTrajectory(state0.second, state1.second, duration);
+  double t = 0;
+  double max_velocity_sqr = 0;
+  double ave_velocity_sqr = 0;
+  double max_acceleration_sqr = 0;
+  double ave_acceleration_sqr = 0;
+  double max_jerk_sqr = 0;
+  double ave_jerk_sqr = 0;
+  double count = 0;
+  while ( t < duration ) {
+    double vs = evalVelocity(coefficients.first, t);
+    double vd = evalVelocity(coefficients.second, t);
+    double v_sqr = vs*vs + vd*vd;
+    ave_velocity_sqr += v_sqr;
+    if ( v_sqr > max_velocity_sqr ) { max_velocity_sqr = v_sqr; }
+
+    double as = evalAcceleration(coefficients.first, t);
+    double ad = evalAcceleration(coefficients.second, t);
+    double a_sqr = as*as + ad*ad;
+    ave_acceleration_sqr += a_sqr;
+    if ( a_sqr > max_acceleration_sqr ) { max_acceleration_sqr = a_sqr; }
+
+    double js = evalJerk(coefficients.first, t);
+    double jd = evalJerk(coefficients.second, t);
+    double j_sqr = js*js + jd*jd;
+    ave_jerk_sqr += j_sqr;
+    if ( j_sqr > max_jerk_sqr ) { max_jerk_sqr = j_sqr; }
+
+    t += time_step_;
+    ++count;
+  }
+
+  double max_speed = std::sqrt(max_velocity_sqr);
+  double ave_speed = std::sqrt(ave_velocity_sqr / count);
+  if ( max_speed > 0.95*max_speed_ ) {
+    cost += max_speed*10;
+  } else {
+    cost -= ave_speed;
+  }
+
+  double max_acceleration = std::sqrt(max_acceleration_sqr);
+  double ave_acceleration = std::sqrt(ave_acceleration_sqr / count);
+  if ( max_acceleration > 0.95*max_acceleration_ ) {
+    cost += max_acceleration*10;
+  } else {
+    cost += ave_acceleration;
+  }
+
+  double max_jerk = std::sqrt(max_jerk_sqr);
+  double ave_jerk = std::sqrt(ave_jerk_sqr / count);
+  if ( max_jerk > 0.95*max_jerk_ ) {
+    cost += max_jerk*10;
+  } else {
+    cost += ave_jerk;
+  }
+
+  std::cout << "cost: " << cost
+            << "max speed: " << max_speed
+            << "max acceleration: " << max_acceleration
+            << "max jerk: " << max_jerk << std::endl;
+
+  return cost;
+}
+
+vehicle_trajectory PathPlanner::plan(const vehicle_state& state0,
+                                     const vehicle_state& state1,
+                                     double duration) {
+  double min_cost = 1000;
+  path_coefficients best_coefficients;
+
+  int count = 0;
+  vehicle_state state1_jittered = state1;
+
+  while ( count < 10 ) {
+    state1_jittered.first[0] = state1.first[0] + 0.5*(count - 5);
+    std::vector<double> coeff_s = jerkMinimizingTrajectory(
+        state0.first, state1_jittered.first, duration);
+    std::vector<double> coeff_d = jerkMinimizingTrajectory(
+        state0.second, state1_jittered.second, duration);
+
+    path_coefficients coefficients = std::make_pair(coeff_s, coeff_d);
+
+    double cost = analyzePath(coefficients, duration);
+
+    if ( cost < min_cost ) {
+      min_cost = cost;
+      best_coefficients = coefficients;
+    }
+    ++count;
+  }
 
   double t = 0.0;
-  std::vector<double> path_s;
-  std::vector<double> path_d;
-  while ( path_s.size() <= duration / time_step_  ) {
-    path_s.push_back(evalTrajectory(coeff_s, t));
-    path_d.push_back(evalTrajectory(coeff_d, t));
+  std::vector<double> best_path_s;
+  std::vector<double> best_path_d;
+  while ( best_path_s.size() <= duration / time_step_  ) {
+    best_path_s.push_back(evalTrajectory(best_coefficients.first, t));
+    best_path_d.push_back(evalTrajectory(best_coefficients.second, t));
 
     t += time_step_;
   }
 
-  return std::make_pair(path_s, path_d);
+  return std::make_pair(best_path_s, best_path_d);
 }
 
 std::vector<double>

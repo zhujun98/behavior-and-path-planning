@@ -25,10 +25,11 @@ void EgoStateChangeLane::planPath(Ego &ego) {
   double pd1, vd1, ad1;
 
   auto vehicle_side_front = ego.getClosestVehicle(ego.getTargetLaneID(), 1);
-  if ( vehicle_side_front.empty() ) {
-    vs1 = ego.getMaxSpeed();
+  if ( vehicle_side_front.empty()) {
+    vs1 = ego.getTargetSpeed();
   } else {
     vs1 = vehicle_side_front[1];
+    if ( vs1 > ego.getTargetSpeed() ) { vs1 = ego.getTargetSpeed(); }
   }
 
   vd1 = 0;
