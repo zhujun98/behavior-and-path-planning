@@ -14,7 +14,7 @@ Ego::Ego(const Map& map) : Vehicle(map) {
   max_jerk_ = 10; // in m/s^3
   min_safe_distance_ = 15; // in m
 
-  max_evaluation_time_ = 3; // in s
+  max_evaluation_time_ = 5; // in s
   max_evaluation_distance_ = 100; // in m
 
   target_speed_ = max_speed_;

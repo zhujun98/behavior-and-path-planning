@@ -7,6 +7,7 @@
 #include "../map.h"
 #include "../ego.h"
 #include "../ego_states/ego_state.h"
+#include "../utilities.h"
 
 
 EgoTransitionFTToCL::EgoTransitionFTToCL() {}
@@ -54,11 +55,12 @@ bool EgoTransitionFTToCL::willCollision(const Ego& ego, int direction) const {
 bool EgoTransitionFTToCL::isOptimal(const Ego &ego, int direction) const {
   if ( direction != 1 && direction != -1 ) { return false; }
 
+  int current_lane_id = ego.getLaneID();
   // A small prediction time here unless we know the front vehicle
   // dynamics very well.
   double prediction_time = 1.0;
 
-  std::vector<double> ds_finals;
+  std::vector<double> ds_finals;  // ds at the prediction time
   // lane ID starts from 1
   for ( int i = 1; i <= ego.getMap()->getNoLanes(); ++i ) {
     auto front_vehicle = ego.getClosestVehicle(i, 1);
@@ -75,25 +77,35 @@ bool EgoTransitionFTToCL::isOptimal(const Ego &ego, int direction) const {
     ds_finals.push_back(ds_final);
   }
 
-  double max_distance_lane_id = ego.getLaneID();
-  double max_ps_final = ds_finals[max_distance_lane_id - 1];
+  double max_distance_lane_id = current_lane_id;
+  double max_ds_final = ds_finals[max_distance_lane_id - 1];
   // be careful since land ID starts from 1
   for ( int i = 0; i < ds_finals.size(); ++i ) {
-    // Shift the lane unless there is some gap.
-    // Also ensure that the current lane is the best when having the
-    // same cost.
-    if ( ds_finals[i] > max_ps_final + 15 ) {
-      max_ps_final = ds_finals[i];
+    // The second condition says always keep in the middle lane (yield
+    // the overtake lane.
+    if (( ds_finals[i] > max_ds_final ) ||
+       ( std::abs(ds_finals[i] - max_ds_final) < 5 && i == 1 )) {
+      max_ds_final = ds_finals[i];
       max_distance_lane_id = i + 1;
     }
   }
 
-  if ( ego.getTicker() % 20  == 0 ) {
-    std::cout << "Current lane ID: " << ego.getLaneID()
-              << ", Best land ID: " << max_distance_lane_id << std::endl;
+  // for debug
+  if ( ego.getTicker() % 30  == 0 ) {
+    std::cout << "Current lane ID: " << current_lane_id
+              << ", Best land ID: " << max_distance_lane_id << ": ";
+    print1DContainer(ds_finals);
   }
 
-  // if the lane which has the most space is on the same direction as the
-  // current planned lane-changing direction. Then do it!
-  return ( direction*(max_distance_lane_id - ego.getLaneID()) >= 1 );
+  if ( direction*(max_distance_lane_id - current_lane_id) == 1 ) {
+    return true;
+  } else if ( direction*(max_distance_lane_id - current_lane_id) > 1 ) {
+    double current_ds = ds_finals[current_lane_id - 1];
+    double next_ds = ds_finals[current_lane_id - 1 + direction ];
+
+    // if there is not enough room to change lane if the car keeps going
+    return ( current_ds - next_ds < 30 );
+  } else {
+    return false;
+  }
 }
