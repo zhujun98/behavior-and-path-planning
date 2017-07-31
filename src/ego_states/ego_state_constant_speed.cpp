@@ -22,6 +22,7 @@ EgoStateConstantSpeed::EgoStateConstantSpeed() {
 EgoStateConstantSpeed::~EgoStateConstantSpeed() {}
 
 void EgoStateConstantSpeed::onEnter(Ego& ego) {
+  ego.setTargetSpeed(ego.getMaxSpeed()*0.95);
   std::cout << "Enter state: *** CONSTANT SPEED *** " << ego.getTargetSpeed()*2.25
             << " MPH" << std::endl;
 }

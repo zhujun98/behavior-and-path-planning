@@ -6,6 +6,7 @@
 #include "../ego.h"
 #include "ego_state.h"
 #include "../ego_transition_states/ego_transition_state.h"
+#include "ego_state_start.h"
 #include "ego_state_change_lane_right.h"
 #include "ego_state_change_lane_left.h"
 #include "ego_state_constant_speed.h"
@@ -43,6 +44,8 @@ EgoStateFactory::~EgoStateFactory() {}
 
 EgoState* EgoStateFactory::createState(States name) {
   switch(name) {
+    case ST:
+      return new EgoStateStart;
     case CLR:
       return new EgoStateChangeLaneRight;
     case CLL:

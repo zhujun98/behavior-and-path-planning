@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "ego_transition_state.h"
+#include "ego_transition_ST_to_FT.h"
 #include "ego_transition_CS_to_FT.h"
 #include "ego_transition_CS_to_CLR.h"
 #include "ego_transition_CS_to_CLL.h"
@@ -30,6 +31,9 @@ EgoTransitionStateFactory::~EgoTransitionStateFactory() {}
 
 EgoTransitionState* EgoTransitionStateFactory::createState(TransitionStates name) {
   switch (name) {
+    case ST_TO_FT:
+      static EgoTransitionSTToFT st_to_ft;
+      return &st_to_ft;
     case CS_TO_FT:
       static EgoTransitionCSToFT cs_to_ft;
       return &cs_to_ft;

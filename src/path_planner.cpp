@@ -99,25 +99,25 @@ std::vector<double> PathPlanner::analyzePath(const path_coefficients& coefficien
     costs.push_back(0);
   }
 
-  if ( max_as > max_acceleration_ ) {
+  if ( max_as > 0.95*max_acceleration_ ) {
     costs.push_back(max_as*5);
   }  else {
     costs.push_back(0);
   }
 
-  if ( max_ad > max_acceleration_ ) {
+  if ( max_ad > 0.95*max_acceleration_ ) {
     costs.push_back(max_ad*5);
   }  else {
     costs.push_back(0);
   }
 
-  if ( max_js > max_jerk_ ) {
+  if ( max_js > 0.95*max_jerk_ ) {
     costs.push_back(max_js*5);
   }  else {
     costs.push_back(0);
   }
 
-  if ( max_jd > max_jerk_ ) {
+  if ( max_jd > 0.95*max_jerk_ ) {
     costs.push_back(max_jd*5);
   }  else {
     costs.push_back(0);

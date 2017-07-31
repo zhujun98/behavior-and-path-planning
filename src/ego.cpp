@@ -17,9 +17,9 @@ Ego::Ego(const Map& map) : Vehicle(map) {
   max_evaluation_time_ = 3; // in s
   max_evaluation_distance_ = 100; // in m
 
-  target_speed_ = max_speed_*0.95;
+  target_speed_ = max_speed_;
 
-  state_ = EgoStateFactory::createState(FT);
+  state_ = EgoStateFactory::createState(ST);
   state_->onEnter(*this);
 
   // ugly?!

@@ -13,7 +13,6 @@ EgoTransitionFTToCS::EgoTransitionFTToCS() {}
 EgoTransitionFTToCS::~EgoTransitionFTToCS() {}
 
 EgoState* EgoTransitionFTToCS::getNextState(Ego& ego) const {
-  ego.setTargetSpeed(ego.getMaxSpeed()*0.95);
   return EgoStateFactory::createState(CS);
 }
 

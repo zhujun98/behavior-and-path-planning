@@ -23,7 +23,7 @@ void EgoStateChangeLane::planPath(Ego &ego) {
   auto vehicle_side_front = ego.getClosestVehicle(ego.getTargetLaneID(), 1);
 
   // extend the current path
-  double prediction_time = 2.5 - ego.getPathS()->size()*ego.getTimeStep(); // in s
+  double prediction_time = 2.7 - ego.getPathS()->size()*ego.getTimeStep(); // in s
 
   double vs1 = vs0 + ego.getMaxAcceleration()*prediction_time;
   if ( vs1 > ego.getTargetSpeed() ) { vs1 = ego.getTargetSpeed(); }

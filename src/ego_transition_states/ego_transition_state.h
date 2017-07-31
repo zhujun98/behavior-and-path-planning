@@ -10,6 +10,7 @@ class Ego;
 class EgoState;
 
 //
+// ST_TO_FT: start to follow traffic
 // CS_TO_FT: constant speed to follow traffic
 // CS_TO_CLR: constant speed to change lane right
 // CS_TO_CLL: constant speed to change lane left
@@ -18,7 +19,8 @@ class EgoState;
 // FT_TO_CLR: follow traffic to change lane right
 // FT_TO_CLL: follow traffic to change lane left
 //
-enum TransitionStates { CS_TO_FT, CS_TO_CLR, CS_TO_CLL, CL_TO_FT, FT_TO_CS, FT_TO_CLR, FT_TO_CLL };
+enum TransitionStates { ST_TO_FT, CS_TO_FT, CS_TO_CLR, CS_TO_CLL, CL_TO_FT,
+                        FT_TO_CS, FT_TO_CLR, FT_TO_CLL };
 
 
 class EgoTransitionState {
