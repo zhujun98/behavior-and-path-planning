@@ -34,8 +34,13 @@ private:
   double max_jerk_; // maximum jerk (m/s^3)
   double max_steering_; // maximum steering angle (rad)
   double min_safe_distance_;
+
+  // The actual evaluation distance is given by the minimum of
+  // max_evaluation_time_* speed_ and max_evaluation_distance_
+  //
   // We care about traffic within this distance (m). Also, in reality,
   // the detector has its own range.
+  double max_evaluation_time_;
   double max_evaluation_distance_;
 
   long ticker_;  // a timer controlling output

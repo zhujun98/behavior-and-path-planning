@@ -24,7 +24,7 @@ void EgoStateFollowTraffic::onEnter(Ego& ego) {
 }
 
 void EgoStateFollowTraffic::onUpdate(Ego &ego) {
-  ego.truncatePath(20);
+  ego.truncatePath(15);
   planPath(ego);
 }
 

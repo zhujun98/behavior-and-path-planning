@@ -16,12 +16,20 @@ EgoTransitionFTToCL::~EgoTransitionFTToCL() {}
 bool EgoTransitionFTToCL::willCollision(const Ego& ego, int direction) const {
   if ( direction != 1 && direction != -1 ) { return true; }
 
-  double prediction_time = 1.5; // in s
+  double prediction_time = 0.5; // in s
+  double safe_maneuver_distance = 10; // in m
 
+  std::vector<double> front_vehicle = ego.getClosestVehicle(ego.getLaneID(), 1);
   std::vector<double> side_front_vehicle = ego.getClosestVehicle(ego.getLaneID() + direction, 1);
   std::vector<double> side_rear_vehicle = ego.getClosestVehicle(ego.getLaneID() + direction, -1);
 
   // estimated distance after the prediction time
+  double distance_front = 1000; // a large number
+  if ( !front_vehicle.empty() ) {
+    double ps_front = front_vehicle[0];
+    double vs_front = front_vehicle[1];
+    distance_front = ps_front - ego.getPs() + ( vs_front - ego.getVs() ) * prediction_time;
+  }
 
   double distance_side_front = 1000; // a large number
   if ( !side_front_vehicle.empty() ) {
@@ -37,8 +45,9 @@ bool EgoTransitionFTToCL::willCollision(const Ego& ego, int direction) const {
     distance_side_rear = ego.getPs() - ps_rear + ( ego.getVs() - vs_rear ) * prediction_time;
   }
 
-  return ( (distance_side_front < ego.getMinSafeDistance()) ||
-           (distance_side_rear < ego.getMinSafeDistance()) );
+  return ( (std::abs(distance_front) < safe_maneuver_distance) ||
+           (std::abs(distance_side_front) < safe_maneuver_distance) ||
+           (std::abs(distance_side_rear) < safe_maneuver_distance) );
 }
 
 
@@ -73,7 +82,7 @@ bool EgoTransitionFTToCL::isOptimal(const Ego &ego, int direction) const {
     // Shift the lane unless there is some gap.
     // Also ensure that the current lane is the best when having the
     // same cost.
-    if ( ds_finals[i] > max_ps_final + 20 ) {
+    if ( ds_finals[i] > max_ps_final + 15 ) {
       max_ps_final = ds_finals[i];
       max_distance_lane_id = i + 1;
     }

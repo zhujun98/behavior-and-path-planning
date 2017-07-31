@@ -13,6 +13,8 @@ Ego::Ego(const Map& map) : Vehicle(map) {
   max_acceleration_ = 10; // in m/s^2
   max_jerk_ = 10; // in m/s^3
   min_safe_distance_ = 15; // in m
+
+  max_evaluation_time_ = 3; // in s
   max_evaluation_distance_ = 100; // in m
 
   target_speed_ = max_speed_*0.95;
@@ -94,7 +96,8 @@ std::vector<double> Ego::getClosestVehicle(int lane_id, int direction) const {
 
   // get the distance and the speed of the front car
   // Ignore the vehicle beyond the max_evaluation_distance_
-  double min_ds = max_evaluation_distance_;
+  double min_ds = speed_*max_evaluation_time_;
+  if (min_ds > max_evaluation_distance_ ) { min_ds = max_evaluation_distance_; }
   double ps;
   double vs;
   bool is_found = false;
