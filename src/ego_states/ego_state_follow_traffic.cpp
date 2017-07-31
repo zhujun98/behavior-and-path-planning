@@ -55,8 +55,8 @@ void EgoStateFollowTraffic::planPath(Ego& ego) {
 
   PathPlanner planner(ego.getTargetSpeed(), ego.getMaxAcceleration(), ego.getMaxJerk());
 
-  planner.setDsBoundary(0.9*ds1, ds1);
-  planner.setVsBoundary(0.9*vs1, vs1);
+  planner.setDsBoundary(0.8*ds1, ds1);
+  planner.setVsBoundary(0.8*vs1, vs1);
   planner.setAsBoundary(0, 0);
   planner.setPdBoundary(pd1, pd1);
   planner.setVdBoundary(0, 0);

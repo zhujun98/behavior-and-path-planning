@@ -33,8 +33,8 @@ void EgoStateChangeLane::planPath(Ego &ego) {
 
   PathPlanner planner(ego.getTargetSpeed(), ego.getMaxAcceleration(), ego.getMaxJerk());
 
-  planner.setDsBoundary(0.95*ds1, 1.05*ds1);
-  planner.setVsBoundary(0.95*vs1, 1.05*vs1);
+  planner.setDsBoundary(0.80*ds1, 1.0*ds1);
+  planner.setVsBoundary(0.80*vs1, 1.0*vs1);
   planner.setAsBoundary(0, 0);
 
   planner.setPdBoundary(pd1, pd1);

@@ -50,8 +50,8 @@ void EgoStateConstantSpeed::planPath(Ego& ego) {
 
   PathPlanner planner(ego.getTargetSpeed(), ego.getMaxAcceleration(), ego.getMaxJerk());
 
-  planner.setDsBoundary(ds1*0.95, ds1*1.05);
-  planner.setVsBoundary(vs1*0.95, vs1*1.05);
+  planner.setDsBoundary(ds1*0.8, ds1*1.0);
+  planner.setVsBoundary(vs1*0.8, vs1*1.0);
   planner.setAsBoundary(0, 0);
 
   planner.setPdBoundary(pd1, pd1);
