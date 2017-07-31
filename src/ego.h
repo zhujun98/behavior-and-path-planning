@@ -45,6 +45,9 @@ private:
 
   long ticker_;  // a timer controlling output
 
+  // Update information of the surrounding vehicles
+  void updateSurroundings(const std::vector<std::vector<double>>& sensor_fusion);
+
 public:
 
   // constructor
@@ -60,9 +63,6 @@ public:
   // Remove the way points in the vehicle paths which have been processed.
   void updateUnprocessedPath();
 
-  // Update information of the surrounding vehicles
-  void updateSurroundings(const std::vector<std::vector<double>>& sensor_fusion);
-
   //
   // Get the closest vehicle (in front of or in back of) on a given lane
   //
@@ -71,6 +71,11 @@ public:
   // @return: [s, v, d] of the vehicle
   //
   std::vector<double> getClosestVehicle(int lane_id, int direction) const;
+
+  //
+  // Get all the vehicles in a given lane
+  //
+  std::vector<std::vector<double>> getVehiclesInLane(int lane_id) const;
 
   //
   // Keep a given number of way points in the current path

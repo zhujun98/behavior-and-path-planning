@@ -17,40 +17,51 @@ EgoTransitionFTToCL::~EgoTransitionFTToCL() {}
 bool EgoTransitionFTToCL::willCollision(const Ego& ego, int direction) const {
   if ( direction != 1 && direction != -1 ) { return true; }
 
-  double prediction_time = 0.5; // in s
-  double safe_maneuver_distance = 10; // in m
+  // check collision with the vehicles in the same lane
+  auto vehicles_in_lane = ego.getVehiclesInLane(ego.getLaneID());
+  for ( const auto& v : vehicles_in_lane ) {
+    double safe_maneuver_distance = 5; // in m
 
-  std::vector<double> front_vehicle = ego.getClosestVehicle(ego.getLaneID(), 1);
-  std::vector<double> side_front_vehicle = ego.getClosestVehicle(ego.getLaneID() + direction, 1);
-  std::vector<double> side_rear_vehicle = ego.getClosestVehicle(ego.getLaneID() + direction, -1);
+    double t0 = 0;
+    double t1 = 1.0;
+    double speed = v[2];
+    double ps = v[4];
 
-  // estimated distance after the prediction time
-  double distance_front = 1000; // a large number
-  if ( !front_vehicle.empty() ) {
-    double ps_front = front_vehicle[0];
-    double vs_front = front_vehicle[1];
-    distance_front = ps_front - ego.getPs() + ( vs_front - ego.getVs() ) * prediction_time;
+    double distance_start = ps - ego.getPs() + ( speed - ego.getVs() ) * t0;
+    double distance_end = ps - ego.getPs() + ( speed - ego.getVs() ) * t1;
+
+    if ( distance_start * distance_end > 0 ) {
+      if ( std::abs(distance_start) < safe_maneuver_distance ||
+           std::abs(distance_end) < safe_maneuver_distance ) { return true; }
+    } else {
+      return true;
+    }
   }
 
-  double distance_side_front = 1000; // a large number
-  if ( !side_front_vehicle.empty() ) {
-    double ps_front = side_front_vehicle[0];
-    double vs_front = side_front_vehicle[1];
-    distance_side_front = ps_front - ego.getPs() + ( vs_front - ego.getVs() ) * prediction_time;
+  // check collision with the vehicles in the target lane
+  auto vehicles_in_next_lane = ego.getVehiclesInLane(ego.getLaneID() + direction);
+  for ( const auto& v : vehicles_in_next_lane ) {
+    double safe_maneuver_distance = 10; // in m
+
+    double t0 = 0;
+    double t1 = 3.0;
+    double speed = v[2];
+    double ps = v[4];
+
+    double distance_start = ps - ego.getPs() + ( speed - ego.getVs() ) * t0;
+    double distance_end = ps - ego.getPs() + ( speed - ego.getVs() ) * t1;
+
+    if ( distance_start * distance_end > 0 ) {
+      if ( std::abs(distance_start) < safe_maneuver_distance ||
+           std::abs(distance_end) < safe_maneuver_distance ) { return true; }
+    } else {
+      return true;
+    }
   }
 
-  double distance_side_rear = 1000; // a large number
-  if ( !side_rear_vehicle.empty() ) {
-    double ps_rear = side_rear_vehicle[0];
-    double vs_rear = side_rear_vehicle[1];
-    distance_side_rear = ego.getPs() - ps_rear + ( ego.getVs() - vs_rear ) * prediction_time;
-  }
+  return false;
 
-  return ( (std::abs(distance_front) < safe_maneuver_distance) ||
-           (std::abs(distance_side_front) < safe_maneuver_distance) ||
-           (std::abs(distance_side_rear) < safe_maneuver_distance) );
 }
-
 
 bool EgoTransitionFTToCL::isOptimal(const Ego &ego, int direction) const {
   if ( direction != 1 && direction != -1 ) { return false; }
@@ -91,13 +102,13 @@ bool EgoTransitionFTToCL::isOptimal(const Ego &ego, int direction) const {
   }
 
   // for debug
-  if ( ego.getTicker() % 30  == 0 ) {
+  if ( ego.getTicker() % 10  == 0 ) {
     std::cout << "Current lane ID: " << current_lane_id
               << ", Best land ID: " << max_distance_lane_id << ": ";
     print1DContainer(ds_finals);
   }
 
-  if ( direction*(max_distance_lane_id - current_lane_id) == 1 ) {
+  if ( max_distance_lane_id - current_lane_id == direction ) {
     return true;
   } else if ( direction*(max_distance_lane_id - current_lane_id) > 1 ) {
     double current_ds = ds_finals[current_lane_id - 1];

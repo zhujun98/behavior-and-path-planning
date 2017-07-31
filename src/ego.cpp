@@ -9,7 +9,7 @@
 
 Ego::Ego(const Map& map) : Vehicle(map) {
 
-  max_speed_ = 22;  // in m/s
+  max_speed_ = 35;  // in m/s
   max_acceleration_ = 10; // in m/s^2
   max_jerk_ = 10; // in m/s^3
   min_safe_distance_ = 15; // in m
@@ -74,7 +74,6 @@ void Ego::updateUnprocessedPath() {
 }
 
 void Ego::updateSurroundings(const std::vector<std::vector<double>>& sensor_fusion) {
-
   for ( auto &v : surroundings_ ) { v.clear(); }
 
   for ( const auto& v : sensor_fusion ) {
@@ -82,6 +81,15 @@ void Ego::updateSurroundings(const std::vector<std::vector<double>>& sensor_fusi
     if (lane_id > 0 && lane_id <= map_->getNoLanes()) {
       surroundings_[lane_id - 1].push_back(v);
     }
+  }
+}
+
+
+std::vector<std::vector<double>> Ego::getVehiclesInLane(int lane_id) const {
+  if ( lane_id < 1 || lane_id > surroundings_.size() ) {
+    return {};
+  } else {
+    return surroundings_[lane_id - 1];
   }
 }
 
