@@ -17,8 +17,7 @@ EgoState* EgoTransitionCSToFT::getNextState(Ego& ego) const {
 
 bool EgoTransitionCSToFT::isValid(Ego &ego) const {
   // It requires a longer prediction time here to make the car
-  // have enough space to adjust its speed in follow traffic
-  // state.
+  // have enough space to adjust its speed in follow traffic state.
   double prediction_time = 5.0; // in s
 
   std::vector<double> front_vehicle = ego.getClosestVehicle(ego.getLaneID(), 1);
@@ -26,9 +25,9 @@ bool EgoTransitionCSToFT::isValid(Ego &ego) const {
   double ps_front = front_vehicle[0];
   double vs_front = front_vehicle[1];
 
-
-  double vs_ego = ego.getTargetSpeed();
   double ps_ego = ego.getPs();
+  double vs_ego = ego.getTargetSpeed();
 
-  return ( (ps_front - ps_ego + (vs_front - vs_ego)*prediction_time) < ego.getMinSafeDistance() );
+  return ( (ps_front - ps_ego + (vs_front - vs_ego)*prediction_time) <
+            ego.getMinSafeDistance() );
 }

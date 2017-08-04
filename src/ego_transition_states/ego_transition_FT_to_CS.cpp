@@ -23,11 +23,7 @@ bool EgoTransitionFTToCS::isValid(Ego &ego) const {
 
   double ps_front = front_vehicle[0];
   double vs_front = front_vehicle[1];
-  if ( vs_front > ego.getTargetSpeed() && ego.getMinSafeDistance() < (ps_front - ego.getPs()) ) {
-    return true;
-  } else if ( ps_front - ego.getPs() > ego.getMaxEvaluationDistance() ) {
-    return true;
-  } else {
-    return false;
-  }
+
+  return ( vs_front > ego.getTargetSpeed() &&
+           (ps_front - ego.getPs()) > 2*ego.getMinSafeDistance() );
 }
