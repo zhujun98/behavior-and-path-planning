@@ -13,8 +13,6 @@ class Ego;
 class EgoStateChangeLane : public EgoState {
 protected:
 
-  void planPath(Ego& ego);
-
   // constructor
   EgoStateChangeLane();
 
@@ -23,6 +21,7 @@ public:
   // destructor
   virtual ~EgoStateChangeLane();
 
+  void onUpdate(Ego& ego);
 };
 
 

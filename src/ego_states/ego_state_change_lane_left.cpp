@@ -15,14 +15,8 @@ EgoStateChangeLaneLeft::EgoStateChangeLaneLeft() {
 EgoStateChangeLaneLeft::~EgoStateChangeLaneLeft() {}
 
 void EgoStateChangeLaneLeft::onEnter(Ego& ego) {
-  ego.truncatePath(15);
-  planPath(ego);
   std::cout << "Enter state: *** CHANGE TO THE LEFT LANE *** from Lane-" << ego.getLaneID()
             << " to Lane-" << ego.getTargetLaneID() << std::endl;
-}
-
-void EgoStateChangeLaneLeft::onUpdate(Ego &ego) {
-  ;
 }
 
 void EgoStateChangeLaneLeft::onExit(Ego& egop) {

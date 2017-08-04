@@ -25,6 +25,8 @@ protected:
 
   bool isOptimal(const Ego& ego, int direction) const;
 
+  void planPath(Ego &ego) const;
+
 public:
 
   // destructor

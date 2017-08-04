@@ -33,8 +33,6 @@ protected:
 
   double timer_;  // track how long the state lasts
 
-  virtual void planPath(Ego& ego) = 0;
-
 public:
 
   // destructor

@@ -19,8 +19,6 @@ public:
 
   void onEnter(Ego& ego);
 
-  void onUpdate(Ego& ego);
-
   void onExit(Ego& ego);
 };
 

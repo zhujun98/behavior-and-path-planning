@@ -27,8 +27,14 @@ bool EgoTransitionFTToCL::willCollision(const Ego& ego, int direction) const {
     double speed = v[2];
     double ps = v[4];
 
-    double distance_start = ps - ego.getPs() + ( speed - ego.getVs() ) * t0;
-    double distance_end = ps - ego.getPs() + ( speed - ego.getVs() ) * t1;
+    // estimate the ego car's maximum speed at t0 and t1
+    double max_ego_speed0 = ego.getPs() + ego.getMaxAcceleration()*t0;
+    if ( max_ego_speed0 > speed ) { max_ego_speed0 = speed; }
+    double max_ego_speed1 = ego.getPs() + ego.getMaxAcceleration()*t1;
+    if ( max_ego_speed1 > speed ) { max_ego_speed1 = speed; }
+
+    double distance_start = ps - ego.getPs() + ( speed - max_ego_speed0 ) * t0;
+    double distance_end = ps - ego.getPs() + ( speed - max_ego_speed1 ) * t1;
 
     if ( distance_start * distance_end > 0 ) {
       if ( std::abs(distance_start) < safe_maneuver_distance ||
@@ -48,8 +54,14 @@ bool EgoTransitionFTToCL::willCollision(const Ego& ego, int direction) const {
     double speed = v[2];
     double ps = v[4];
 
-    double distance_start = ps - ego.getPs() + ( speed - ego.getVs() ) * t0;
-    double distance_end = ps - ego.getPs() + ( speed - ego.getVs() ) * t1;
+    // estimate the ego car's maximum speed at t0 and t1
+    double max_ego_speed0 = ego.getVs() + ego.getMaxAcceleration()*t0;
+    if ( max_ego_speed0 > speed ) { max_ego_speed0 = speed; }
+    double max_ego_speed1 = ego.getVs() + ego.getMaxAcceleration()*t1;
+    if ( max_ego_speed1 > speed ) { max_ego_speed1 = speed; }
+
+    double distance_start = ps - ego.getPs() + ( speed - max_ego_speed0 ) * t0;
+    double distance_end = ps - ego.getPs() + ( speed - max_ego_speed1 ) * t1;
 
     if ( distance_start * distance_end > 0 ) {
       if ( std::abs(distance_start) < safe_maneuver_distance ||
@@ -102,11 +114,11 @@ bool EgoTransitionFTToCL::isOptimal(const Ego &ego, int direction) const {
   }
 
   // for debug
-  if ( ego.getTicker() % 10  == 0 ) {
-    std::cout << "Current lane ID: " << current_lane_id
-              << ", Best land ID: " << max_distance_lane_id << ": ";
-    print1DContainer(ds_finals);
-  }
+//  if ( ego.getTicker() % 10  == 0 ) {
+//    std::cout << "Current lane ID: " << current_lane_id
+//              << ", Best land ID: " << max_distance_lane_id << ": ";
+//    print1DContainer(ds_finals);
+//  }
 
   if ( max_distance_lane_id - current_lane_id == direction ) {
     return true;
@@ -119,4 +131,35 @@ bool EgoTransitionFTToCL::isOptimal(const Ego &ego, int direction) const {
   } else {
     return false;
   }
+}
+
+void EgoTransitionFTToCL::planPath(Ego &ego) const {
+  auto state0 = getState0(ego);
+  double vs0 = state0.first[1];
+  double ps0 = state0.first[0];
+
+  auto vehicles_in_lane = ego.getVehiclesInLane(ego.getLaneID());
+
+  // extend the current path
+  double prediction_time = 3.0 - ego.getPathS()->size()*ego.getTimeStep(); // in s
+
+  double vs1 = vs0 + ego.getMaxAcceleration()*prediction_time;
+  if ( vs1 > ego.getTargetSpeed() ) { vs1 = ego.getTargetSpeed(); }
+  double ds1 = 0.5*(vs0 + vs1)*prediction_time;
+
+  double pd1 = (ego.getTargetLaneID() - 0.5) * ego.getMap()->getLaneWidth();
+
+  PathPlanner planner(ego.getTargetSpeed(), ego.getMaxAcceleration(), ego.getMaxJerk());
+
+  planner.setDsBoundary(0.80*ds1, 1.0*ds1);
+  planner.setVsBoundary(0.80*vs1, 1.0*vs1);
+  planner.setAsBoundary(0, 0);
+
+  planner.setPdBoundary(pd1, pd1);
+  planner.setVdBoundary(0, 0);
+  planner.setAdBoundary(0, 0);
+
+  vehicle_trajectory new_path = planner.plan(state0, prediction_time);
+
+  ego.extendPath(new_path);
 }
