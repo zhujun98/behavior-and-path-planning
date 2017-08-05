@@ -12,7 +12,8 @@ Ego::Ego(const Map& map) : Vehicle(map) {
   max_speed_ = 35;  // in m/s
   max_acceleration_ = 10; // in m/s^2
   max_jerk_ = 10; // in m/s^3
-  min_safe_distance_ = 15; // in m
+
+  min_safe_distance_coeff_ = 0.5; // in m
 
   max_evaluation_time_ = 5; // in s
   max_evaluation_distance_ = 100; // in m
@@ -190,7 +191,8 @@ double Ego::getMaxJerk() const { return max_jerk_; }
 
 double Ego::getMaxSteering() const { return max_steering_; }
 
-double Ego::getMinSafeDistance() const { return min_safe_distance_; }
+double Ego::getMinSafeDistance(double speed) const { return min_safe_distance_coeff_*speed + 2; }
+double Ego::getMinSafeDistance() const { return min_safe_distance_coeff_*speed_ + 2; }
 
 double Ego::getMaxEvaluationDistance() const { return max_evaluation_distance_; }
 

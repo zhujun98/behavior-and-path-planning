@@ -33,7 +33,9 @@ private:
   double max_acceleration_; // maximum acceleration (m/s^2)
   double max_jerk_; // maximum jerk (m/s^3)
   double max_steering_; // maximum steering angle (rad)
-  double min_safe_distance_;
+
+  // the safe distance is proportional to a car's speed
+  double min_safe_distance_coeff_;
 
   // The actual evaluation distance is given by the minimum of
   // max_evaluation_time_* speed_ and max_evaluation_distance_
@@ -104,6 +106,7 @@ public:
 
   double getMaxSteering() const;
 
+  double getMinSafeDistance(double speed) const;
   double getMinSafeDistance() const;
 
   double getMaxEvaluationDistance() const;

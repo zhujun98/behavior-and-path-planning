@@ -24,7 +24,6 @@ void EgoStateFollowTraffic::onEnter(Ego& ego) {
 }
 
 void EgoStateFollowTraffic::onUpdate(Ego &ego) {
-  ego.truncatePath(15);
   planPath(ego);
 }
 
@@ -33,24 +32,48 @@ void EgoStateFollowTraffic::onExit(Ego& ego) {
 }
 
 void EgoStateFollowTraffic::planPath(Ego& ego) {
+  ego.truncatePath(5);
+
   auto state0 = getState0(ego);
   double ps0 = state0.first[0];
   double vs0 = state0.first[1];
 
   // get the distance and the speed of the front car
   std::vector<double> front_vehicle = ego.getClosestVehicle(ego.getLaneID(), 1);
-  double prediction_time = 2.0 - ego.getPathS()->size()*ego.getTimeStep();
+  double prediction_time = 1.0 - ego.getPathS()->size()*ego.getTimeStep();
 
-  double vs1 = ego.getTargetSpeed();
+  double vs1 = vs0 + prediction_time*ego.getMaxAcceleration();
+  if ( vs1 > ego.getTargetSpeed() ) { vs1 = ego.getTargetSpeed(); }
+
+  // If there is vehicle in front of the ego car, then find the maximum
+  // acceleration that can make a safe distance between the ego car
+  // and the front car.
   if ( !front_vehicle.empty() ) {
     double ps_front = front_vehicle[0];
     double vs_front = front_vehicle[1];
-    double ds1_safe = ps_front - ps0 + vs_front*prediction_time - ego.getMinSafeDistance();
-    double vs1_safe = 2*ds1_safe / prediction_time - vs0;
-    if ( vs1_safe < ego.getTargetSpeed() ) { vs1 = vs1_safe; }
-  }
-  double ds1 = 0.5*(vs0 + vs1)*prediction_time;
 
+    double acc = ego.getMaxAcceleration();
+    int n_steps = 20;
+    double acc_step = 2*ego.getMaxAcceleration()/n_steps;
+    // The maximum deceleration is actually 3*max_acceleration_.
+    // In practice, the number should be the maximum deceleration that
+    // the car can physically achieve.
+    for ( int i=0; i<=2*n_steps; ++i ) {
+      vs1 = vs0 + prediction_time*acc;
+      if ( vs1 > ego.getTargetSpeed() ) { vs1 = ego.getTargetSpeed(); }
+      if ( vs1 < 0 ) { vs1 = 0; }
+
+      double distance = ps_front - ps0 - ego.getMinSafeDistance(vs1) +
+                        (vs_front - 0.5*(vs0 + vs1))*prediction_time;
+      if ( distance > 0 ) {
+        break;
+      } else {
+        acc -= acc_step;
+      }
+    }
+  }
+
+  double ds1 = 0.5*(vs0 + vs1)*prediction_time;
   double pd1 = (ego.getLaneID() - 0.5) * ego.getMap()->getLaneWidth();
 
   PathPlanner planner(ego.getTargetSpeed(), ego.getMaxAcceleration(), ego.getMaxJerk());
