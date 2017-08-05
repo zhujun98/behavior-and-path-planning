@@ -15,6 +15,11 @@ EgoTransitionFTToCL::EgoTransitionFTToCL() {}
 EgoTransitionFTToCL::~EgoTransitionFTToCL() {}
 
 bool EgoTransitionFTToCL::isOptimal(const Ego &ego, int direction) const {
+  // Do nothing at the end or at the beginning of a lap.
+  if ( ego.getPs() < 30 || ego.getMap()->getMaxS() - ego.getPs() < 30 ) {
+    return false;
+  }
+
   if ( direction != 1 && direction != -1 ) { return false; }
 
   int current_lane_id = ego.getLaneID();
