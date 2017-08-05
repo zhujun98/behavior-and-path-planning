@@ -34,7 +34,7 @@ void EgoStateFollowTraffic::onExit(Ego& ego) {
 void EgoStateFollowTraffic::planPath(Ego& ego) {
   ego.truncatePath(5);
 
-  auto state0 = getState0(ego);
+  auto state0 = ego.getInitialState();
   double ps0 = state0.first[0];
   double vs0 = state0.first[1];
 

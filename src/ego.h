@@ -124,6 +124,11 @@ public:
   void setTargetSpeed(double value);
 
   long getTicker() const;
+
+  //
+  // Estimate the state vector (s, d) at the end of the current path
+  //
+  vehicle_state getInitialState() const;
 };
 
 

@@ -38,7 +38,7 @@ void EgoStateConstantSpeed::onExit(Ego& ego) {
 
 void EgoStateConstantSpeed::planPath(Ego& ego) {
 
-  auto state0 = getState0(ego);
+  auto state0 = ego.getInitialState();
   double vs0 = state0.first[1];
 
   // extend the current path

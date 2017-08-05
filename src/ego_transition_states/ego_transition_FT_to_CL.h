@@ -18,14 +18,9 @@ protected:
   // constructor
   EgoTransitionFTToCL();
 
-  //
-  // @param direction: 1 for to the right, otherwise to the left
-  //
-  bool willCollision(const Ego& ego, int direction) const;
-
   bool isOptimal(const Ego& ego, int direction) const;
 
-  void planPath(Ego &ego) const;
+  bool planPath(Ego &ego, int direction) const;
 
 public:
 

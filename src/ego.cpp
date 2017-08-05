@@ -9,7 +9,7 @@
 
 Ego::Ego(const Map& map) : Vehicle(map) {
 
-  max_speed_ = 35;  // in m/s
+  max_speed_ = 40;  // in m/s
   max_acceleration_ = 10; // in m/s^2
   max_jerk_ = 10; // in m/s^3
 
@@ -191,8 +191,8 @@ double Ego::getMaxJerk() const { return max_jerk_; }
 
 double Ego::getMaxSteering() const { return max_steering_; }
 
-double Ego::getMinSafeDistance(double speed) const { return min_safe_distance_coeff_*speed + 2; }
-double Ego::getMinSafeDistance() const { return min_safe_distance_coeff_*speed_ + 2; }
+double Ego::getMinSafeDistance(double speed) const { return min_safe_distance_coeff_*speed + 5; }
+double Ego::getMinSafeDistance() const { return min_safe_distance_coeff_*speed_ + 5; }
 
 double Ego::getMaxEvaluationDistance() const { return max_evaluation_distance_; }
 
@@ -220,3 +220,43 @@ void Ego::setTargetSpeed(double value) {
 }
 
 long Ego::getTicker() const { return ticker_; }
+
+vehicle_state Ego::getInitialState() const {
+  double ps0, vs0, as0;
+  double pd0, vd0, ad0;
+
+  // we need at least 3 points to calculate acceleration
+  if ( path_s_.empty() || path_s_.size() < 3 ) {
+    ps0 = ps_;
+    pd0 = pd_;
+    vs0 = vs_;
+    vd0 = vd_;
+    as0 = as_;
+    ad0 = ad_;
+
+  } else {
+    auto it_s = path_s_.rbegin();
+    auto it_d = path_d_.rbegin();
+    ps0 = *it_s;
+    pd0 = *it_d;
+    std::advance(it_s, 1);
+    std::advance(it_d, 1);
+    double ps0_1 = *it_s;
+    double pd0_1 = *it_d;
+    std::advance(it_s, 1);
+    std::advance(it_d, 1);
+    double ps0_2 = *it_s;
+    double pd0_2 = *it_d;
+    vs0 = (ps0 - ps0_1) / time_step_;
+    vd0 = (pd0 - pd0_1) / time_step_;
+    double vs0_1 = (ps0_1 - ps0_2) / time_step_;
+    double vd0_1 = (pd0_1 - pd0_2) / time_step_;
+    as0 = (vs0 - vs0_1) / time_step_;
+    ad0 = (vd0 - vd0_1) / time_step_;
+  }
+
+  std::vector<double> state0_s {ps0, vs0, as0};
+  std::vector<double> state0_d {pd0, vd0, ad0};
+
+  return std::make_pair(state0_s, state0_d);
+}

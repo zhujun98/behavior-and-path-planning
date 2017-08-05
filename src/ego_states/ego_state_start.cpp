@@ -31,7 +31,7 @@ void EgoStateStart::onExit(Ego& ego) {
 }
 
 void EgoStateStart::planPath(Ego &ego) {
-  auto state0 = getState0(ego);
+  auto state0 = ego.getInitialState();
 
   double vs0 = state0.first[1];
   double as0 = state0.first[2];
