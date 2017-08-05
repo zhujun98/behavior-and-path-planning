@@ -25,7 +25,7 @@ EgoState::~EgoState() {}
 EgoState* EgoState::checkTransition(Ego &ego) {
   ++ timer_;
   // avoid frequently switching between states
-  if ( timer_ < 10 ) { return nullptr; }
+  if ( timer_ < 5 ) { return nullptr; }
 
   for ( const auto& v : transition_states_ ) {
     if ( v->isValid(ego) ) { return v->getNextState(ego); }
