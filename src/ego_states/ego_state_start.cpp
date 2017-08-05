@@ -7,7 +7,6 @@
 #include "ego_state_start.h"
 #include "../ego_transition_states/ego_transition_state.h"
 #include "../path_planner.h"
-#include "../utilities.h"
 
 
 EgoStateStart::EgoStateStart() {

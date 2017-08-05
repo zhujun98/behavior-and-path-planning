@@ -9,7 +9,6 @@
 #include "../ego.h"
 #include "ego_state.h"
 #include "ego_state_constant_speed.h"
-#include "../utilities.h"
 #include "../ego_transition_states/ego_transition_state.h"
 
 
@@ -22,13 +21,11 @@ EgoStateConstantSpeed::EgoStateConstantSpeed() {
 EgoStateConstantSpeed::~EgoStateConstantSpeed() {}
 
 void EgoStateConstantSpeed::onEnter(Ego& ego) {
-  ego.setTargetSpeed(ego.getMaxSpeed()*0.95);
   std::cout << "Enter state: *** CONSTANT SPEED *** " << ego.getTargetSpeed()*2.25
             << " MPH" << std::endl;
 }
 
 void EgoStateConstantSpeed::onUpdate(Ego &ego) {
-  ego.truncatePath(15);
   planPath(ego);
 }
 
@@ -37,6 +34,7 @@ void EgoStateConstantSpeed::onExit(Ego& ego) {
 }
 
 void EgoStateConstantSpeed::planPath(Ego& ego) {
+  ego.truncatePath(15);
 
   auto state0 = ego.getInitialState();
   double vs0 = state0.first[1];

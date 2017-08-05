@@ -1,8 +1,6 @@
 //
 // Created by jun on 7/28/17.
 //
-#include <algorithm>
-
 #include "ego_transition_FT_to_CS.h"
 #include "../ego.h"
 #include "../ego_states/ego_state.h"
@@ -24,6 +22,11 @@ bool EgoTransitionFTToCS::isValid(Ego &ego) const {
   double ps_front = front_vehicle[0];
   double vs_front = front_vehicle[1];
 
-  return ( vs_front > ego.getTargetSpeed() &&
-           (ps_front - ego.getPs()) > 2*ego.getMinSafeDistance() );
+  if (vs_front > ego.getTargetSpeed() &&
+      (ps_front - ego.getPs()) > 2*ego.getMinSafeDistance() ) {
+    ego.setTargetSpeed(ego.getMaxSpeed()*0.95);
+    return true;
+  } else {
+    return false;
+  }
 }

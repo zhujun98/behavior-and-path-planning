@@ -1,15 +1,10 @@
 //
 // Created by jun on 7/27/17.
 //
-
 #ifndef PATH_PLANNING_EGO_STATE_FOLLOW_TRAFFIC_H
 #define PATH_PLANNING_EGO_STATE_FOLLOW_TRAFFIC_H
 
-
-#include <vector>
-
 #include "ego_state.h"
-
 
 class Ego;
 

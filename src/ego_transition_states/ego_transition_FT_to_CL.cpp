@@ -7,7 +7,6 @@
 #include "../map.h"
 #include "../ego.h"
 #include "../ego_states/ego_state.h"
-#include "../utilities.h"
 
 
 EgoTransitionFTToCL::EgoTransitionFTToCL() {}
@@ -83,6 +82,7 @@ bool EgoTransitionFTToCL::isOptimal(const Ego &ego, int direction) const {
 
 bool EgoTransitionFTToCL::planPath(Ego &ego, int direction) const {
   ego.truncatePath(5);
+
   auto state0 = ego.getInitialState();
   double vs0 = state0.first[1];
   double ps0 = state0.first[0];
@@ -96,7 +96,7 @@ bool EgoTransitionFTToCL::planPath(Ego &ego, int direction) const {
 
   double acc_step = ego.getMaxAcceleration()/10;
   // "i << 15" says that the car is not allowed to perform overtaking
-  // by dramatically reducing speed
+  // at a very low speed
   for ( int i = 0; i <= 15; ++i ) {
     if ( i != 0 ) { acc -= acc_step; }
 

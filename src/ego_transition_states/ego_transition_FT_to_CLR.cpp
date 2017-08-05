@@ -1,7 +1,6 @@
 //
 // Created by jun on 7/29/17.
 //
-
 #include "ego_transition_FT_to_CLR.h"
 #include "../ego.h"
 #include "../ego_states/ego_state.h"

@@ -9,7 +9,6 @@
 #include "Eigen-3.3/Eigen/Dense"
 
 #include "path_planner.h"
-#include "utilities.h"
 
 
 const double INF_D = std::numeric_limits<double>::max();

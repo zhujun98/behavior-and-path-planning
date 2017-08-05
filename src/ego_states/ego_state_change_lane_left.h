@@ -1,7 +1,6 @@
 //
 // Created by jun on 7/29/17.
 //
-
 #ifndef PATH_PLANNING_EGO_STATE_CHANGE_LANE_LEFT_H
 #define PATH_PLANNING_EGO_STATE_CHANGE_LANE_LEFT_H
 

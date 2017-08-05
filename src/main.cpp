@@ -70,7 +70,11 @@ int main() {
 //                    << "dd: " << car_d - car_frenet.second << std::endl;
 
           std::vector<double> localization = {car_x, car_y, car_speed, car_yaw, car_s, car_d};
+
           // Previous path data passed to the planner.
+          // Note:: the previous path is not used!!! The processed way points
+          //        can be found by comparing the current location (car_s) and
+          //        the path in the last time step.
           auto previous_path_x = j[1]["previous_path_x"];
           auto previous_path_y = j[1]["previous_path_y"];
 

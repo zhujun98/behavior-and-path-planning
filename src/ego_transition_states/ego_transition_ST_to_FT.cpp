@@ -1,7 +1,6 @@
 //
 // Created by jun on 7/31/17.
 //
-
 #include "../ego.h"
 #include "../ego_states/ego_state.h"
 #include "ego_transition_ST_to_FT.h"

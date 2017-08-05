@@ -1,12 +1,8 @@
 //
 // Created by jun on 7/24/17.
 //
-
 #ifndef PATH_PLANNING_EGO_STATE_CONSTANT_SPEED_H
 #define PATH_PLANNING_EGO_STATE_CONSTANT_SPEED_H
-
-#include <vector>
-
 
 class Ego;
 class EgoState;

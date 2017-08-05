@@ -8,8 +8,6 @@
 #include "map.h"
 
 
-double kPI = std::atan(1)*4;
-
 Vehicle::Vehicle(const Map& map) {
   time_step_ = 0.02; // in s
 

@@ -1,7 +1,9 @@
 //
 // Created by jun on 7/16/17.
 //
-
+// The Vehicle class was made to represent other cars on the road.
+// However, it is not used now but only a base class for class Ego.
+//
 #ifndef PATH_PLANNING_VEHICLE_H
 #define PATH_PLANNING_VEHICLE_H
 
@@ -19,7 +21,7 @@ protected:
 
   bool is_initialized_;
 
-  double time_step_;
+  double time_step_; // time step in s
 
   // parameters in global coordinate system
   double px_; // in m
@@ -41,9 +43,9 @@ protected:
   std::list<double> hvs_;
   std::list<double> hvd_;
 
-  const Map* map_;
+  const Map* map_; // pointer to Map object
 
-  int lane_id_;
+  int lane_id_; // current lane id
 
 public:
 

@@ -4,19 +4,18 @@
 #include "ego.h"
 #include "map.h"
 #include "ego_states/ego_state.h"
-#include "utilities.h"
 
 
 Ego::Ego(const Map& map) : Vehicle(map) {
 
-  max_speed_ = 40;  // in m/s
-  max_acceleration_ = 10; // in m/s^2
-  max_jerk_ = 10; // in m/s^3
+  max_speed_ = 22;
+  max_acceleration_ = 10;
+  max_jerk_ = 10;
 
-  min_safe_distance_coeff_ = 0.5; // in m
+  min_safe_distance_coeff_ = 0.5;
 
-  max_evaluation_time_ = 5; // in s
-  max_evaluation_distance_ = 100; // in m
+  max_evaluation_time_ = 5;
+  max_evaluation_distance_ = 100;
 
   target_speed_ = max_speed_;
 
@@ -40,7 +39,8 @@ void Ego::update(const std::vector<double>& localization,
   updateSurroundings(sensor_fusion);
   updateUnprocessedPath();
 
-  // do nothing until collecting enough data
+  // Do nothing until collecting enough data. For calculation of the
+  // derivative.
   if ( hvs_.size() < history_length_ ) { return; }
 
   EgoState* state = state_->checkTransition(*this);
@@ -70,7 +70,6 @@ void Ego::updateUnprocessedPath() {
 
     path_s_.erase(path_s_.begin(), unprocessed_s_begin);
     path_d_.erase(path_d_.begin(), unprocessed_d_begin);
-
   }
 }
 
@@ -126,7 +125,7 @@ std::vector<double> Ego::getClosestVehicle(int lane_id, int direction) const {
   if ( is_found ) {
     state.push_back(ps);
     state.push_back(vs);
-    state.push_back(0); // currently assume 0 acceleration
+    state.push_back(0); // currently assuming 0 acceleration
   }
 
   return state;
@@ -153,6 +152,46 @@ void Ego::extendPath(vehicle_trajectory new_path) {
   if ( path_s_[0] >= max_s ) {
     for ( auto &v : path_s_ ) { v -= max_s; }
   }
+}
+
+vehicle_state Ego::getInitialState() const {
+  double ps0, vs0, as0;
+  double pd0, vd0, ad0;
+
+  // we need at least 3 points to calculate acceleration
+  if ( path_s_.empty() || path_s_.size() < 3 ) {
+    ps0 = ps_;
+    pd0 = pd_;
+    vs0 = vs_;
+    vd0 = vd_;
+    as0 = as_;
+    ad0 = ad_;
+
+  } else {
+    auto it_s = path_s_.rbegin();
+    auto it_d = path_d_.rbegin();
+    ps0 = *it_s;
+    pd0 = *it_d;
+    std::advance(it_s, 1);
+    std::advance(it_d, 1);
+    double ps0_1 = *it_s;
+    double pd0_1 = *it_d;
+    std::advance(it_s, 1);
+    std::advance(it_d, 1);
+    double ps0_2 = *it_s;
+    double pd0_2 = *it_d;
+    vs0 = (ps0 - ps0_1) / time_step_;
+    vd0 = (pd0 - pd0_1) / time_step_;
+    double vs0_1 = (ps0_1 - ps0_2) / time_step_;
+    double vd0_1 = (pd0_1 - pd0_2) / time_step_;
+    as0 = (vs0 - vs0_1) / time_step_;
+    ad0 = (vd0 - vd0_1) / time_step_;
+  }
+
+  std::vector<double> state0_s {ps0, vs0, as0};
+  std::vector<double> state0_d {pd0, vd0, ad0};
+
+  return std::make_pair(state0_s, state0_d);
 }
 
 void Ego::printTraffic() {
@@ -220,43 +259,3 @@ void Ego::setTargetSpeed(double value) {
 }
 
 long Ego::getTicker() const { return ticker_; }
-
-vehicle_state Ego::getInitialState() const {
-  double ps0, vs0, as0;
-  double pd0, vd0, ad0;
-
-  // we need at least 3 points to calculate acceleration
-  if ( path_s_.empty() || path_s_.size() < 3 ) {
-    ps0 = ps_;
-    pd0 = pd_;
-    vs0 = vs_;
-    vd0 = vd_;
-    as0 = as_;
-    ad0 = ad_;
-
-  } else {
-    auto it_s = path_s_.rbegin();
-    auto it_d = path_d_.rbegin();
-    ps0 = *it_s;
-    pd0 = *it_d;
-    std::advance(it_s, 1);
-    std::advance(it_d, 1);
-    double ps0_1 = *it_s;
-    double pd0_1 = *it_d;
-    std::advance(it_s, 1);
-    std::advance(it_d, 1);
-    double ps0_2 = *it_s;
-    double pd0_2 = *it_d;
-    vs0 = (ps0 - ps0_1) / time_step_;
-    vd0 = (pd0 - pd0_1) / time_step_;
-    double vs0_1 = (ps0_1 - ps0_2) / time_step_;
-    double vd0_1 = (pd0_1 - pd0_2) / time_step_;
-    as0 = (vs0 - vs0_1) / time_step_;
-    ad0 = (vd0 - vd0_1) / time_step_;
-  }
-
-  std::vector<double> state0_s {ps0, vs0, as0};
-  std::vector<double> state0_d {pd0, vd0, ad0};
-
-  return std::make_pair(state0_s, state0_d);
-}

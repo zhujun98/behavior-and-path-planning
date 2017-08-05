@@ -4,8 +4,8 @@
 #ifndef PATH_PLANNING_EGO_TRANSITION_FT_TO_CS_H
 #define PATH_PLANNING_EGO_TRANSITION_FT_TO_CS_H
 
-
 #include "ego_transition_state.h"
+
 
 class Ego;
 class EgoState;

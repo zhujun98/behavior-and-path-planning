@@ -1,12 +1,8 @@
 //
 // Created by jun on 7/31/17.
 //
-
 #ifndef PATH_PLANNING_EGO_TRANSITION_ST_TO_FT_H
 #define PATH_PLANNING_EGO_TRANSITION_ST_TO_FT_H
-
-
-#include <vector>
 
 #include "ego_transition_state.h"
 

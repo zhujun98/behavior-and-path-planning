@@ -1,13 +1,12 @@
 //
 // Created by jun on 7/28/17.
 //
-
 #ifndef PATH_PLANNING_EGO_TRANSITION_STATE_H
 #define PATH_PLANNING_EGO_TRANSITION_STATE_H
 
-
 class Ego;
 class EgoState;
+
 
 //
 // ST_TO_FT: start to follow traffic
@@ -50,6 +49,7 @@ public:
   // destructor
   ~EgoTransitionStateFactory();
 
+  // construct a new transition state
   static EgoTransitionState* createState(TransitionStates name);
 };
 

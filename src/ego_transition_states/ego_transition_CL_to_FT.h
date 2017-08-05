@@ -6,7 +6,6 @@
 
 #include "ego_transition_state.h"
 
-
 class Ego;
 class EgoState;
 

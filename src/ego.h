@@ -1,7 +1,6 @@
 //
 // Created by jun on 7/25/17.
 //
-
 #ifndef PATH_PLANNING_EGO_H
 #define PATH_PLANNING_EGO_H
 
@@ -23,11 +22,11 @@ private:
   typedef std::vector<std::vector<std::vector<double>>> Surroundings;
   Surroundings surroundings_; // surrounding vehicles information
 
-  int target_lane_id_;
-  double target_speed_;
+  int target_lane_id_; // target lane ID
+  double target_speed_; // target speed (m/s)
 
-  std::vector<double> path_s_;
-  std::vector<double> path_d_;
+  std::vector<double> path_s_; // unprocessed path s
+  std::vector<double> path_d_; // unprocessed path d
 
   double max_speed_; // maximum speed (m/s)
   double max_acceleration_; // maximum acceleration (m/s^2)
@@ -42,8 +41,8 @@ private:
   //
   // We care about traffic within this distance (m). Also, in reality,
   // the detector has its own range.
-  double max_evaluation_time_;
-  double max_evaluation_distance_;
+  double max_evaluation_time_; // in s
+  double max_evaluation_distance_; // in m
 
   long ticker_;  // a timer controlling output
 
@@ -77,6 +76,8 @@ public:
   //
   // Get all the vehicles in a given lane
   //
+  // @param lane_id: lane ID
+  //
   std::vector<std::vector<double>> getVehiclesInLane(int lane_id) const;
 
   //
@@ -91,7 +92,14 @@ public:
   //
   void extendPath(vehicle_trajectory new_path);
 
+  //
+  // Estimate the state vector (s, d) at the end of the current path
+  //
+  vehicle_state getInitialState() const;
+
+  //
   // Print out the vehicle information around the ego car
+  //
   void printTraffic();
 
   std::vector<double> const* getPathS() const;
@@ -124,11 +132,6 @@ public:
   void setTargetSpeed(double value);
 
   long getTicker() const;
-
-  //
-  // Estimate the state vector (s, d) at the end of the current path
-  //
-  vehicle_state getInitialState() const;
 };
 
 

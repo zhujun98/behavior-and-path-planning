@@ -7,7 +7,6 @@
 #include "../ego.h"
 #include "../map.h"
 #include "ego_state_follow_traffic.h"
-#include "../utilities.h"
 #include "../ego_transition_states/ego_transition_state.h"
 
 
@@ -42,6 +41,8 @@ void EgoStateFollowTraffic::planPath(Ego& ego) {
   std::vector<double> front_vehicle = ego.getClosestVehicle(ego.getLaneID(), 1);
   double prediction_time = 1.0 - ego.getPathS()->size()*ego.getTimeStep();
 
+  // Calculate the maximum reachable final speed. The maximum jerk is
+  // not considered here. So this could be an over-estimation.
   double vs1 = vs0 + prediction_time*ego.getMaxAcceleration();
   if ( vs1 > ego.getTargetSpeed() ) { vs1 = ego.getTargetSpeed(); }
 

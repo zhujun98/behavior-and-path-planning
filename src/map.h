@@ -1,7 +1,6 @@
 //
 // Created by jun on 7/17/17.
 //
-
 #ifndef PATH_PLANNING_MAP_H
 #define PATH_PLANNING_MAP_H
 
@@ -18,7 +17,7 @@ private:
 
   size_t n_lanes_; // number of lanes
   int lane_width_; // width of lane (m)
-  double max_s_; // The max s value before wrapping around the track back to 0
+  double max_s_; // Maximum s in meter. s will restart from 0 after this point
 
   // Coordinates of the way points
   std::vector<double> x_;

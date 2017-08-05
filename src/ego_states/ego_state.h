@@ -1,7 +1,6 @@
 //
 // Created by jun on 7/24/17.
 //
-
 #ifndef PATH_PLANNING_EGO_STATE_H
 #define PATH_PLANNING_EGO_STATE_H
 
@@ -38,12 +37,17 @@ public:
   // destructor
   virtual ~EgoState();
 
+  // Check the validity of the transition states one-by-one. If valid.
+  // Switch to the next state.
   EgoState* checkTransition(Ego& ego);
 
+  // action when entering a state
   virtual void onEnter(Ego& ego) = 0;
 
+  // action when updating a state
   virtual void onUpdate(Ego& ego) = 0;
 
+  // action when exiting a state
   virtual void onExit(Ego& ego) = 0;
 
 };
@@ -53,10 +57,13 @@ class EgoStateFactory {
 
 public:
 
+  // constructor
   EgoStateFactory();
 
+  // destructor
   ~EgoStateFactory();
 
+  // construct a new state
   static EgoState* createState(States name);
 };
 
