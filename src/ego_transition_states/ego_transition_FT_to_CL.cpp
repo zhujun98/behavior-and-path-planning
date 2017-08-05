@@ -62,11 +62,11 @@ bool EgoTransitionFTToCL::isOptimal(const Ego &ego, int direction) const {
   }
 
 //   for debug
-  if ( ego.getTicker() % 10  == 0 ) {
-    std::cout << "Current lane ID: " << current_lane_id
-              << ", Best land ID: " << max_distance_lane_id << ": ";
-    print1DContainer(ds_finals);
-  }
+//  if ( ego.getTicker() % 10  == 0 ) {
+//    std::cout << "Current lane ID: " << current_lane_id
+//              << ", Best land ID: " << max_distance_lane_id << ": ";
+//    print1DContainer(ds_finals);
+//  }
 
   if ( max_distance_lane_id - current_lane_id == direction ) {
     return true;
