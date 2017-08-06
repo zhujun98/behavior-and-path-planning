@@ -17,16 +17,16 @@ EgoState* EgoTransitionFTToCS::getNextState(Ego& ego) const {
 bool EgoTransitionFTToCS::isValid(Ego &ego) const {
 
   auto front_vehicle = ego.getClosestVehicle(ego.getLaneID(), 1);
-  if ( front_vehicle.empty() ) { return true; }
+  if ( !front_vehicle.empty() ) { ;
+    double ps_front = front_vehicle[0];
+    double vs_front = front_vehicle[1];
 
-  double ps_front = front_vehicle[0];
-  double vs_front = front_vehicle[1];
-
-  if (vs_front > ego.getTargetSpeed() &&
-      (ps_front - ego.getPs()) > 2*ego.getMinSafeDistance() ) {
-    ego.setTargetSpeed(ego.getMaxSpeed()*0.95);
-    return true;
-  } else {
-    return false;
+    if ( vs_front < ego.getTargetSpeed() ||
+         (ps_front - ego.getPs()) < 2*ego.getMinSafeDistance() ) {
+      return false;
+    }
   }
+
+  ego.setTargetSpeed(ego.getMaxSpeed()*0.95);
+  return true;
 }
