@@ -44,8 +44,8 @@ void EgoStateStart::planPath(Ego &ego) {
 
   PathPlanner planner(ego.getTargetSpeed(), ego.getMaxAcceleration(), ego.getMaxJerk());
 
-  planner.setDsBoundary(0.5*ds1, 1.00*ds1);
-  planner.setVsBoundary(0.5*vs1, 1.00*vs1);
+  planner.setDsBoundary(0.3*ds1, 0.8*ds1);
+  planner.setVsBoundary(0.3*vs1, 0.8*vs1);
   planner.setAsBoundary(0, 0);
 
   planner.setPdBoundary(pd1, pd1);
