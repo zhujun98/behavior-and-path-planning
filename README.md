@@ -45,5 +45,5 @@ Increase the speed to 85 MPH. More exciting!
 
 ## References
 
-- [M. Werling, et al., Optimal trajectory generation for dynamic street scenarios in a Frenét Frame](10.1109/ROBOT.2010.5509799)
+- [M. Werling, et al., Optimal trajectory generation for dynamic street scenarios in a Frenét Frame](http://ieeexplore.ieee.org/document/5509799/)
 
