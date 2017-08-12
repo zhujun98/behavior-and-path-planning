@@ -6,10 +6,11 @@
 
 #include "vehicle.h"
 #include "map.h"
+#include "parameters.h"
 
 
 Vehicle::Vehicle(const Map& map) {
-  time_step_ = 0.02; // in s
+  time_step_ = kTIME_STEP; // in s
 
   is_initialized_ = false;
   history_length_ = 5;

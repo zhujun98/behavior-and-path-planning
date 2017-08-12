@@ -9,12 +9,11 @@
 #include "Eigen-3.3/Eigen/Dense"
 
 #include "path_planner.h"
+#include "parameters.h"
 
-
-const double INF_D = std::numeric_limits<double>::max();
 
 PathPlanner::PathPlanner(double max_speed, double max_acceleration, double max_jerk) {
-  time_step_ = 0.02; // in s
+  time_step_ = kTIME_STEP; // in s
 
   max_speed_ = max_speed;
   max_acceleration_ = max_acceleration;
@@ -134,7 +133,7 @@ std::vector<double> PathPlanner::analyzePath(const path_coefficients& coefficien
 
 vehicle_trajectory PathPlanner::plan(const vehicle_state& state0, double duration) {
 
-  double min_cost = INF_D;
+  double min_cost = kINF_D;
   std::vector<double> best_costs;
   path_coefficients best_coefficients;
 

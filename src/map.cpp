@@ -11,13 +11,14 @@
 #include "spline/spline.h"
 #include "map.h"
 #include "utilities.h"
+#include "parameters.h"
 
 
 Map::Map() {
   n_lanes_ = 3;
   lane_width_ = 4;
 
-  max_s_ = 6945.554;
+  max_s_ = kMAX_S;
 
   loadData();
 }
@@ -36,7 +37,7 @@ int Map::computerLaneID(double d) const {
 }
 
 void Map::loadData() {
-  std::string map_file_ = "../data/highway_map.csv";  // Read waypoints data
+  std::string map_file_ = kMAP_PATH;  // Read waypoints data
   std::ifstream ifs(map_file_.c_str(), std::ifstream::in);
 
   double x;

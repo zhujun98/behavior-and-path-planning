@@ -30,7 +30,8 @@ set(sources
         src/ego_transition_states/ego_transition_FT_to_CLL.cpp
         src/ego_transition_states/ego_transition_CS_to_CLL.cpp
         src/ego_transition_states/ego_transition_CS_to_CLR.cpp
-        src/ego_transition_states/ego_transition_ST_to_FT.cpp)
+        src/ego_transition_states/ego_transition_ST_to_FT.cpp
+        src/parameters.h)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 

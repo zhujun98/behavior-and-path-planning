@@ -4,13 +4,14 @@
 #include "ego.h"
 #include "map.h"
 #include "ego_states/ego_state.h"
+#include "parameters.h"
 
 
 Ego::Ego(const Map& map) : Vehicle(map) {
 
-  max_speed_ = 22;
-  max_acceleration_ = 10;
-  max_jerk_ = 10;
+  max_speed_ = kMAX_SPEED;
+  max_acceleration_ = kMAX_ACCELERATION;
+  max_jerk_ = kMAX_JERK;
 
   min_safe_distance_coeff_ = 0.5;
 
