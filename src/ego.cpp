@@ -7,20 +7,17 @@
 #include "parameters.h"
 
 
-Ego::Ego(const Map& map) : Vehicle(map) {
-
-  max_speed_ = kMAX_SPEED;
-  max_acceleration_ = kMAX_ACCELERATION;
-  max_jerk_ = kMAX_JERK;
-
-  min_safe_distance_coeff_ = 0.5;
-
-  max_evaluation_time_ = 5;
-  max_evaluation_distance_ = 100;
-
-  target_speed_ = max_speed_;
-
-  state_ = EgoStateFactory::createState(ST);
+Ego::Ego(const Map& map) :
+    Vehicle(map),
+    max_speed_(kMAX_SPEED),
+    max_acceleration_ (kMAX_ACCELERATION),
+    max_jerk_(kMAX_JERK),
+    min_safe_distance_coeff_(0.5),
+    max_evaluation_time_(5),
+    max_evaluation_distance_(100),
+    target_speed_(kMAX_SPEED),
+    ticker_(0),
+    state_(EgoStateFactory::createState(ST)) {
   state_->onEnter(*this);
 
   // ugly?!
@@ -28,8 +25,6 @@ Ego::Ego(const Map& map) : Vehicle(map) {
     std::vector<std::vector<double>> place_holder;
     surroundings_.push_back(place_holder);
   }
-
-  ticker_ = 0;
 }
 
 Ego::~Ego() { delete state_; }

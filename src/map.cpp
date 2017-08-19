@@ -14,12 +14,7 @@
 #include "parameters.h"
 
 
-Map::Map() {
-  n_lanes_ = 3;
-  lane_width_ = 4;
-
-  max_s_ = kMAX_S;
-
+Map::Map() : n_lanes_(3), lane_width_(4), max_s_(kMAX_S) {
   loadData();
 }
 
@@ -178,8 +173,8 @@ std::pair<double, double> Map::frenetToCartesian(double s, double d) const {
   double x = spline_sx(s);
   double y = spline_sy(s);
 
-  double dx = spline_sx(s + 0.1) - spline_sx(s - 0.1);
-  double dy = spline_sy(s + 0.1) - spline_sy(s - 0.1);
+  double dx = spline_sx(s + 0.01) - spline_sx(s - 0.01);
+  double dy = spline_sy(s + 0.01) - spline_sy(s - 0.01);
   double yaw = std::atan2(dy, dx) - pi()/2;
 
   x += d*cos(yaw);

@@ -9,13 +9,11 @@
 #include "parameters.h"
 
 
-Vehicle::Vehicle(const Map& map) {
-  time_step_ = kTIME_STEP; // in s
-
-  is_initialized_ = false;
-  history_length_ = 5;
-  map_ = &map;
-}
+Vehicle::Vehicle(const Map& map) :
+    is_initialized_(false),
+    time_step_(kTIME_STEP),
+    history_length_(5),
+    map_(&map) {}
 
 Vehicle::~Vehicle() {}
 
