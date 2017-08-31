@@ -18,9 +18,9 @@ protected:
 public:
 
   // destructor
-  virtual ~EgoStateChangeLane();
+  ~EgoStateChangeLane() override;
 
-  void onUpdate(Ego& ego);
+  void onUpdate(Ego& ego) override;
 };
 
 

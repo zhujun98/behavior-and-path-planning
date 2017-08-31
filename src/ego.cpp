@@ -17,14 +17,9 @@ Ego::Ego(const Map& map) :
     max_evaluation_distance_(100),
     target_speed_(kMAX_SPEED),
     ticker_(0),
-    state_(EgoStateFactory::createState(ST)) {
+    state_(EgoStateFactory::createState(ST)),
+    surroundings_(map.getNoLanes()){
   state_->onEnter(*this);
-
-  // ugly?!
-  for ( size_t i = 0; i < map_->getNoLanes(); ++i ) {
-    std::vector<std::vector<double>> place_holder;
-    surroundings_.push_back(place_holder);
-  }
 }
 
 Ego::~Ego() { delete state_; }
@@ -61,7 +56,7 @@ void Ego::updateUnprocessedPath() {
 
     auto unprocessed_s_begin = std::lower_bound(path_s_.begin(), path_s_.end(), ps_);
     // remove processed way points
-    int n_removed = std::distance(path_s_.begin(), unprocessed_s_begin);
+    long n_removed = std::distance(path_s_.begin(), unprocessed_s_begin);
     auto unprocessed_d_begin = std::next(path_d_.begin(), n_removed);
 
     path_s_.erase(path_s_.begin(), unprocessed_s_begin);
@@ -80,13 +75,12 @@ void Ego::updateSurroundings(const std::vector<std::vector<double>>& sensor_fusi
   }
 }
 
-
 std::vector<std::vector<double>> Ego::getVehiclesInLane(int lane_id) const {
   if ( lane_id < 1 || lane_id > surroundings_.size() ) {
     return {};
-  } else {
-    return surroundings_[lane_id - 1];
   }
+
+  return surroundings_[lane_id - 1];
 }
 
 std::vector<double> Ego::getClosestVehicle(int lane_id, int direction) const {
@@ -128,22 +122,27 @@ std::vector<double> Ego::getClosestVehicle(int lane_id, int direction) const {
 }
 
 void Ego::truncatePath(unsigned int n_keep) {
-  while ( path_s_.size() > n_keep ) {
-    path_s_.pop_back();
-    path_d_.pop_back();
+  if (path_s_.size() > n_keep) {
+    path_s_.erase(path_s_.begin() + n_keep, path_s_.end());
+    path_d_.erase(path_d_.begin() + n_keep, path_d_.end());
   }
 }
 
 void Ego::extendPath(vehicle_trajectory new_path) {
+  if (!path_s_.empty()) {
+    if (*(path_s_.rbegin()) != new_path.first[0] ||
+        *(path_d_.rbegin()) != new_path.second[0]) {
+      throw std::runtime_error("The first point of new path is not the last point "
+                               "of the old path");
+    }
+  }
 
-  // the last point of the old path and the first point of the new
-  // path are the same.
-  for ( int i=1; i < new_path.first.size(); ++i ) {
+  for ( size_t i = 1; i < new_path.first.size(); ++i ) {
     path_s_.push_back(new_path.first[i]);
     path_d_.push_back(new_path.second[i]);
   }
 
-  // Reset path when the car just finishes a lap!
+  // Re-calculate s value when the car just finishes a lap!
   double max_s = map_->getMaxS();
   if ( path_s_[0] >= max_s ) {
     for ( auto &v : path_s_ ) { v -= max_s; }
@@ -248,7 +247,7 @@ void Ego::setTargetSpeed(double value) {
   if ( value > max_speed_ ) {
     target_speed_ = max_speed_;
   } else if ( value < 0 ) {
-    target_speed_ = 0;
+    target_speed_ = speed_;
   } else {
     target_speed_ = value;
   }

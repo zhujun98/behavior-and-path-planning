@@ -53,19 +53,19 @@ int main() {
           double car_speed = j[1]["speed"];  // in MPH
           double car_yaw = j[1]["yaw"];  // in degree
           double yaw_in_rad = deg2rad(car_yaw);
-//          double car_vx = car_speed*std::cos(yaw_in_rad);
-//          double car_vy = car_speed*std::sin(yaw_in_rad);
           double car_s = j[1]["s"];  // in m
           double car_d = j[1]["d"];  // in m
           car_speed *= 4.0/9;  // MPH to m/s
 
-//          std::pair<double, double> car_cartesian = my_car.getMap()->frenetToCartesian(car_s, car_d);
+//          std::pair<double, double> car_cartesian =
+//              my_car.getMap()->frenetToCartesian(car_s, car_d);
 //          std::cout << "Difference in Cartesian from Frenet: "
 //                    << "dx: " << car_x - car_cartesian.first << ", "
 //                    << "dy: " << car_y - car_cartesian.second << std::endl;
-
-//          std::pair<double, double> car_frenet = my_car.getMap()->cartesianToFrenet(car_x, car_y);
-//          std::cout << "Difference in Cartesian from Frenet: "
+//
+//          std::pair<double, double> car_frenet =
+// my_car.getMap()->cartesianToFrenet(car_x, car_y);
+//          std::cout << "Difference in Frenet from Cartesian: "
 //                    << "ds: " << car_s - car_frenet.first << ", "
 //                    << "dd: " << car_d - car_frenet.second << std::endl;
 
@@ -99,12 +99,9 @@ int main() {
 
           my_car.update(localization, sensor_fusion);
 
-//          my_car.printTraffic();
-
-          // Transfer the trajectory in Frenet coordinate system output
-          // by "my_car" and pass it to the simulator.
-
-          vehicle_trajectory trajectory_frenet = std::make_pair(*my_car.getPathS(), *my_car.getPathD());
+          // Frenet to Cartesian
+          vehicle_trajectory trajectory_frenet = std::make_pair(
+              *my_car.getPathS(), *my_car.getPathD());
           vehicle_trajectory trajectory_cartesian =
               my_car.getMap()->trajFrenetToCartesian(trajectory_frenet);
 

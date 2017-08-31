@@ -41,9 +41,9 @@ void Vehicle::updateParameters(const std::vector<double>& localization) {
 
   // update velocity in Frenet coordinate system
 
-  if ( hps_.size() >= 2 ) {
-    vs_ = (hps_.back() - hps_.front()) / (4 * (hps_.size() - 1) * time_step_);
-    vd_ = (hpd_.back() - hpd_.front()) / (4 * (hpd_.size() - 1) * time_step_);
+  if ( hps_.size() > 1 ) {
+    vs_ = (hps_.back() - hps_.front()) / ((hps_.size() - 1) * time_step_);
+    vd_ = (hpd_.back() - hpd_.front()) / ((hpd_.size() - 1) * time_step_);
 
     if ( hvs_.size() >= history_length_ ) {
       hvs_.pop_front();
@@ -55,9 +55,9 @@ void Vehicle::updateParameters(const std::vector<double>& localization) {
 
   // update acceleration in Frenet coordinate system
 
-  if ( hvs_.size() >= 2 ) {
-    as_ = (hvs_.back() - hvs_.front()) / (4 * (hvs_.size() - 1) * time_step_);
-    ad_ = (hvd_.back() - hvd_.front()) / (4 * (hvd_.size() - 1) * time_step_);
+  if ( hvs_.size() > 1 ) {
+    as_ = (hvs_.back() - hvs_.front()) / ((hvs_.size() - 1) * time_step_);
+    ad_ = (hvd_.back() - hvd_.front()) / ((hvd_.size() - 1) * time_step_);
   }
 
 //  std::cout << "Compare speed: " << speed_ << " "

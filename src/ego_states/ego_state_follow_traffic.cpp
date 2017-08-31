@@ -66,11 +66,9 @@ void EgoStateFollowTraffic::planPath(Ego& ego) {
 
       double distance = ps_front - ps0 - ego.getMinSafeDistance(vs1) +
                         (vs_front - 0.5*(vs0 + vs1))*prediction_time;
-      if ( distance > 0 ) {
-        break;
-      } else {
-        acc -= acc_step;
-      }
+      if ( distance > 0 ) { break; }
+
+      acc -= acc_step;
     }
   }
 
@@ -79,12 +77,11 @@ void EgoStateFollowTraffic::planPath(Ego& ego) {
 
   PathPlanner planner(ego.getTargetSpeed(), ego.getMaxAcceleration(), ego.getMaxJerk());
 
-  planner.setDsBoundary(0.8*ds1, ds1);
-  planner.setVsBoundary(0.8*vs1, vs1);
-  planner.setAsBoundary(0, 0);
+  planner.setDsBoundary(ds1*0.9, ds1*1.1);
+  planner.setVsBoundary(vs1*0.9, vs1*1.1);
+
   planner.setPdBoundary(pd1, pd1);
   planner.setVdBoundary(0, 0);
-  planner.setAdBoundary(0, 0);
 
   vehicle_trajectory new_path = planner.plan(state0, prediction_time);
 

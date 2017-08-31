@@ -14,11 +14,11 @@ public:
   EgoStateChangeLaneLeft();
 
   // destructor
-  ~EgoStateChangeLaneLeft();
+  ~EgoStateChangeLaneLeft() override;
 
-  void onEnter(Ego& ego);
+  void onEnter(Ego& ego) override;
 
-  void onExit(Ego& ego);
+  void onExit(Ego& ego) override;
 };
 
 

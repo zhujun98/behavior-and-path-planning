@@ -14,7 +14,7 @@ public:
   EgoTransitionCSToCLR();
 
   // destructor
-  ~EgoTransitionCSToCLR();
+  ~EgoTransitionCSToCLR() override;
 
 };
 

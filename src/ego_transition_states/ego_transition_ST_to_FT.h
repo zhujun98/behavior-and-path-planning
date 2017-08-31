@@ -18,11 +18,11 @@ public:
   EgoTransitionSTToFT();
 
   // destructor
-  ~EgoTransitionSTToFT();
+  ~EgoTransitionSTToFT() override;
 
-  bool isValid(Ego& ego) const;
+  bool isValid(Ego& ego) const override;
 
-  EgoState* getNextState(Ego& ego) const;
+  EgoState* getNextState(Ego& ego) const override;
 
 };
 

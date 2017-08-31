@@ -22,7 +22,7 @@ bool EgoTransitionFTToCL::isOptimal(const Ego &ego, int direction) const {
   if ( direction != 1 && direction != -1 ) { return false; }
 
   int current_lane_id = ego.getLaneID();
-  double MAX_DS = 1000;
+  const double kMaxDist = 1000000;
 
   double prediction_time = 5.0;
 
@@ -39,7 +39,7 @@ bool EgoTransitionFTToCL::isOptimal(const Ego &ego, int direction) const {
 
       ds_final = ps - ego.getPs() + ( vs - ego.getVs() ) * prediction_time;
     } else {
-      ds_final = MAX_DS; // a very large number if there no car on the lane
+      ds_final = kMaxDist; // a very large number if there is no car on the lane
     }
 
     ds_finals.push_back(ds_final);
@@ -54,9 +54,6 @@ bool EgoTransitionFTToCL::isOptimal(const Ego &ego, int direction) const {
     if ( ds_finals[i] - max_ds_final > 15 ) {
       max_ds_final = ds_finals[i];
       max_distance_lane_id = i + 1; // lane id starts from 1
-    } else if ( ds_finals[i] == MAX_DS && i == 1 ) {
-      // keep in the middle lane if there are other empty lanes
-      max_distance_lane_id = 2;
     }
   }
 
@@ -69,15 +66,17 @@ bool EgoTransitionFTToCL::isOptimal(const Ego &ego, int direction) const {
 
   if ( max_distance_lane_id - current_lane_id == direction ) {
     return true;
-  } else if ( direction*(max_distance_lane_id - current_lane_id) > 1 ) {
+  }
+
+  if ( direction*(max_distance_lane_id - current_lane_id) > 1 ) {
     double current_ds = ds_finals[current_lane_id - 1];
     double next_ds = ds_finals[current_lane_id - 1 + direction ];
 
     // if there is not enough room to change lane if the car keeps going
     return ( current_ds - next_ds < 40 );
-  } else {
-    return false;
   }
+
+  return false;
 }
 
 bool EgoTransitionFTToCL::planPath(Ego &ego, int direction) const {
@@ -173,13 +172,11 @@ bool EgoTransitionFTToCL::planPath(Ego &ego, int direction) const {
 
     PathPlanner planner(ego.getTargetSpeed(), ego.getMaxAcceleration(), ego.getMaxJerk());
 
-    planner.setDsBoundary(0.80*ds1, 1.0*ds1);
-    planner.setVsBoundary(0.80*vs1, 1.0*vs1);
-    planner.setAsBoundary(0, 0);
+    planner.setDsBoundary(ds1*0.9, ds1*1.1);
+    planner.setVsBoundary(vs1*0.9, vs1*1.1);
 
     planner.setPdBoundary(pd1, pd1);
     planner.setVdBoundary(0, 0);
-    planner.setAdBoundary(0, 0);
 
     vehicle_trajectory new_path = planner.plan(state0, t_total);
 

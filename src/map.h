@@ -41,10 +41,10 @@ public:
   int computerLaneID(double d) const;
 
   // Calculate the index of the closest waypoint to (x, y)
-  int closestWaypoint(double x, double y) const;
+  unsigned long closestWaypoint(double x, double y) const;
 
   //
-  int nextWaypoint(double x, double y, double theta) const;
+  unsigned long nextWaypoint(double x, double y, double theta) const;
 
   // Convert a point from Frenet to Cartesian coordinate system
   std::pair<double, double> frenetToCartesian(double s, double d) const;
@@ -64,5 +64,6 @@ public:
 
   size_t getNoLanes() const;
 };
+
 
 #endif //PATH_PLANNING_MAP_H

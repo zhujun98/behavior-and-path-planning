@@ -26,9 +26,9 @@ int Map::computerLaneID(double d) const {
   if ( id < 1 || id > 3 ) {
     // out of lane
     return -1;
-  } else {
-    return id;
   }
+
+  return id;
 }
 
 void Map::loadData() {
@@ -62,7 +62,7 @@ void Map::loadData() {
 
 }
 
-int Map::closestWaypoint(double x, double y) const {
+unsigned long Map::closestWaypoint(double x, double y) const {
 
   std::vector<double> l2;
   for ( int i=0; i < x_.size(); ++ i) {
@@ -72,35 +72,27 @@ int Map::closestWaypoint(double x, double y) const {
   }
 
   auto it = std::max_element(l2.begin(), l2.end(), std::greater<double>());
-  int closest_waypoint = std::distance(l2.begin(), it);
+  auto closest_waypoint = (unsigned long)std::distance(l2.begin(), it);
 
   return closest_waypoint;
 }
 
-int Map::nextWaypoint(double x, double y, double theta) const
+unsigned long Map::nextWaypoint(double x, double y, double theta) const
 {
 
-  int closest_waypoint = closestWaypoint(x, y);
+  auto closest_waypoint = closestWaypoint(x, y);
 
   double map_x = x_[closest_waypoint];
   double map_y = y_[closest_waypoint];
 
-  double heading = atan2( (map_y-y),(map_x-x) );
+  double heading = atan2((map_y - y), (map_x - x));
+  double angle = std::abs(theta - heading);
 
-  double angle = abs(theta-heading);
-
-  if(angle > pi()/4)
-  {
-    closest_waypoint++;
-  }
+  if(angle > pi()/4) { ++closest_waypoint; }
 
   return closest_waypoint;
-
 }
 
-//
-// Transform from Cartesian x,y coordinates to Frenet s,d coordinates
-//
 std::pair<double, double> Map::cartesianToFrenet(double x, double y) const {
 
 //  auto i = closestWaypoints(x, y);
@@ -143,14 +135,14 @@ std::pair<double, double> Map::cartesianToFrenet(double x, double y) const {
 std::pair<double, double> Map::frenetToCartesian(double s, double d) const {
 
   if ( s > max_s_ ) { s -= max_s_; }
-  // index of the next way point
-  int closest_waypoint = std::distance(s_.begin(), std::lower_bound(s_.begin(), s_.end(), s));
+  auto next_waypoint = (unsigned long)std::distance(
+      s_.begin(), std::lower_bound(s_.begin(), s_.end(), s));
 
   std::vector<double> local_s;
   std::vector<double> local_x;
   std::vector<double> local_y;
-  for ( int i = -5; i < 6; ++i ) {
-    int index = closest_waypoint + i;
+  for ( long i = -11; i < 11; ++i ) {
+    long index = next_waypoint + i;
     if ( index < 0 ) {
       index += s_.size();
       local_s.push_back(s_[index] - max_s_);
@@ -177,12 +169,13 @@ std::pair<double, double> Map::frenetToCartesian(double s, double d) const {
   double dy = spline_sy(s + 0.01) - spline_sy(s - 0.01);
   double yaw = std::atan2(dy, dx) - pi()/2;
 
-  x += d*cos(yaw);
-  y += d*sin(yaw);
+  x += d*std::cos(yaw);
+  y += d*std::sin(yaw);
 
   return std::make_pair(x, y);
 }
 
+// TODO:: improve the algorithm
 vehicle_trajectory Map::trajFrenetToCartesian(const vehicle_trajectory& trajectory) const {
   vehicle_trajectory trajectory_cartesian;
   std::pair<double, double> xy;

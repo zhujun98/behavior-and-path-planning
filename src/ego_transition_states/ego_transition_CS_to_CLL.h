@@ -14,7 +14,7 @@ public:
   EgoTransitionCSToCLL();
 
   // destructor
-  ~EgoTransitionCSToCLL();
+  ~EgoTransitionCSToCLL() override;
 
 };
 

@@ -17,11 +17,12 @@ public:
   EgoTransitionCLToFT();
 
   // destructor
-  ~EgoTransitionCLToFT();
+  ~EgoTransitionCLToFT() override;
 
-  bool isValid(Ego& ego) const;
+  bool isValid(Ego& ego) const override;
 
-  EgoState* getNextState(Ego& ego) const;
+  EgoState* getNextState(Ego& ego) const override;
 };
+
 
 #endif //PATH_PLANNING_EGO_TRANSITION_CL_TO_FT_H

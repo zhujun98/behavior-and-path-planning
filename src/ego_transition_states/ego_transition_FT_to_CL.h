@@ -38,8 +38,9 @@ protected:
 public:
 
   // destructor
-  virtual ~EgoTransitionFTToCL();
+  ~EgoTransitionFTToCL() override;
 
 };
+
 
 #endif //PATH_PLANNING_EGO_TRANSITION_FT_TO_CL_H

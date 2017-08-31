@@ -55,7 +55,7 @@ public:
   Ego(const Map& map);
 
   // destructor
-  virtual ~Ego();
+  ~Ego() override;
 
   // Update the ego car's state
   void update(const std::vector<double>& localization,
@@ -64,42 +64,37 @@ public:
   // Remove the way points in the vehicle paths which have been processed.
   void updateUnprocessedPath();
 
-  //
-  // Get the closest vehicle (in front of or in back of) on a given lane
-  //
-  // @param lane_id: lane ID
-  // @param direction: 1 for front, -1 for rear
-  // @return: [s, v, d] of the vehicle
-  //
+  /**
+   * Get the closest vehicle (in front of or in back of) on a given lane
+   *
+   * @param lane_id: lane ID
+   * @param direction: 1 for front, -1 for rear
+   * @return: [s, v, d] of the vehicle
+   */
   std::vector<double> getClosestVehicle(int lane_id, int direction) const;
 
-  //
-  // Get all the vehicles in a given lane
-  //
-  // @param lane_id: lane ID
-  //
+  /**
+   * Get all the vehicles in a given lane
+   *
+   * @param lane_idlane ID
+   * @return
+   */
   std::vector<std::vector<double>> getVehiclesInLane(int lane_id) const;
 
-  //
-  // Keep a given number of way points in the current path
-  //
-  // @param n_keep: number of points to keep
-  //
+  /**
+   * Truncate a path (remove tail) to a given length
+   *
+   * @param n_keep: number of points to keep
+   */
   void truncatePath(unsigned int n_keep);
 
-  //
-  // Extend the current path to a given duration
-  //
+  // Append the new path to the end of the old path
   void extendPath(vehicle_trajectory new_path);
 
-  //
   // Estimate the state vector (s, d) at the end of the current path
-  //
   vehicle_state getInitialState() const;
 
-  //
   // Print out the vehicle information around the ego car
-  //
   void printTraffic();
 
   std::vector<double> const* getPathS() const;

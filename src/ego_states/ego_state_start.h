@@ -21,13 +21,13 @@ public:
   EgoStateStart();
 
   // destructor
-  virtual ~EgoStateStart();
+  ~EgoStateStart() override;
 
-  void onEnter(Ego& ego);
+  void onEnter(Ego& ego) override;
 
-  void onUpdate(Ego& ego);
+  void onUpdate(Ego& ego) override;
 
-  void onExit(Ego& ego);
+  void onExit(Ego& ego) override;
 
 };
 
