@@ -14,7 +14,6 @@
 #include "utilities.h"
 #include "ego.h"
 #include "map.h"
-#include "test/test_path_planner.h"
 
 
 int main() {
