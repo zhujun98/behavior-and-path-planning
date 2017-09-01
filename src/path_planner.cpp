@@ -14,9 +14,9 @@
 
 PathPlanner::PathPlanner(double max_speed, double max_acceleration, double max_jerk) :
     time_step_(kTIME_STEP),
-    max_speed_(0.98*max_speed),
-    max_acceleration_(0.98*max_acceleration),
-    max_jerk_(0.98*max_jerk),
+    max_speed_(0.95*max_speed),
+    max_acceleration_(0.95*max_acceleration),
+    max_jerk_(0.95*max_jerk),
     search_steps_(100),
     goal_ds_upper_(0),
     goal_ds_lower_(0),
@@ -91,9 +91,9 @@ vehicle_trajectory PathPlanner::plan(const vehicle_state& state0, double duratio
     t += time_step_;
   }
 
-  std::cout << "cost, min speed (m/s), max speed (m/s), average speed (m/s), "
-      "max acceleration (m/s^2), max jerk (m/s^2)\n";
-  print1DContainer(best_result);
+//  std::cout << "cost, min speed (m/s), max speed (m/s), average speed (m/s), "
+//      "max acceleration (m/s^2), max jerk (m/s^2)\n";
+//  print1DContainer(best_result);
 
   return std::make_pair(best_path_s, best_path_d);
 }
@@ -147,7 +147,7 @@ std::vector<double> PathPlanner::analyzeTrajectory(
   double distance = evalTrajectory(coefficients.first, duration) -
                     evalTrajectory(coefficients.first, 0);
   double average_speed = distance/duration;
-  result[3] = average_speed;  // m/s to MPH
+  result[3] = average_speed;
   cost -= average_speed*5;
 
   // max acceleration
@@ -164,8 +164,7 @@ std::vector<double> PathPlanner::analyzeTrajectory(
     cost += max_jerk*10.0;
   }
 
-  //
-
+  // total cost
   result[0] = cost;
 
   return result;

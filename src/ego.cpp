@@ -35,7 +35,7 @@ void Ego::update(const std::vector<double>& localization,
   if ( hvs_.size() < history_length_ ) { return; }
 
   EgoState* state = state_->checkTransition(*this);
-  if ( state != NULL ) {
+  if ( state != nullptr ) {
     state_->onExit(*this);
     delete state_;
     state_ = state;

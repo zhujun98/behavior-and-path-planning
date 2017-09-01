@@ -15,24 +15,8 @@
 
 
 Map::Map() : n_lanes_(3), lane_width_(4), max_s_(kMAX_S) {
-  loadData();
-}
-
-Map::~Map() {}
-
-int Map::computerLaneID(double d) const {
-  int id = (int)(d / lane_width_) + 1;
-
-  if ( id < 1 || id > 3 ) {
-    // out of lane
-    return -1;
-  }
-
-  return id;
-}
-
-void Map::loadData() {
-  std::string map_file_ = kMAP_PATH;  // Read waypoints data
+  // Read waypoints data
+  std::string map_file_ = kMAP_PATH;
   std::ifstream ifs(map_file_.c_str(), std::ifstream::in);
 
   double x;
@@ -58,28 +42,42 @@ void Map::loadData() {
     dy_.push_back(dy);
   }
 
-  ifs.close();
-
+  ifs.close();;
 }
 
-unsigned long Map::closestWaypoint(double x, double y) const {
+Map::~Map() {}
 
-  std::vector<double> l2;
-  for ( int i=0; i < x_.size(); ++ i) {
-    double dx = x - x_[i];
-    double dy = y - y_[i];
-    l2.push_back( dx*dx + dy*dy );
+int Map::computerLaneID(double d) const {
+  int id = (int)(d / lane_width_) + 1;
+
+  if ( id < 1 || id > 3 ) {
+    // out of lane
+    return -1;
   }
 
-  auto it = std::max_element(l2.begin(), l2.end(), std::greater<double>());
+  return id;
+}
+
+double Map::distance(double x0, double y0, double x1, double y1) const {
+  double dx = x1 - x0;
+  double dy = y1 - y0;
+
+  return std::sqrt(dx*dx + dy*dy);
+}
+
+size_t Map::closestWaypoint(double x, double y) const {
+  std::vector<double> l2;
+  for ( int i=0; i < x_.size(); ++ i) {
+    l2.push_back(distance(x, y, x_[i], y_[i]));
+  }
+
+  auto it = std::min_element(l2.begin(), l2.end());
   auto closest_waypoint = (unsigned long)std::distance(l2.begin(), it);
 
   return closest_waypoint;
 }
 
-unsigned long Map::nextWaypoint(double x, double y, double theta) const
-{
-
+size_t Map::nextWaypoint(double x, double y, double theta) const {
   auto closest_waypoint = closestWaypoint(x, y);
 
   double map_x = x_[closest_waypoint];
@@ -88,52 +86,54 @@ unsigned long Map::nextWaypoint(double x, double y, double theta) const
   double heading = atan2((map_y - y), (map_x - x));
   double angle = std::abs(theta - heading);
 
-  if(angle > pi()/4) { ++closest_waypoint; }
+  if (angle > pi()/4) { ++closest_waypoint; }
 
   return closest_waypoint;
 }
 
 std::pair<double, double> Map::cartesianToFrenet(double x, double y) const {
+  std::cerr << "cartesianToFrenet is not implemented correctly!" << std::endl;
 
-//  auto i = closestWaypoints(x, y);
-//  int i_minus = i.first;
-//  int i_plus = i.second;
-//
-//  double n_x = x_[i_plus] - x_[i_minus];
-//  double n_y = y_[i_plus] - y_[i_minus];
-//  double x_x = x - x_[i_minus];
-//  double x_y = y - y_[i_minus];
-//
-//  // find the projection of x onto n
-//  double proj_norm = (x_x*n_x + x_y*n_y)/(n_x*n_x + n_y*n_y);
-//  double proj_x = proj_norm*n_x;
-//  double proj_y = proj_norm*n_y;
-//
-//  double frenet_d = distance(x_x, x_y, proj_x, proj_y);
-//
-//  //see if d value is positive or negative by comparing it to a center point
-//
-//  double center_x = 1000 - x_[i_minus];
-//  double center_y = 2000 - y_[i_minus];
-//  double centerToPos = distance(center_x, center_y, x_x, x_y);
-//  double centerToRef = distance(center_x, center_y, proj_x, proj_y);
-//
-//  if ( centerToPos <= centerToRef ) { frenet_d *= -1; }
-//
-//  // calculate s value
-//  double frenet_s = 0;
-//  for ( int i = 0; i < i_minus; i++ ) {
-//    frenet_s += distance(x_[i], y_[i], x_[i+1], y_[i+1]);
-//  }
-//
-//  frenet_s += distance(0, 0, proj_x, proj_y);
+  auto closest_wpt = closestWaypoint(x, y);
+  size_t max_index = s_.size();
+  auto prev_wpt = closest_wpt - 1;
+  if (prev_wpt > max_index) { prev_wpt -= max_index; }
+  auto next_wpt = closest_wpt + 1;
+  if (next_wpt > max_index) { next_wpt -= max_index; }
 
-//  return std::make_pair(frenet_s, frenet_d);
-  return {};
+  double n_x = x_[next_wpt] - x_[prev_wpt];
+  double n_y = y_[next_wpt] - y_[prev_wpt];
+  double x_x = x - x_[prev_wpt];
+  double x_y = y - y_[prev_wpt];
+
+  // find the projection of x onto n
+  double proj_norm = (x_x*n_x + x_y*n_y)/(n_x*n_x + n_y*n_y);
+  double proj_x = proj_norm*n_x;
+  double proj_y = proj_norm*n_y;
+
+  double frenet_d = distance(x_x, x_y, proj_x, proj_y);
+
+  //see if d value is positive or negative by comparing it to a center point
+
+  double center_x = 1000 - x_[prev_wpt];
+  double center_y = 2000 - y_[prev_wpt];
+  double centerToPos = distance(center_x, center_y, x_x, x_y);
+  double centerToRef = distance(center_x, center_y, proj_x, proj_y);
+
+  if ( centerToPos <= centerToRef ) { frenet_d *= -1; }
+
+  // calculate s value
+  double frenet_s = 0;
+  for ( size_t i = 0; i < next_wpt; i++ ) {
+    frenet_s += distance(x_[i], y_[i], x_[i+1], y_[i+1]);
+  }
+
+  frenet_s += distance(0, 0, proj_x, proj_y);
+
+  return std::make_pair(frenet_s, frenet_d);
 }
 
 std::pair<double, double> Map::frenetToCartesian(double s, double d) const {
-
   if ( s > max_s_ ) { s -= max_s_; }
   auto next_waypoint = (unsigned long)std::distance(
       s_.begin(), std::lower_bound(s_.begin(), s_.end(), s));
@@ -141,7 +141,7 @@ std::pair<double, double> Map::frenetToCartesian(double s, double d) const {
   std::vector<double> local_s;
   std::vector<double> local_x;
   std::vector<double> local_y;
-  for ( long i = -11; i < 11; ++i ) {
+  for ( long i = -5; i < 5; ++i ) {
     long index = next_waypoint + i;
     if ( index < 0 ) {
       index += s_.size();
@@ -165,8 +165,8 @@ std::pair<double, double> Map::frenetToCartesian(double s, double d) const {
   double x = spline_sx(s);
   double y = spline_sy(s);
 
-  double dx = spline_sx(s + 0.01) - spline_sx(s - 0.01);
-  double dy = spline_sy(s + 0.01) - spline_sy(s - 0.01);
+  double dx = spline_sx(s + 0.1) - spline_sx(s - 0.1);
+  double dy = spline_sy(s + 0.1) - spline_sy(s - 0.1);
   double yaw = std::atan2(dy, dx) - pi()/2;
 
   x += d*std::cos(yaw);

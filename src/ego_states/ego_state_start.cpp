@@ -22,7 +22,6 @@ void EgoStateStart::onEnter(Ego& ego) {
 }
 
 void EgoStateStart::onUpdate(Ego &ego) {
-  ego.truncatePath(15);
   planPath(ego);
 }
 
@@ -31,12 +30,14 @@ void EgoStateStart::onExit(Ego& ego) {
 }
 
 void EgoStateStart::planPath(Ego &ego) {
+  ego.truncatePath(5);
+
   auto state0 = ego.getInitialState();
 
   double vs0 = state0.first[1];
   double as0 = state0.first[2];
 
-  double prediction_time = 0.5;
+  double prediction_time = 1.0;
 
   double as1 = as0 + ego.getMaxJerk()*prediction_time;
   if ( as1 > ego.getMaxAcceleration() ) { as1 = ego.getMaxAcceleration(); }
@@ -45,16 +46,12 @@ void EgoStateStart::planPath(Ego &ego) {
 
   PathPlanner planner(ego.getTargetSpeed(), ego.getMaxAcceleration(), ego.getMaxJerk());
 
-  planner.setDsBoundary(0.6*ds1, ds1);
-  planner.setVsBoundary(0.6*vs1, vs1);
+  planner.setDsBoundary(0.25*ds1, ds1);
+  planner.setVsBoundary(0.25*vs1, vs1);
   planner.setAsBoundary(as0, as1);
 
   double pd0 = state0.second[0];
-  double vd0 = state0.second[1];
-  double ad0 = state0.second[2];
-  planner.setPdBoundary(pd0 - 0.1, pd0 + 0.1);
-  planner.setVdBoundary(vd0, 0.05);
-  planner.setAdBoundary(ad0, 0.05);
+  planner.setPdBoundary(pd0, pd0);
 
   vehicle_trajectory new_path = planner.plan(state0, prediction_time);
 

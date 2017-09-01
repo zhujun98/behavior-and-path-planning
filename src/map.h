@@ -26,9 +26,6 @@ private:
   std::vector<double> dx_;
   std::vector<double> dy_;
 
-  // Read way points data from a file
-  void loadData();
-
 public:
 
   // constructor
@@ -40,11 +37,14 @@ public:
   // Computer the lane id using Frenet d value
   int computerLaneID(double d) const;
 
+  // compute distance between two points
+  double distance(double x0, double y0, double x1, double y1) const;
+
   // Calculate the index of the closest waypoint to (x, y)
-  unsigned long closestWaypoint(double x, double y) const;
+  size_t closestWaypoint(double x, double y) const;
 
   //
-  unsigned long nextWaypoint(double x, double y, double theta) const;
+  size_t nextWaypoint(double x, double y, double theta) const;
 
   // Convert a point from Frenet to Cartesian coordinate system
   std::pair<double, double> frenetToCartesian(double s, double d) const;

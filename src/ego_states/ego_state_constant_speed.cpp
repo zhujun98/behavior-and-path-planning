@@ -49,11 +49,10 @@ void EgoStateConstantSpeed::planPath(Ego& ego) {
 
   PathPlanner planner(ego.getTargetSpeed(), ego.getMaxAcceleration(), ego.getMaxJerk());
 
-  planner.setDsBoundary(ds1*0.9, ds1*1.1);
-  planner.setVsBoundary(vs1*0.9, vs1*1.1);
+  planner.setDsBoundary(ds1*0.8, ds1*1.2);
+  planner.setVsBoundary(vs1*0.8, vs1*1.2);
 
   planner.setPdBoundary(pd1, pd1);
-  planner.setVdBoundary(0, 0);
 
   vehicle_trajectory new_path = planner.plan(state0, prediction_time );
 
