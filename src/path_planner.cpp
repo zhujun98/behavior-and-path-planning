@@ -5,7 +5,7 @@
 #include <cmath>
 #include <vector>
 
-#include "Eigen-3.3/Eigen/Dense"
+#include "eigen3/Eigen/Dense"
 
 #include "path_planner.h"
 #include "utilities.h"
