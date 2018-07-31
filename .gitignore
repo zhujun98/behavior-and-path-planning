@@ -3,4 +3,4 @@ bosch_track1*
 cmake-build-debug
 .idea
 .ipynb_checkpoints
-third_party/eigen3
+third_party/eigen3/*
