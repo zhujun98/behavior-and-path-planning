@@ -7,7 +7,7 @@ In this project your goal is to safely navigate around a virtual highway with ot
 
 ## Setup and run
 
-Download the Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases).
+Download the [simulator](https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2) which contains the Path Planning Project.
 
 Run the simulator and 
 
