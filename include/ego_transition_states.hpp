@@ -67,7 +67,6 @@ protected:
   //
   // @param direction: +1 for to the right and -1 for to the left
   //
-  // TODO:: there is plenty room to improve the AI
   bool isOptimal(const Ego& ego, int direction) const;
 
   //
@@ -82,7 +81,6 @@ protected:
 public:
 
   ~EgoTransitionFTToCL() override;
-
 };
 
 

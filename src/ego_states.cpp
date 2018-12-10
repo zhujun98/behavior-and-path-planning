@@ -3,10 +3,10 @@
 //
 #include <iostream>
 
-#include "ego.h"
-#include "map.h"
-#include "ego_states.h"
-#include "ego_transition_states.h"
+#include "ego.hpp"
+#include "map.hpp"
+#include "ego_states.hpp"
+#include "ego_transition_states.hpp"
 
 
 /*
@@ -18,11 +18,12 @@ EgoState::EgoState() : timer_(0.0) {}
 EgoState::~EgoState() = default;
 
 EgoState* EgoState::checkTransition(Ego &ego) {
-  ++ timer_;
+  ++timer_;
   // avoid frequently switching between states
-  if ( timer_ < 5 ) { return nullptr; }
+  if ( timer_ < 5 ) return nullptr;
 
-  for ( const auto& v : transition_states_ ) if ( v->isValid(ego) ) { return v->getNextState(ego); }
+  for (const auto& v : transition_states_)
+    if ( v->isValid(ego) ) { return v->getNextState(ego); }
 
   return nullptr;
 }
@@ -74,60 +75,60 @@ void EgoStateFollowTraffic::onExit(Ego& ego) {
 }
 
 void EgoStateFollowTraffic::planPath(Ego& ego) {
-  ego.truncatePath(5);
-
-  auto state0 = ego.getInitialState();
-  double ps0 = state0.first[0];
-  double vs0 = state0.first[1];
-
-  // get the distance and the speed of the front car
-  std::vector<double> front_vehicle = ego.getClosestVehicle(ego.getLaneID(), 1);
-  double prediction_time = 1.0 - ego.getPathS()->size()*ego.getTimeStep();
-
-  // Calculate the maximum reachable final speed. The maximum jerk is
-  // not considered here. So this could be an over-estimation.
-  double vs1 = vs0 + prediction_time*ego.getMaxAcceleration();
-  if ( vs1 > ego.getTargetSpeed() ) { vs1 = ego.getTargetSpeed(); }
-
-  // If there is vehicle in front of the ego car, then find the maximum
-  // acceleration that can make a safe distance between the ego car
-  // and the front car.
-  if ( !front_vehicle.empty() ) {
-    double ps_front = front_vehicle[0];
-    double vs_front = front_vehicle[1];
-
-    double acc = ego.getMaxAcceleration();
-    int n_steps = 20;
-    double acc_step = 2*ego.getMaxAcceleration()/n_steps;
-    // The maximum deceleration is actually 3*max_acceleration_.
-    // In practice, the number should be the maximum deceleration that
-    // the car can physically achieve.
-    for ( int i=0; i<=2*n_steps; ++i ) {
-      vs1 = vs0 + prediction_time*acc;
-      if ( vs1 > ego.getTargetSpeed() ) { vs1 = ego.getTargetSpeed(); }
-      if ( vs1 < 0 ) { vs1 = 0; }
-
-      double distance = ps_front - ps0 - ego.getMinSafeDistance(vs1) +
-                        (vs_front - 0.5*(vs0 + vs1))*prediction_time;
-      if ( distance > 0 ) { break; }
-
-      acc -= acc_step;
-    }
-  }
-
-  double ds1 = 0.5*(vs0 + vs1)*prediction_time;
-  double pd1 = (ego.getLaneID() - 0.5) * ego.getMap()->getLaneWidth();
-
-  PathPlanner planner(ego.getTargetSpeed(), ego.getMaxAcceleration(), ego.getMaxJerk());
-
-  planner.setDsBoundary(ds1*0.8, ds1*1.2);
-  planner.setVsBoundary(vs1*0.8, vs1*1.2);
-
-  planner.setPdBoundary(pd1, pd1);
-
-  vehicle_trajectory new_path = planner.plan(state0, prediction_time);
-
-  ego.extendPath(new_path);
+//  ego.truncatePath(5);
+//
+//  auto state0 = ego.getCurrentState();
+//  double ps0 = state0.first[0];
+//  double vs0 = state0.first[1];
+//
+//  // get the distance and the speed of the front car
+//  std::vector<double> front_vehicle = ego.getClosestVehicle(ego.getCurrentLaneId(), 1);
+//  double prediction_time = 1.0 - ego.getPathS()->size()*ego.getTimeStep();
+//
+//  // Calculate the maximum reachable final speed. The maximum jerk is
+//  // not considered here. So this could be an over-estimation.
+//  double vs1 = vs0 + prediction_time*ego.getMaxAcceleration();
+//  if ( vs1 > ego.getTargetSpeed() ) { vs1 = ego.getTargetSpeed(); }
+//
+//  // If there is vehicle in front of the ego car, then find the maximum
+//  // acceleration that can make a safe distance between the ego car
+//  // and the front car.
+//  if ( !front_vehicle.empty() ) {
+//    double ps_front = front_vehicle[0];
+//    double vs_front = front_vehicle[1];
+//
+//    double acc = ego.getMaxAcceleration();
+//    int n_steps = 20;
+//    double acc_step = 2*ego.getMaxAcceleration()/n_steps;
+//    // The maximum deceleration is actually 3*max_acceleration_.
+//    // In practice, the number should be the maximum deceleration that
+//    // the car can physically achieve.
+//    for ( int i=0; i<=2*n_steps; ++i ) {
+//      vs1 = vs0 + prediction_time*acc;
+//      if ( vs1 > ego.getTargetSpeed() ) { vs1 = ego.getTargetSpeed(); }
+//      if ( vs1 < 0 ) { vs1 = 0; }
+//
+//      double distance = ps_front - ps0 - ego.getMinSafeDistance(vs1) +
+//                        (vs_front - 0.5*(vs0 + vs1))*prediction_time;
+//      if ( distance > 0 ) { break; }
+//
+//      acc -= acc_step;
+//    }
+//  }
+//
+//  double ds1 = 0.5*(vs0 + vs1)*prediction_time;
+//  double pd1 = ego.getLaneCenter();
+//
+//  PathPlanner planner(ego.getTargetSpeed(), ego.getMaxAcceleration(), ego.getMaxJerk());
+//
+//  planner.setDsBoundary(ds1*0.8, ds1*1.2);
+//  planner.setVsBoundary(vs1*0.8, vs1*1.2);
+//
+//  planner.setPdBoundary(pd1, pd1);
+//
+//  trajectory new_path = planner.plan(state0, prediction_time);
+//
+//  ego.extendPath(new_path);
 }
 
 
@@ -142,8 +143,8 @@ EgoStateChangeLaneLeft::EgoStateChangeLaneLeft() {
 EgoStateChangeLaneLeft::~EgoStateChangeLaneLeft() = default;
 
 void EgoStateChangeLaneLeft::onEnter(Ego& ego) {
-  std::cout << "Enter state: *** CHANGE TO THE LEFT LANE *** from Lane-" << ego.getLaneID()
-            << " to Lane-" << ego.getTargetLaneID() << std::endl;
+  std::cout << "Enter state: *** CHANGE TO THE LEFT LANE *** from Lane-" << ego.getCurrentLaneId()
+            << " to Lane-" << ego.getTargetLaneId() << std::endl;
 }
 
 void EgoStateChangeLaneRight::onUpdate(Ego& ego) {}
@@ -163,8 +164,8 @@ EgoStateChangeLaneRight::EgoStateChangeLaneRight() {
 EgoStateChangeLaneRight::~EgoStateChangeLaneRight() = default;
 
 void EgoStateChangeLaneRight::onEnter(Ego& ego) {
-  std::cout << "Enter state: *** CHANGE TO THE RIGHT LANE *** from Lane-" << ego.getLaneID()
-            << " to Lane-" << ego.getTargetLaneID() << std::endl;
+  std::cout << "Enter state: *** CHANGE TO THE RIGHT LANE *** from Lane-" << ego.getCurrentLaneId()
+            << " to Lane-" << ego.getTargetLaneId() << std::endl;
 }
 
 void EgoStateChangeLaneLeft::onUpdate(Ego& ego) {}

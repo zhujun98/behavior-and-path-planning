@@ -12,39 +12,38 @@ Download the [simulator](https://github.com/udacity/self-driving-car-sim/release
 Run the simulator and 
 
 ```
-mkdir build && cd build
-cmake .. && make
-./path_planning
+$ mkdir build && cd build
+$ cmake .. && make
+$ ./path_planning
 ```
 
 
-
 ## Highway map
-The map data of the highway is listed in [highway_map.csv](data/highway_map.csv). Each row of the data contains  [x, y, s, dx, dy] values for a waypoint, where x and y are the coordinates in the global coordinate system, s is the longitudinal coordinate along the reference trajectory, dx and dy define the x and y components of the unit vector d which is normal (pointing to the right of the traffic direction) to the referece trajectory.
+The map data of the highway is listed in [highway_map.csv](data/highway_map.csv). Each row of the data contains  [x, y, s, dx, dy] values for a waypoint, where x and y are the coordinates in the global coordinate system, s is the longitudinal coordinate along the reference trajectory, dx and dy define the x and y components of the unit vector d which is normal (pointing to the right of the traffic direction) to the reference trajectory.
 
 ## Simulator output
 
-#### Main car's localization data (without noise)
+* Ego car's localization data (without noise)
+  - ["x"] x in the Cartesian coordinate system, m
+  - ["y"] y in the Cartesian coordinate system, m
+  - ["s"] s in the Frenet coordinate system, m
+  - ["d"] d in the Frenet coordinate system, m
+  - ["yaw"] yaw angle, degree
+  - ["speed"] speed, MPH
 
-["x"] / ["y"] / ["s"] / ["d"] Coordinates in the global coordinate system and Frenet coordinate system.
+* Unprocessed previous path data passed to the simulator (not used)
 
-["yaw"] Yaw angle in degree.
+  - ["previous_path_x"] lists of unprocessed x coordinates, m
+  - ["previous_path_y"] lists of unprocessed y coordinates, m
 
-["speed"] Speed in MPH.
+* End point of the previous path (not used) 
 
-Note: these data will not be used except for the initialization of the car's path.
+  - ["end_path_s"] s in the Frenet coordinate system, m
+  - ["end_path_d"] d in the Frenet coordinate system, m
 
-#### Unreached previous path data passed to the planner (not used)
+* Sensor fusion data  (without noise)
 
-["previous_path_x"] / ["previous_path_y"] Lists of x and y values.
-
-#### End s and d values of  the previous path (not used) 
-
-["end_path_s"] / ["end_path_d"] The last s and d values.
-
-#### Sensor fusion data  (without noise)
-
-["sensor_fusion"] A list other cars' data on the same side of the road in the format [[ID, x (m), y (m), vx (m/s), vy (m/s), s (m), d]]
+  - ["sensor_fusion"] A list other cars' data on the same side of the road in the format [[ID, x (m), y (m), vx (m/s), vy (m/s), s (m), d (m)]]
 
 ## Behavior planning
 

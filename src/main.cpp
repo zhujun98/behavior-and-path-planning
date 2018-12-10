@@ -11,10 +11,9 @@
 #include "eigen3/Eigen/QR"
 #include "json.hpp"
 
-#include "utilities.h"
-#include "ego.h"
-#include "map.h"
-
+#include "utilities.hpp"
+#include "ego.hpp"
+#include "map.hpp"
 
 int main() {
 
@@ -22,94 +21,55 @@ int main() {
 
   uWS::Hub h;
 
-  Map highway_map;
+  Map map("../data/highway_map.csv");
+  Ego ego(map);
 
-  Ego my_car(highway_map);
-
-  h.onMessage([&my_car]
-               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
-                uWS::OpCode opCode) {
+  h.onMessage([&ego](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
-    //auto sdata = string(data).substr(0, length);
-    //cout << sdata << endl;
-    if (length && length > 2 && data[0] == '4' && data[1] == '2') {
+    if (length > 2 && data[0] == '4' && data[1] == '2') {
 
-      std::string s = hasData(data);
+      std::string socket_data = parseSocketData(data);
 
-      if (s != "") {
-        auto j = nlohmann::json::parse(s);
+      if (!socket_data.empty()) {
+        const nlohmann::json json_data = nlohmann::json::parse(socket_data);
 
-        std::string event = j[0].get<std::string>();
+        std::string event = json_data[0].get<std::string>();
         
         if (event == "telemetry") {
-          // j[1] is the data JSON object
-          
-        	// Main car's localization data (without noise).
-          double car_x = j[1]["x"];  // in m
-          double car_y = j[1]["y"];  // in m
-          double car_speed = j[1]["speed"];  // in MPH
-          double car_yaw = j[1]["yaw"];  // in degree
-          double yaw_in_rad = deg2rad(car_yaw);
-          double car_s = j[1]["s"];  // in m
-          double car_d = j[1]["d"];  // in m
-          car_speed *= 4.0/9;  // MPH to m/s
+          // Ego's localization data (without noise).
+          double x = json_data[1]["x"];  // in m
+          double y = json_data[1]["y"];  // in m
+          double speed = mph2mps(json_data[1]["speed"]);  // in MPH
+          double yaw = deg2rad(json_data[1]["yaw"]);  // in rad
+          double s = json_data[1]["s"];  // in m
+          double d = json_data[1]["d"];  // in m
+          std::vector<double> localization = {x, y, speed * std::cos(yaw), speed * std::sin(yaw), s, d};
 
-//          std::pair<double, double> car_cartesian =
-//              my_car.getMap()->frenetToCartesian(car_s, car_d);
-//          std::cout << "Difference in Cartesian from Frenet: "
-//                    << "dx: " << car_x - car_cartesian.first << ", "
-//                    << "dy: " << car_y - car_cartesian.second << std::endl;
-//
-//          std::pair<double, double> car_frenet =
-//              my_car.getMap()->cartesianToFrenet(car_x, car_y);
-//          std::cout << "Difference in Frenet from Cartesian: "
-//                    << "ds: " << car_s - car_frenet.first << ", "
-//                    << "dd: " << car_d - car_frenet.second << std::endl;
+          // Unprocessed path data previously passed to the planner.
+          auto previous_path_x = json_data[1]["previous_path_x"];
+          auto previous_path_y = json_data[1]["previous_path_y"];
 
-          std::vector<double> localization = {car_x, car_y, car_speed, car_yaw, car_s, car_d};
-
-          // Previous path data passed to the planner.
-          // Note:: the previous path is not used!!! The processed way points
-          //        can be found by comparing the current location (car_s) and
-          //        the path in the last time step.
-          auto previous_path_x = j[1]["previous_path_x"];
-          auto previous_path_y = j[1]["previous_path_y"];
-
-          // End s and d values of the previous path.
-          double end_path_s = j[1]["end_path_s"];
-          double end_path_d = j[1]["end_path_d"];
+          // End point of the previous path.
+          double end_path_s = json_data[1]["end_path_s"];
+          double end_path_d = json_data[1]["end_path_d"];
 
           // All other car's data on the same side of the road
           // in the format [[ID, x (m), y (m), vx (m/s), vy (m/s), s (m), d (m)]].
-          auto sensor_fusion_readout = j[1]["sensor_fusion"];
-          std::vector<std::vector<double>> sensor_fusion;
-          for ( auto &it : sensor_fusion_readout ) {
-            double vx = it[3];
-            double vy = it[4];
-            it[3] = std::sqrt(vx*vx + vy*vy);
-            it[4] = std::atan2(vy, vx);
-            std::vector<double> value (std::next(it.begin(), 1), it.end());
-            sensor_fusion.push_back(value);
-          }
+          std::vector<std::vector<double>> sensor_fusion = json_data[1]["sensor_fusion"];
 
           nlohmann::json msgJson;
 
-          my_car.update(localization, sensor_fusion);
+          ego.update(localization, sensor_fusion);
 
-          // Frenet to Cartesian
-          vehicle_trajectory trajectory_frenet = std::make_pair(
-              *my_car.getPathS(), *my_car.getPathD());
-          vehicle_trajectory trajectory_cartesian =
-              my_car.getMap()->trajFrenetToCartesian(trajectory_frenet);
-
-          msgJson["next_x"] = trajectory_cartesian.first;
-          msgJson["next_y"] = trajectory_cartesian.second;
+          auto path = ego.getPath();
+          // define the path that the car will visit sequentially every .02 seconds
+          msgJson["next_x"] = path.first;
+          msgJson["next_y"] = path.second;
 
           auto msg = "42[\"control\"," + msgJson.dump() + "]";
 
-          //this_thread::sleep_for(chrono::milliseconds(1000));
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }
 
@@ -129,7 +89,7 @@ int main() {
     if (req.getUrl().valueLength == 1) {
       res->end(s.data(), s.length());
     } else {
-      // i guess this should be done more gracefully?
+      // I guess this should be done more gracefully?
       res->end(nullptr, 0);
     }
   });

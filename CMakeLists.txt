@@ -9,12 +9,10 @@ set(CMAKE_CXX_FLAGS, "${CXX_FLAGS}")
 
 set(sources
     src/main.cpp
-    src/vehicle.cpp
-    src/map.cpp
-    src/path_planner.cpp
     src/ego.cpp
     src/ego_states.cpp
     src/ego_transition_states.cpp
+    include/trajectory.hpp
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party)
