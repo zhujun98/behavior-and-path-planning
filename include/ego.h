@@ -51,10 +51,8 @@ private:
 
 public:
 
-  // constructor
   Ego(const Map& map);
 
-  // destructor
   ~Ego() override;
 
   // Update the ego car's state

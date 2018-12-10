@@ -1,11 +1,10 @@
 //
 // Created by jun on 7/24/17.
 //
-#ifndef PATH_PLANNING_EGO_STATE_H
-#define PATH_PLANNING_EGO_STATE_H
+#ifndef PATH_PLANNING_EGO_STATES_H
+#define PATH_PLANNING_EGO_STATES_H
 
 #include <vector>
-
 
 class Ego;
 class Map;
@@ -21,9 +20,8 @@ class EgoTransitionState;
 enum States { ST, CLR, CLL, CS, FT };
 
 class EgoState {
-protected:
 
-  // constructor
+protected:
   EgoState();
 
   // Storing the transition states which is belong to this state.
@@ -34,7 +32,6 @@ protected:
 
 public:
 
-  // destructor
   virtual ~EgoState();
 
   // Check the validity of the transition states one-by-one. If valid.
@@ -57,10 +54,8 @@ class EgoStateFactory {
 
 public:
 
-  // constructor
   EgoStateFactory();
 
-  // destructor
   ~EgoStateFactory();
 
   // construct a new state
@@ -68,4 +63,54 @@ public:
 };
 
 
-#endif //PATH_PLANNING_EGO_STATE_H
+class EgoStateFollowTraffic : public EgoState {
+private:
+
+  void planPath(Ego& ego);
+
+public:
+
+  EgoStateFollowTraffic();
+
+  ~EgoStateFollowTraffic() override;
+
+  void onEnter(Ego& ego) override;
+
+  void onUpdate(Ego& ego) override;
+
+  void onExit(Ego& ego) override;
+};
+
+
+class EgoStateChangeLaneLeft : public EgoState {
+public:
+
+  EgoStateChangeLaneLeft();
+
+  ~EgoStateChangeLaneLeft() override;
+
+  void onEnter(Ego& ego) override;
+
+  void onUpdate(Ego& ego) override;
+
+  void onExit(Ego& ego) override;
+};
+
+
+class EgoStateChangeLaneRight : public EgoState {
+public:
+
+  EgoStateChangeLaneRight();
+
+  ~EgoStateChangeLaneRight() override;
+
+  void onEnter(Ego& ego) override;
+
+  void onUpdate(Ego& ego) override;
+
+  void onExit(Ego& ego) override;
+
+};
+
+
+#endif //PATH_PLANNING_EGO_STATES_H

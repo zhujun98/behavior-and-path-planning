@@ -3,7 +3,7 @@
 //
 #include "ego.h"
 #include "map.h"
-#include "ego_states/ego_state.h"
+#include "ego_states.h"
 #include "parameters.h"
 
 
@@ -17,7 +17,7 @@ Ego::Ego(const Map& map) :
     max_evaluation_distance_(100),
     target_speed_(kMAX_SPEED),
     ticker_(0),
-    state_(EgoStateFactory::createState(ST)),
+    state_(EgoStateFactory::createState(FT)),
     surroundings_(map.getNoLanes()){
   state_->onEnter(*this);
 }

@@ -28,10 +28,8 @@ private:
 
 public:
 
-  // constructor
   Map();
 
-  // destructor
   ~Map();
 
   // Computer the lane id using Frenet d value

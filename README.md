@@ -48,9 +48,7 @@ Note: these data will not be used except for the initialization of the car's pat
 
 ## Behavior planning
 
-Behavior planning is achieved by using the State (FSM) and Factory Design Patterns, as sketched below. We have two types of FSM: ***state*** (belong to the ego vehicle, e.g. Follow traffic) and ***transition state*** (belong to the ***state***, e.g. FT_TO_CS). The ego vehicle can only occupy one ***state*** at any time but the ***state*** can have several ***transition states***. At each time step, the ***transition states*** of the current ***state*** are checked one by one. If any transition is valid, the vehicle will switch to the next ***state*** that this ***transition state*** leads to.
-
-![alt text](misc/FSM.png)
+Behavior planning is achieved by using the FSM pattern. We have two types of FSMs: ***state*** (belong to the ego vehicle) and ***transition state*** (belong to the ***state***). The ego vehicle can only occupy one ***state*** at a time but the ***state*** can have several ***transition states***. At each time step, the ***transition states*** of the current ***state*** are checked one by one. If any transition is valid, the vehicle will switch to the next ***state*** that this ***transition state*** leads to.
 
 ## Path planning
 

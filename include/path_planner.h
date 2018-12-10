@@ -96,10 +96,8 @@ private:
 
 public:
 
-  // consturctor
   PathPlanner(double max_speed, double max_acceleration, double max_jerk);
 
-  // destructor
   ~PathPlanner();
 
   // Find the optimized path

@@ -1,17 +1,61 @@
 //
 // Created by jun on 7/28/17.
 //
+#include <iostream>
 #include <cmath>
 
-#include "ego_transition_FT_to_CL.h"
-#include "../map.h"
-#include "../ego.h"
-#include "../ego_states/ego_state.h"
+#include "ego.h"
+#include "map.h"
+#include "ego_states.h"
+#include "ego_transition_states.h"
 
 
-EgoTransitionFTToCL::EgoTransitionFTToCL() {}
+EgoTransitionState* EgoTransitionStateFactory::createState(TransitionStates name) {
+  switch (name) {
+    case CL_TO_FT:
+      static EgoTransitionCLToFT cl_to_ft;
+      return &cl_to_ft;
+    case FT_TO_CLR:
+      static EgoTransitionFTToCLR ft_to_clr;
+      return &ft_to_clr;
+    case FT_TO_CLL:
+      static EgoTransitionFTToCLL ft_to_cll;
+      return &ft_to_cll;
+    default:
+      throw std::invalid_argument("Unknown transition state!");
+  }
+}
 
-EgoTransitionFTToCL::~EgoTransitionFTToCL() {}
+
+EgoTransitionFTToCLR::EgoTransitionFTToCLR() = default;
+
+EgoTransitionFTToCLR::~EgoTransitionFTToCLR() = default;
+
+EgoState* EgoTransitionFTToCLR::getNextState(Ego& ego) const {
+  return EgoStateFactory::createState(CLR);
+}
+
+bool EgoTransitionFTToCLR::isValid(Ego &ego) const {
+  return ( isOptimal(ego, 1) && planPath(ego, 1) );
+}
+
+
+EgoTransitionFTToCLL::EgoTransitionFTToCLL() = default;
+
+EgoTransitionFTToCLL::~EgoTransitionFTToCLL() = default;
+
+EgoState* EgoTransitionFTToCLL::getNextState(Ego& ego) const {
+  return EgoStateFactory::createState(CLL);
+}
+
+bool EgoTransitionFTToCLL::isValid(Ego &ego) const {
+  return ( isOptimal(ego, -1) && planPath(ego, -1) );
+}
+
+
+EgoTransitionFTToCL::EgoTransitionFTToCL() = default;
+
+EgoTransitionFTToCL::~EgoTransitionFTToCL() = default;
 
 bool EgoTransitionFTToCL::isOptimal(const Ego &ego, int direction) const {
   // Do nothing at the end or at the beginning of a lap.
@@ -185,4 +229,17 @@ bool EgoTransitionFTToCL::planPath(Ego &ego, int direction) const {
   }
 
   return false;
+}
+
+
+EgoTransitionCLToFT::EgoTransitionCLToFT() {}
+
+EgoTransitionCLToFT::~EgoTransitionCLToFT() {}
+
+EgoState* EgoTransitionCLToFT::getNextState(Ego& ego) const {
+  return EgoStateFactory::createState(FT);
+}
+
+bool EgoTransitionCLToFT::isValid(Ego &ego) const {
+  return ( ego.getTargetLaneID() == ego.getLaneID() );
 }

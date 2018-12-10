@@ -45,7 +45,7 @@ Map::Map() : n_lanes_(3), lane_width_(4), max_s_(kMAX_S) {
   ifs.close();;
 }
 
-Map::~Map() {}
+Map::~Map() = default;
 
 int Map::computerLaneID(double d) const {
   int id = (int)(d / lane_width_) + 1;

@@ -15,7 +15,7 @@ Vehicle::Vehicle(const Map& map) :
     history_length_(5),
     map_(&map) {}
 
-Vehicle::~Vehicle() {}
+Vehicle::~Vehicle() = default;
 
 void Vehicle::updateParameters(const std::vector<double>& localization) {
   px_ = localization[0];
