@@ -61,14 +61,22 @@ struct Map {
 
   ~Map() = default;
 
-  // get the lane id based on the Frenet coordinate d
+  /**
+   * get the lane id based on the Frenet coordinate d
+   */
   uint8_t getLaneId(double d) const {
     if (d < 0) return 0;
     if (d > n_lanes * lane_width) return (uint8_t)(n_lanes + 1);
     return static_cast<uint8_t>(d / lane_width);
   }
 
+  /**
+   * Get lane center from ID. If the lane ID does not exist, it returns the center
+   * of the nearest valid lane.
+   */
   double getLaneCenter(uint8_t lane_id) {
+    if (lane_id == 0) lane_id = 1;
+    if (lane_id > n_lanes) lane_id = n_lanes;
     return (lane_id - 0.5) * lane_width;
   }
 };
