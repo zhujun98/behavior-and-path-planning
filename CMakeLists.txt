@@ -1,10 +1,12 @@
-project(Path_Planning)
+project(behavior_and_path_planning)
 
 cmake_minimum_required (VERSION 3.0)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -g")
 
-set(sources
+OPTION(BUILD_TESTS "test suit" ON)
+
+set(SOURCES
     src/main.cpp
     src/ego.cpp
     src/ego_states.cpp
@@ -23,6 +25,12 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     link_directories(/usr/local/Cellar/libuv/1.11.0/lib)
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 
-add_executable(path_planning ${sources})
+enable_testing()
+if(BUILD_TESTS)
+    add_subdirectory(tests)
+endif()
 
-target_link_libraries(path_planning z ssl uv uWS)
+set(TARGET run_app)
+add_executable(${TARGET} ${SOURCES})
+
+target_link_libraries(${TARGET} z ssl uv uWS)
