@@ -82,8 +82,8 @@ position cartesianToFrenet(const position& p, double yaw, const trajectory& traj
 
   //see if d value is positive or negative by comparing it to a center point
 
-  double center_x = 1000 - p.first[prev_wpt];
-  double center_y = 2000 - p.second[prev_wpt];
+  double center_x = 1000 - traj.first[prev_wpt];
+  double center_y = 2000 - traj.second[prev_wpt];
   double centerToPos = distance(center_x, center_y, x_x, x_y);
   double centerToRef = distance(center_x, center_y, proj_x, proj_y);
 
