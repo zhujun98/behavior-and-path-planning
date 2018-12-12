@@ -7,6 +7,8 @@
 #include "utilities.hpp"
 
 
+namespace {
+
 TEST(TestSquareDistance, GeneralTest) {
   ASSERT_EQ(2.0, square_distance(1, 0, 0, 1));
   ASSERT_EQ(17.0, square_distance(-1, 0, 3, 1));
@@ -18,3 +20,5 @@ TEST(TestDistance, GeneralTest) {
 }
 
 // TODO: add parseSocketData
+
+}
