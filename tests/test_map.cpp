@@ -12,12 +12,11 @@ namespace {
 class TestMap : public testing::Test {
 
 protected:
-  // TODO: make it relative path
-  std::string filename = "/home/jun/Projects/behavior-and-path-planning/tests/highway_map.csv";
+  // cwd is build/tests
+  std::string filename = "../../data/highway_map.csv";
   Map map_;
 
-  TestMap() : map_(filename) {};
-
+  TestMap() : map_(filename) {}
 };
 
 
