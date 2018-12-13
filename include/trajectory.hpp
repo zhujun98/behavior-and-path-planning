@@ -11,18 +11,18 @@
 #include "eigen3/Eigen/Dense"
 #include "spline/spline.h"
 
-using trajectory = std::pair<std::vector<double>, std::vector<double>>;
 using position = std::pair<double, double>;
 
 
 /**
  * Calculate the index of the closest waypoint.
  */
-std::size_t closestWaypoint(const position& p, const trajectory& traj) {
+std::size_t closestWaypoint(double x, double y,
+                            const std::vector<double>& traj_x, const std::vector<double>& traj_y) {
   std::size_t closest_waypoint = 0;
   double closest = std::numeric_limits<double>::max();
-  for (std::size_t i=0; i < traj.first.size(); ++i) {
-    double dist = distance(p.first, p.second, traj.first[i], traj.second[i]);
+  for (std::size_t i=0; i < traj_x.size(); ++i) {
+    double dist = distance(x, y, traj_x[i], traj_y[i]);
     if (dist < closest) {
       closest = dist;
       closest_waypoint = i;
@@ -35,20 +35,21 @@ std::size_t closestWaypoint(const position& p, const trajectory& traj) {
 /**
  * Get the index of the next waypoint.
  */
-std::size_t nextWaypoint(const position& p, double yaw, const trajectory& traj) {
-  std::size_t closest_wpt = closestWaypoint(p, traj);
+std::size_t nextWaypoint(double x, double y, double yaw,
+                         const std::vector<double>& traj_x, const std::vector<double>& traj_y) {
+  std::size_t closest_wpt = closestWaypoint(x, y, traj_x, traj_y);
 
-  double closest_x = traj.first[closest_wpt];
-  double closest_y = traj.second[closest_wpt];
+  double closest_x = traj_x[closest_wpt];
+  double closest_y = traj_y[closest_wpt];
 
-  double closest_yaw = atan2(closest_y - p.second, closest_x - p.first);
+  double closest_yaw = atan2(closest_y - y, closest_x - x);
 
   double angle = std::abs(yaw - closest_yaw);
   angle = std::min(2*pi() - angle, angle);
 
   if(angle > pi()/4) {
     ++closest_wpt;
-    if (closest_wpt == traj.first.size()) closest_wpt = 0;
+    if (closest_wpt == traj_x.size()) closest_wpt = 0;
   }
 
   return closest_wpt;
@@ -58,19 +59,20 @@ std::size_t nextWaypoint(const position& p, double yaw, const trajectory& traj) 
 /**
  * Convert the Cartesian coordinate in a trajectory to the Frenet coordinate.
  */
-position cartesianToFrenet(const position& p, double yaw, const trajectory& traj) {
+position cartesianToFrenet(double x, double y, double yaw, double max_s,
+                           const std::vector<double>& traj_x, const std::vector<double>& traj_y) {
 
-  std::size_t next_wpt = nextWaypoint(p, yaw, traj);
+  std::size_t next_wpt = nextWaypoint(x, y, yaw, traj_x, traj_y);
   std::size_t prev_wpt;
-  if (next_wpt == 0) prev_wpt = traj.first.size() - 1;
+  if (next_wpt == 0) prev_wpt = traj_x.size() - 1;
   else prev_wpt = next_wpt - 1;
 
   // find the projection of x onto n
 
-  double n_x = traj.first[next_wpt] - traj.first[prev_wpt];
-  double n_y = traj.second[next_wpt] - traj.second[prev_wpt];
-  double x_x = p.first - traj.first[prev_wpt];
-  double x_y = p.second - traj.second[prev_wpt];
+  double n_x = traj_x[next_wpt] - traj_x[prev_wpt];
+  double n_y = traj_y[next_wpt] - traj_y[prev_wpt];
+  double x_x = x - traj_x[prev_wpt];
+  double x_y = y - traj_y[prev_wpt];
 
   double proj_norm = (x_x*n_x + x_y*n_y) / (n_x*n_x + n_y*n_y);
   double proj_x = proj_norm * n_x;
@@ -78,50 +80,77 @@ position cartesianToFrenet(const position& p, double yaw, const trajectory& traj
 
   // calculate the Frenet coordinate d
 
-  double frenet_d = distance(x_x, x_y, proj_x, proj_y);
+  double d = distance(x_x, x_y, proj_x, proj_y);
 
   //see if d value is positive or negative by comparing it to a center point
 
-  double center_x = 1000 - traj.first[prev_wpt];
-  double center_y = 2000 - traj.second[prev_wpt];
-  double centerToPos = distance(center_x, center_y, x_x, x_y);
-  double centerToRef = distance(center_x, center_y, proj_x, proj_y);
+  double center_x = 1000 - traj_x[prev_wpt];
+  double center_y = 2000 - traj_y[prev_wpt];
+  double center_to_pos = distance(center_x, center_y, x_x, x_y);
+  double center_to_ref = distance(center_x, center_y, proj_x, proj_y);
 
-  if (centerToPos <= centerToRef) frenet_d *= -1;
+  if (center_to_pos <= center_to_ref) d *= -1;
 
   // calculate the Frenet coordinate s
-  double frenet_s = 0;
-  for (std::size_t i = 0; i < next_wpt; ++i)
-    frenet_s += distance(traj.first[i], traj.second[i], traj.first[i+1], traj.second[i+1]);
+  double s = 0;
+  for (std::size_t i = 0; i < prev_wpt; ++i)
+    s += distance(traj_x[i], traj_y[i], traj_x[i+1], traj_y[i+1]);
 
-  frenet_s += distance(0, 0, proj_x, proj_y);
+  s += distance(0, 0, proj_x, proj_y);
+  if (s > max_s) s -= max_s;
+  else if (s < 0) s += max_s;
 
-  return {frenet_s, frenet_d};
+  return {s, d};
 }
 
 /**
  * Convert the Frenet coordinate in a trajectory to the Cartesian coordinate.
  */
-position frenetToCartesian(const position& p, const trajectory& traj, const trajectory& traj_cts) {
-  int prev_wp = -1;
-  while (p.first > traj.first[prev_wp+1] && (prev_wp < traj.first.size() - 1))
-    ++prev_wp;
+position frenetToCartesian(double s, double d, const std::vector<double>& traj_s, double max_s,
+                           const std::vector<double>& traj_x, const std::vector<double>& traj_y) {
+  while (s > max_s) s -= max_s;
+  while (s < 0) s += max_s;
 
-  int wp2 = (prev_wp + 1) % traj.first.size();
+  long next_wpt = std::distance(traj_s.begin(), std::lower_bound(traj_s.begin(), traj_s.end(), s));
 
-  double heading = atan2((traj.second[wp2] - traj.second[prev_wp]), (traj.first[wp2] - traj.first[prev_wp]));
-  // the x,y,s along the segment
-  double seg_s = (p.first - traj.first[prev_wp]);
+  std::vector<double> local_traj_s;
+  std::vector<double> local_traj_x;
+  std::vector<double> local_traj_y;
+  // apply interpolation around the next waypoint
+  for (auto i = -5; i < 5; ++i ){
+    long wpt = next_wpt + i;
 
-  double seg_x = traj.first[prev_wp] + seg_s * std::cos(heading);
-  double seg_y = traj.first[prev_wp] + seg_s * std::sin(heading);
+    // we either have wpt < 0 or wpt > 0
+    if (wpt < 0) {
+      wpt += traj_s.size();
+      local_traj_s.push_back(traj_s[wpt] - max_s);
+    } else if (wpt >= traj_s.size()) {
+      wpt -= traj_s.size();
+      local_traj_s.push_back(traj_s[wpt] + max_s);
+    } else {
+      local_traj_s.push_back(traj_s[wpt]);
+    }
+    local_traj_x.push_back(traj_x[wpt]);
+    local_traj_y.push_back(traj_y[wpt]);
+  }
 
-  double perp_heading = heading-pi()/2;
+  tk::spline spline_sx;
+  spline_sx.set_points(local_traj_s, local_traj_x);
 
-  double px = seg_x + p.second * std::cos(perp_heading);
-  double py = seg_y + p.second * std::sin(perp_heading);
+  tk::spline spline_sy;
+  spline_sy.set_points(local_traj_s, local_traj_y);
 
-  return {px, py};
+  double x = spline_sx(s);
+  double y = spline_sy(s);
+
+  double dx = spline_sx(s + 0.1) - spline_sx(s - 0.1);
+  double dy = spline_sy(s + 0.1) - spline_sy(s - 0.1);
+  double yaw = std::atan2(dy, dx) - pi()/2;
+
+  x += d * std::cos(yaw);
+  y += d * std::sin(yaw);
+
+  return {x, y};
 }
 
 /**
