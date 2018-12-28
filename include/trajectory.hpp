@@ -169,9 +169,6 @@ std::vector<double>
 jerkMinimizingTrajectory(const std::vector<double>& state0,
                          const std::vector<double>& state1,
                          double dt) {
-  assert (state0.size() == 3);
-  assert (state1.size() == 3);
-
   double dt2 = dt*dt;
   double dt3 = dt2*dt;
   double dt4 = dt3*dt;
