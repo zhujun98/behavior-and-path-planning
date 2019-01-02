@@ -10,8 +10,9 @@
 
 #include "map.hpp"
 
+
 class EgoState;
-class Map;
+
 
 class Ego {
 
@@ -37,17 +38,13 @@ class Ego {
   double as_; // in m/s^2
   double ad_; // in m/s^2
 
-  unsigned history_length_ = 5; // length of history data
-  std::list<double> hps_;
-  std::list<double> hpd_;
-  std::list<double> hvs_;
-  std::list<double> hvd_;
-
   Map map_;
 
   EgoState* state_; // vehicle state
 
-  surroundings surroundings_; // surrounding vehicles information
+  // surrounding vehicles information
+  // [[ID, x (m), y (m), vx (m/s), vy (m/s), s (m), d (m)]]
+  surroundings surroundings_;
 
   uint8_t target_lane_id_; // target lane ID
 
@@ -57,9 +54,6 @@ class Ego {
   double max_acceleration_; // maximum acceleration (m/s^2)
   double max_jerk_; // maximum jerk (m/s^3)
   double max_steering_; // maximum steering angle (rad)
-
-  // the safe distance is proportional to a car's speed
-  double min_safe_distance_coeff_;
 
   // We care about traffic within this distance (m) since the detector
   // has its own range in reality.
@@ -95,11 +89,6 @@ public:
               const std::vector<std::vector<double>>& sensor_fusion);
 
   /**
-   * Get all the vehicles in a given lane.
-   */
-  std::vector<std::vector<double>> getVehiclesInLane(uint8_t lane_id) const;
-
-  /**
    * Get the closest vehicles (front and rear) on a given lane.
    *
    * @param lane_id: lane ID
@@ -120,6 +109,21 @@ public:
   void extendPath(trajectory new_path);
 
   /**
+   * Plan the path in order to follow the traffic.
+   */
+  void followTraffic();
+
+  /**
+   * Plan the path in order to shift to the left lane.
+   */
+  void shiftLaneLeft();
+
+  /**
+   * Plan the path in order to shift to the right lane.
+   */
+  void shiftLaneRight();
+
+  /**
    * Get the unprocessed waypoints (x, y).
    */
   trajectory getPath();
@@ -130,12 +134,6 @@ public:
   double getMaxAcceleration() const;
   double getMaxJerk() const;
   double getMaxSteering() const;
-
-  double getMinSafeDistance(double speed) const;
-
-  double getMaxEvaluationDistance() const;
-
-  const surroundings& getSurroundings() const;
 
   // Print out the vehicle's information
   void info() const;

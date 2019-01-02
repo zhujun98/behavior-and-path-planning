@@ -11,13 +11,11 @@ class Map;
 class EgoTransitionState;
 
 //
-// ST: start
 // CLR: change to the right lane
 // CLL: change to the left lane
 // CS: constant speed
-// FT: follow traffic
 //
-enum States { ST, CLR, CLL, CS, FT };
+enum States { CLR, CLL, FT };
 
 class EgoState {
 
@@ -64,9 +62,6 @@ public:
 
 
 class EgoStateFollowTraffic : public EgoState {
-private:
-
-  void planPath(Ego& ego);
 
 public:
 
@@ -83,6 +78,7 @@ public:
 
 
 class EgoStateChangeLaneLeft : public EgoState {
+
 public:
 
   EgoStateChangeLaneLeft();

@@ -14,8 +14,6 @@ Ego::Ego(const Map& map) :
   max_speed_(mph2mps(50)),
   max_acceleration_ (10),
   max_jerk_(10),
-  min_safe_distance_coeff_(0.5),
-  max_evaluation_distance_(100),
   state_(EgoStateFactory::createState(FT)),
   map_(map),
   surroundings_(map_.n_lanes + 2)
@@ -30,10 +28,6 @@ void Ego::update(const std::vector<double>& localization,
   updateParameters(localization);
   updateSurroundings(sensor_fusion);
   updateUnprocessedPath();
-
-  // Do nothing until collecting enough data. For calculation of the
-  // derivative.
-  if ( hvs_.size() < history_length_ ) { return; }
 
   EgoState* state = state_->checkTransition(*this);
   if (state != nullptr) {
@@ -51,50 +45,15 @@ void Ego::updateParameters(const std::vector<double>& localization) {
   py_ = localization[1];
   vx_ = localization[2];
   vy_ = localization[3];
+  // TODO: ps_ and pd_ should be calculated from px_ and py_
   ps_ = localization[4];
   pd_ = localization[5];
-
-  if (hps_.size() >= history_length_) {
-    hps_.pop_front();
-    hpd_.pop_front();
-  }
-  hps_.push_back(ps_);
-  hpd_.push_back(pd_);
-
-  /*
-   * The following data are not consistent with the returned data from
-   * the simulator. The time interval of the returned data is changing!
-   */
-
-  // update velocity in Frenet coordinate system
-
-  if ( hps_.size() > 1 ) {
-    vs_ = (hps_.back() - hps_.front()) / ((hps_.size() - 1) * time_step_);
-    vd_ = (hpd_.back() - hpd_.front()) / ((hpd_.size() - 1) * time_step_);
-
-    if ( hvs_.size() >= history_length_ ) {
-      hvs_.pop_front();
-      hvd_.pop_front();
-    }
-    hvs_.push_back(vs_);
-    hvd_.push_back(vd_);
-  }
-
-  // update acceleration in Frenet coordinate system
-
-  if ( hvs_.size() > 1 ) {
-    as_ = (hvs_.back() - hvs_.front()) / ((hvs_.size() - 1) * time_step_);
-    ad_ = (hvd_.back() - hvd_.front()) / ((hvd_.size() - 1) * time_step_);
-  }
 }
 
 
 void Ego::updateSurroundings(const std::vector<std::vector<double>>& sensor_fusion) {
   for (auto& v : surroundings_) v.clear();
-
-  for (auto& v : sensor_fusion) {
-    surroundings_[map_.getLaneId(v[5])].push_back(v);
-  }
+  for (auto& v : sensor_fusion) surroundings_[map_.getLaneId(v[6])].push_back(v);
 }
 
 
@@ -114,10 +73,6 @@ void Ego::updateUnprocessedPath() {
     path_.first.erase(path_.first.begin(), unprocessed_s_begin);
     path_.second.erase(path_.second.begin(), unprocessed_d_begin);
   }
-}
-
-std::vector<std::vector<double>> Ego::getVehiclesInLane(uint8_t lane_id) const {
-  return surroundings_[lane_id];
 }
 
 std::pair<std::vector<double>, std::vector<double>> Ego::getClosestVehicles(uint8_t lane_id) const {
@@ -158,35 +113,24 @@ void Ego::extendPath(trajectory path) {
 }
 
 
+void Ego::followTraffic() {
+
+}
+
+void Ego::shiftLaneLeft() {
+
+}
+
+void Ego::shiftLaneRight() {
+
+}
+
 Ego::trajectory Ego::getPath() { return path_; }
 
 
 Ego::car_state Ego::getCurrentState() const {
   double ps0, vs0, as0;
   double pd0, vd0, ad0;
-
-  // we need at least 3 points to calculate acceleration
-//  if (path_.first.size() < 3)
-//    return std::make_pair(std::vector<double>{ps_, vs_, as_}, std::vector<double>{pd_, vd_, ad_});
-//
-//  auto it_s = path_.first.rbegin();
-//  auto it_d = path_.second.rbegin();
-//  ps0 = *it_s;
-//  pd0 = *it_d;
-//  std::advance(it_s, 1);
-//  std::advance(it_d, 1);
-//  double ps0_1 = *it_s;
-//  double pd0_1 = *it_d;
-//  std::advance(it_s, 1);
-//  std::advance(it_d, 1);
-//  double ps0_2 = *it_s;
-//  double pd0_2 = *it_d;
-//  vs0 = (ps0 - ps0_1) / time_step_;
-//  vd0 = (pd0 - pd0_1) / time_step_;
-//  double vs0_1 = (ps0_1 - ps0_2) / time_step_;
-//  double vd0_1 = (pd0_1 - pd0_2) / time_step_;
-//  as0 = (vs0 - vs0_1) / time_step_;
-//  ad0 = (vd0 - vd0_1) / time_step_;
 
   return {ps0, vs0, as0, pd0, vd0, ad0};
 }
@@ -196,15 +140,11 @@ double Ego::getMaxAcceleration() const { return max_acceleration_; }
 double Ego::getMaxJerk() const { return max_jerk_; }
 double Ego::getMaxSteering() const { return max_steering_; }
 
-double Ego::getMinSafeDistance(double speed) const { return min_safe_distance_coeff_*speed + 5; }
-double Ego::getMaxEvaluationDistance() const { return max_evaluation_distance_; }
-
-const Ego::surroundings& Ego::getSurroundings() const { return surroundings_; }
-
 void Ego::setTargetLaneId(uint8_t value) {
-  if ( value >= 1 && value <= 3 ) { target_lane_id_ = value; }
+  if (value >= 1 && value <= map_.n_lanes)
+    target_lane_id_ = value;
+  else std::cerr << "Invalid target lane ID: " << value << std::endl;
 }
-
 
 void Ego::info() const {
   std::cout << "Lane ID = " << getCurrentLaneId() << ", "

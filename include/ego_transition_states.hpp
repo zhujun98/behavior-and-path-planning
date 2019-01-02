@@ -10,20 +10,20 @@ class EgoState;
 
 //
 // CL_TO_FT: change lane to follow traffic
-// FT_TO_CLR: follow traffic to change lane right
 // FT_TO_CLL: follow traffic to change lane left
+// FT_TO_CLR: follow traffic to change lane right
 //
-enum TransitionStates { CL_TO_FT, FT_TO_CLR, FT_TO_CLL };
+enum TransitionStates { CL_TO_FT, FT_TO_CLL, FT_TO_CLR };
 
 
 class EgoTransitionState {
 protected:
 
-  EgoTransitionState() = default;
+  EgoTransitionState();
 
 public:
 
-  virtual ~EgoTransitionState() = default;
+  virtual ~EgoTransitionState();
 
   // check whether the transition is valid.
   virtual bool isValid(Ego& ego) const = 0;
@@ -35,21 +35,21 @@ public:
 
 class EgoTransitionStateFactory {
 public:
-  EgoTransitionStateFactory() = default;
+  EgoTransitionStateFactory();
 
-  ~EgoTransitionStateFactory() = default;
+  ~EgoTransitionStateFactory();
 
   // construct a new transition state
   static EgoTransitionState* createState(TransitionStates name);
 };
 
 
-class EgoTransitionCLToFT : public EgoTransitionState {
+class EgoTransitionCL2FT : public EgoTransitionState {
 public:
 
-  EgoTransitionCLToFT();
+  EgoTransitionCL2FT();
 
-  ~EgoTransitionCLToFT() override;
+  ~EgoTransitionCL2FT() override;
 
   bool isValid(Ego& ego) const override;
 
@@ -57,39 +57,12 @@ public:
 };
 
 
-class EgoTransitionFTToCL : public EgoTransitionState {
-
-protected:
-  EgoTransitionFTToCL();
-
-  //
-  // check the whether the direction of lane change is optimal
-  //
-  // @param direction: +1 for to the right and -1 for to the left
-  //
-  bool isOptimal(const Ego& ego, int direction) const;
-
-  //
-  // Plan the path for the lane change. If a feasible path is found,
-  // return true and set the path for the ego car. If not, return
-  // false.
-  //
-  // @param direction: +1 for to the right and -1 for to the left
-  //
-  bool planPath(Ego &ego, int direction) const;
-
+class EgoTransitionFT2CLL : public EgoTransitionState {
 public:
 
-  ~EgoTransitionFTToCL() override;
-};
+  EgoTransitionFT2CLL();
 
-
-class EgoTransitionFTToCLL : public EgoTransitionFTToCL {
-public:
-
-  EgoTransitionFTToCLL();
-
-  ~EgoTransitionFTToCLL() override;
+  ~EgoTransitionFT2CLL() override;
 
   bool isValid(Ego& ego) const override;
 
@@ -97,12 +70,12 @@ public:
 };
 
 
-class EgoTransitionFTToCLR : public EgoTransitionFTToCL {
+class EgoTransitionFT2CLR : public EgoTransitionState {
 public:
 
-  EgoTransitionFTToCLR();
+  EgoTransitionFT2CLR();
 
-  ~EgoTransitionFTToCLR() override;
+  ~EgoTransitionFT2CLR() override;
 
   bool isValid(Ego& ego) const override;
 
