@@ -24,7 +24,7 @@ protected:
 };
 
 
-TEST_F(TestTrajectory, TestClosestWaypoint) {
+TEST_F(TestTrajectory, ClosestWaypoint) {
   int i = 0;
   ASSERT_EQ(i, closestWaypoint(map_.x[i] - 1.0, map_.y[i] + 1.0, map_.x, map_.y));
   i = 28;
@@ -34,7 +34,7 @@ TEST_F(TestTrajectory, TestClosestWaypoint) {
 }
 
 
-TEST_F(TestTrajectory, TestNextWaypoint) {
+TEST_F(TestTrajectory, NextWaypoint) {
   int i = 0;
   ASSERT_EQ(i, nextWaypoint(map_.x[i] - 1.0, map_.y[i] + 1.0, 0.0, map_.x, map_.y));
   ASSERT_EQ(i+1, nextWaypoint(map_.x[i] - 1.0, map_.y[i] + 1.0, -pi(), map_.x, map_.y));
@@ -49,7 +49,7 @@ TEST_F(TestTrajectory, TestNextWaypoint) {
 }
 
 
-TEST_F(TestTrajectory, TestCartesianToFrenet) {
+TEST_F(TestTrajectory, CartesianToFrenet) {
   int i = 0;
   position p = cartesianToFrenet(map_.x[i], map_.y[i], 0, map_.max_s, map_.x, map_.y);
   ASSERT_NEAR(map_.s[i], p.first, 1e-4);
@@ -62,7 +62,7 @@ TEST_F(TestTrajectory, TestCartesianToFrenet) {
 }
 
 
-TEST_F(TestTrajectory, TestFrenetToCartisan) {
+TEST_F(TestTrajectory, FrenetToCartisan) {
   int i = 0;
   position p = frenetToCartesian(map_.s[i], 0.0, map_.s, map_.max_s, map_.x, map_.y);
   ASSERT_NEAR(map_.x[i], p.first, 1e-6);
@@ -81,7 +81,7 @@ TEST_F(TestTrajectory, TestFrenetToCartisan) {
 
 using state = std::vector<double>;
 
-TEST(TestJerkMinimizingTrajectory, TestCoefficients) {
+TEST(TestJerkMinimizingTrajectory, Coefficients) {
   state state0_0 = {0, 10, 0};
   state state1_0 = {10, 10, 0};
   polynomial_coeff p_0 = jerkMinimizingTrajectory(state0_0, state1_0, 1);
@@ -102,7 +102,7 @@ TEST(TestJerkMinimizingTrajectory, TestCoefficients) {
 }
 
 
-TEST(TestJerkMinimizingTrajectory, TestEvaluation) {
+TEST(TestJerkMinimizingTrajectory, Evaluation) {
   state state0 = {5, 10, 2};
   state state1 = {-30, -20, -4};
   polynomial_coeff p = jerkMinimizingTrajectory(state0, state1, 5);
