@@ -7,15 +7,15 @@
 #include <vector>
 
 class Car;
-class Map;
 class CarTransitionState;
 
 //
 // CLR: change to the right lane
 // CLL: change to the left lane
-// CS: constant speed
+// FT: follow traffic (keep lane)
+// ON: normal state, ready to go to the next state
 //
-enum States { CLR, CLL, FT };
+enum States {CLR, CLL, FT, ON};
 
 class CarState {
 
@@ -68,6 +68,22 @@ public:
   CarStateFollowTraffic();
 
   ~CarStateFollowTraffic() override;
+
+  void onEnter(Car& car) override;
+
+  void onUpdate(Car& car) override;
+
+  void onExit(Car& car) override;
+};
+
+
+class CarStateOn : public CarState {
+
+public:
+
+  CarStateOn();
+
+  ~CarStateOn() override;
 
   void onEnter(Car& car) override;
 

@@ -14,7 +14,7 @@ Car::Car(const Map& map) :
   max_speed_(mph2mps(50)),
   max_acceleration_ (10),
   max_jerk_(10),
-  state_(CarStateFactory::createState(FT)),
+  state_(CarStateFactory::createState(ON)),
   map_(map),
   surroundings_(map_.n_lanes + 2)
 {
@@ -110,7 +110,6 @@ void Car::extendPath(trajectory path) {
   if (path_.first[0] >= max_s)
     for (auto &s : path_.first) s -= max_s;
 }
-
 
 void Car::followTraffic() {
 //  truncatePath(5);
@@ -221,7 +220,7 @@ void Car::info() const {
   }
 }
 
-uint8_t Car::getCurrentLaneId() const { return map_.getLaneId(pd_); }
-uint8_t Car::getTargetLaneId() const { return target_lane_id_; }
+uint16_t Car::getCurrentLaneId() const { return map_.getLaneId(pd_); }
+uint16_t Car::getTargetLaneId() const { return target_lane_id_; }
 
 bool Car::isAroundOrigin() const { return (ps_ < 30 || map_.max_s - ps_ < 30); }

@@ -59,6 +59,12 @@ class Car {
   // has its own range in reality.
   double max_evaluation_distance_; // in m
 
+public:
+
+  explicit Car(const Map& map);
+
+  ~Car();
+
   /**
    * Update parameters based on the localization data.
    *
@@ -75,12 +81,6 @@ class Car {
    * Update the unprocessed waypoints.
    */
   void updateUnprocessedPath();
-
-public:
-
-  explicit Car(const Map& map);
-
-  ~Car();
 
   /**
    * Update all parameters and states.
@@ -138,8 +138,8 @@ public:
   // Print out the vehicle's information
   void info() const;
 
-  uint8_t getCurrentLaneId() const;
-  uint8_t getTargetLaneId() const;
+  uint16_t getCurrentLaneId() const;
+  uint16_t getTargetLaneId() const;
 
   void setTargetLaneId(uint8_t value);
 

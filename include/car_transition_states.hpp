@@ -9,11 +9,12 @@ class CarState;
 
 
 //
+// ON_TO_FT: on to follow traffic
 // CL_TO_FT: change lane to follow traffic
 // FT_TO_CLL: follow traffic to change lane left
 // FT_TO_CLR: follow traffic to change lane right
 //
-enum TransitionStates { CL_TO_FT, FT_TO_CLL, FT_TO_CLR };
+enum TransitionStates { ON_TO_FT, CL_TO_FT, FT_TO_CLL, FT_TO_CLR };
 
 
 class CarTransitionState {
@@ -41,6 +42,19 @@ public:
 
   // construct a new transition state
   static CarTransitionState* createState(TransitionStates name);
+};
+
+
+class CarTransitionON2FT : public CarTransitionState {
+public:
+
+  CarTransitionON2FT();
+
+  ~CarTransitionON2FT() override;
+
+  bool isValid(Car& car) const override;
+
+  CarState* getNextState(Car& car) const override;
 };
 
 

@@ -20,7 +20,7 @@ protected:
 };
 
 
-TEST_F(TestMap, testConstruction) {
+TEST_F(TestMap, Construction) {
   ASSERT_EQ(181, map_.x.size());
   ASSERT_EQ(181, map_.s.size());
   ASSERT_EQ(784.6001, map_.x.front());
@@ -29,14 +29,14 @@ TEST_F(TestMap, testConstruction) {
   ASSERT_EQ(-0.107399, map_.dx.back());
 }
 
-TEST_F(TestMap, testGetLaneId) {
+TEST_F(TestMap, GetLaneId) {
   ASSERT_EQ(0, map_.getLaneId(-1));
-  ASSERT_EQ(1, map_.getLaneId(4.));
-  ASSERT_EQ(3, map_.getLaneId(12.));
+  ASSERT_EQ(1, map_.getLaneId(3.));
+  ASSERT_EQ(3, map_.getLaneId(8.));
   ASSERT_EQ(4, map_.getLaneId(14.));
 }
 
-TEST_F(TestMap, testGetLaneCenter) {
+TEST_F(TestMap, LaneCenter) {
   ASSERT_EQ(map_.lane_width / 2., map_.getLaneCenter(0));
   ASSERT_EQ(map_.lane_width / 2., map_.getLaneCenter(1));
   ASSERT_EQ(map_.lane_width * 5 / 2., map_.getLaneCenter(3));

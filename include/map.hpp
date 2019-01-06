@@ -64,10 +64,10 @@ struct Map {
   /**
    * get the lane id based on the Frenet coordinate d
    */
-  uint8_t getLaneId(double d) const {
+  uint16_t getLaneId(double d) const {
     if (d < 0) return 0;
-    if (d > n_lanes * lane_width) return (uint8_t)(n_lanes + 1);
-    return static_cast<uint8_t>(d / lane_width);
+    if (d > n_lanes * lane_width) return (uint16_t)(n_lanes + 1);
+    return static_cast<uint16_t>(d / lane_width + 1);
   }
 
   /**

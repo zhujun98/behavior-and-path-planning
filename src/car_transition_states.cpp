@@ -24,6 +24,9 @@ CarTransitionStateFactory::~CarTransitionStateFactory() = default;
 
 CarTransitionState* CarTransitionStateFactory::createState(TransitionStates name) {
   switch (name) {
+    case ON_TO_FT:
+      static CarTransitionON2FT ready_to_ft;
+      return &ready_to_ft;
     case CL_TO_FT:
       static CarTransitionCL2FT cl_to_ft;
       return &cl_to_ft;
@@ -52,6 +55,22 @@ bool CarTransitionCL2FT::isValid(Car &car) const {
   return car.getTargetLaneId() == car.getCurrentLaneId();
 }
 
+
+/* CarTransitionON2FT */
+
+CarTransitionON2FT::CarTransitionON2FT() = default;
+
+CarTransitionON2FT::~CarTransitionON2FT() = default;
+
+CarState* CarTransitionON2FT::getNextState(Car& car) const {
+  return CarStateFactory::createState(FT);
+}
+
+bool CarTransitionON2FT::isValid(Car &car) const {
+  return true;
+}
+
+
 /* CarTransitionFT2CLL */
 
 CarTransitionFT2CLL::CarTransitionFT2CLL() = default;
@@ -63,6 +82,7 @@ CarState* CarTransitionFT2CLL::getNextState(Car& car) const {
 }
 
 bool CarTransitionFT2CLL::isValid(Car &car) const {
+  return false;
 }
 
 /* CarTransitionFT2CLR */
@@ -76,4 +96,5 @@ CarState* CarTransitionFT2CLR::getNextState(Car& car) const {
 }
 
 bool CarTransitionFT2CLR::isValid(Car &car) const {
+  return false;
 }

@@ -45,11 +45,12 @@ CarState* CarStateFactory::createState(States name) {
       return new CarStateChangeLaneLeft;
     case FT:
       return new CarStateFollowTraffic;
+    case ON:
+      return new CarStateOn;
     default:
       throw std::invalid_argument("Unknown state!");
   }
 }
-
 
 /*
  * CarStateFollowTraffic class
@@ -72,6 +73,28 @@ void CarStateFollowTraffic::onUpdate(Car &car) {
 
 void CarStateFollowTraffic::onExit(Car& car) {
   std::cout << "Exit state: *** FOLLOW TRAFFIC ***" << std::endl;
+}
+
+/*
+ * CarStateReady class
+ */
+
+CarStateOn::CarStateOn() {
+  transition_states_.push_back(CarTransitionStateFactory::createState(ON_TO_FT));
+}
+
+CarStateOn::~CarStateOn() = default;
+
+void CarStateOn::onEnter(Car& car) {
+  std::cout << "Enter state: *** ON ***" << std::endl;
+}
+
+void CarStateOn::onUpdate(Car &car) {
+  car.followTraffic();
+}
+
+void CarStateOn::onExit(Car& car) {
+  std::cout << "Exit state: *** ON ***" << std::endl;
 }
 
 /*
