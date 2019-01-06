@@ -14,7 +14,7 @@ Car::Car(const Map& map) :
   max_speed_(mph2mps(50)),
   max_acceleration_ (10),
   max_jerk_(10),
-  state_(CarStateFactory::createState(ON)),
+  state_(CarStateFactory::createState(States::ON)),
   map_(map),
   surroundings_(map_.n_lanes + 2)
 {

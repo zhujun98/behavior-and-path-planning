@@ -39,13 +39,13 @@ CarStateFactory::~CarStateFactory() = default;
 
 CarState* CarStateFactory::createState(States name) {
   switch(name) {
-    case CLR:
+    case States::CLR:
       return new CarStateChangeLaneRight;
-    case CLL:
+    case States::CLL:
       return new CarStateChangeLaneLeft;
-    case FT:
+    case States::FT:
       return new CarStateFollowTraffic;
-    case ON:
+    case States::ON:
       return new CarStateOn;
     default:
       throw std::invalid_argument("Unknown state!");
@@ -57,8 +57,8 @@ CarState* CarStateFactory::createState(States name) {
  */
 
 CarStateFollowTraffic::CarStateFollowTraffic() {
-  transition_states_.push_back(CarTransitionStateFactory::createState(FT_TO_CLR));
-  transition_states_.push_back(CarTransitionStateFactory::createState(FT_TO_CLL));
+  transition_states_.push_back(CarTransitionStateFactory::createState(TransitionStates::FT_TO_CLR));
+  transition_states_.push_back(CarTransitionStateFactory::createState(TransitionStates::FT_TO_CLL));
 }
 
 CarStateFollowTraffic::~CarStateFollowTraffic() = default;
@@ -80,7 +80,7 @@ void CarStateFollowTraffic::onExit(Car& car) {
  */
 
 CarStateOn::CarStateOn() {
-  transition_states_.push_back(CarTransitionStateFactory::createState(ON_TO_FT));
+  transition_states_.push_back(CarTransitionStateFactory::createState(TransitionStates::ON_TO_FT));
 }
 
 CarStateOn::~CarStateOn() = default;
@@ -102,7 +102,7 @@ void CarStateOn::onExit(Car& car) {
  */
 
 CarStateChangeLaneLeft::CarStateChangeLaneLeft() {
-  transition_states_.push_back(CarTransitionStateFactory::createState(CL_TO_FT));
+  transition_states_.push_back(CarTransitionStateFactory::createState(TransitionStates::CL_TO_FT));
 }
 
 CarStateChangeLaneLeft::~CarStateChangeLaneLeft() = default;
@@ -123,7 +123,7 @@ void CarStateChangeLaneLeft::onExit(Car& car) {
  */
 
 CarStateChangeLaneRight::CarStateChangeLaneRight() {
-  transition_states_.push_back(CarTransitionStateFactory::createState(CL_TO_FT));
+  transition_states_.push_back(CarTransitionStateFactory::createState(TransitionStates::CL_TO_FT));
 }
 
 CarStateChangeLaneRight::~CarStateChangeLaneRight() = default;

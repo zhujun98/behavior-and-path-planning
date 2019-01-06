@@ -14,7 +14,7 @@ class CarState;
 // FT_TO_CLL: follow traffic to change lane left
 // FT_TO_CLR: follow traffic to change lane right
 //
-enum TransitionStates { ON_TO_FT, CL_TO_FT, FT_TO_CLL, FT_TO_CLR };
+enum class TransitionStates { ON_TO_FT, CL_TO_FT, FT_TO_CLL, FT_TO_CLR };
 
 
 class CarTransitionState {

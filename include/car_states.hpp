@@ -15,7 +15,7 @@ class CarTransitionState;
 // FT: follow traffic (keep lane)
 // ON: normal state, ready to go to the next state
 //
-enum States {CLR, CLL, FT, ON};
+enum class States {CLR, CLL, FT, ON};
 
 class CarState {
 
