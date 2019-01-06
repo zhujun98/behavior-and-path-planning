@@ -1,8 +1,8 @@
 //
 // Created by jun on 7/25/17.
 //
-#ifndef PATH_PLANNING_EGO_H
-#define PATH_PLANNING_EGO_H
+#ifndef PATH_PLANNING_CAR_H
+#define PATH_PLANNING_CAR_H
 
 #include <iostream>
 #include <vector>
@@ -11,10 +11,10 @@
 #include "map.hpp"
 
 
-class EgoState;
+class CarState;
 
 
-class Ego {
+class Car {
 
   using surroundings = std::vector<std::vector<std::vector<double>>>;
   using trajectory = std::pair<std::vector<double>, std::vector<double>>;
@@ -40,7 +40,7 @@ class Ego {
 
   Map map_;
 
-  EgoState* state_; // vehicle state
+  CarState* state_; // vehicle state
 
   // surrounding vehicles information
   // [[ID, x (m), y (m), vx (m/s), vy (m/s), s (m), d (m)]]
@@ -78,9 +78,9 @@ class Ego {
 
 public:
 
-  explicit Ego(const Map& map);
+  explicit Car(const Map& map);
 
-  ~Ego();
+  ~Car();
 
   /**
    * Update all parameters and states.
@@ -147,4 +147,4 @@ public:
 };
 
 
-#endif //PATH_PLANNING_EGO_H
+#endif //PATH_PLANNING_CAR_H

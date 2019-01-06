@@ -10,7 +10,7 @@
 #include <cmath>
 #include <assert.h>
 
-#include "ego.hpp"
+#include "car.hpp"
 
 //
 // For converting back and forth between radians and degrees.

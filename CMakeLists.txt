@@ -8,9 +8,9 @@ OPTION(BUILD_TESTS "test suit" ON)
 
 set(SOURCES
     src/main.cpp
-    src/ego.cpp
-    src/ego_states.cpp
-    src/ego_transition_states.cpp
+    src/car.cpp
+    src/car_states.cpp
+    src/car_transition_states.cpp
     include/trajectory.hpp
     include/map.hpp)
 

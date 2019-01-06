@@ -12,7 +12,7 @@
 #include "json.hpp"
 
 #include "utilities.hpp"
-#include "ego.hpp"
+#include "car.hpp"
 #include "map.hpp"
 
 int main() {
@@ -22,9 +22,9 @@ int main() {
   uWS::Hub h;
 
   Map map("../data/highway_map.csv");
-  Ego ego(map);
+  Car car(map);
 
-  h.onMessage([&ego](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+  h.onMessage([&car](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -38,7 +38,7 @@ int main() {
         std::string event = json_data[0].get<std::string>();
         
         if (event == "telemetry") {
-          // Ego's localization data (without noise).
+          // Car's localization data (without noise).
           double x = json_data[1]["x"];  // in m
           double y = json_data[1]["y"];  // in m
           double speed = mph2mps(json_data[1]["speed"]);  // in MPH
@@ -61,9 +61,9 @@ int main() {
 
           nlohmann::json msgJson;
 
-          ego.update(localization, sensor_fusion);
+          car.update(localization, sensor_fusion);
 
-          auto path = ego.getPath();
+          auto path = car.getPath();
           // define the path that the car will visit sequentially every .02 seconds
           msgJson["next_x"] = path.first;
           msgJson["next_y"] = path.second;
