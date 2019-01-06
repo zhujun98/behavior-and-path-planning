@@ -9,6 +9,7 @@
 #include <list>
 
 #include "map.hpp"
+#include "utilities.hpp"
 
 
 class CarState;
@@ -18,7 +19,6 @@ class Car {
 
   using surroundings = std::vector<std::vector<std::vector<double>>>;
   using trajectory = std::pair<std::vector<double>, std::vector<double>>;
-  using car_state = std::vector<double>;
 
   bool is_initialized_;
 
@@ -50,9 +50,9 @@ class Car {
 
   trajectory path_;
 
-  double max_speed_; // maximum speed (m/s)
-  double max_acceleration_; // maximum acceleration (m/s^2)
-  double max_jerk_; // maximum jerk (m/s^3)
+  double max_speed_ = mph2mps(50); // maximum speed (m/s)
+  double max_acceleration_ = 10; // maximum acceleration (m/s^2)
+  double max_jerk_ = 10; // maximum jerk (m/s^3)
   double max_steering_; // maximum steering angle (rad)
 
   // We care about traffic within this distance (m) since the detector
@@ -94,7 +94,7 @@ public:
    * @param lane_id: lane ID
    * @return: (front car_state, rear car_state)
    */
-  std::pair<car_state, car_state> getClosestVehicles(uint8_t lane_id) const;
+  std::pair<std::vector<double>, std::vector<double>> getClosestVehicles(uint16_t lane_id) const;
 
   /**
    * Truncate a path (remove tail) to a given length
@@ -127,8 +127,6 @@ public:
    * Get the unprocessed waypoints (x, y).
    */
   trajectory getPath();
-
-  car_state getCurrentState() const;
 
   double getMaxSpeed() const;
   double getMaxAcceleration() const;

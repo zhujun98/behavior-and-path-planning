@@ -5,17 +5,13 @@
 
 #include "car.hpp"
 #include "car_states.hpp"
-#include "utilities.hpp"
 
 
 Car::Car(const Map& map) :
   is_initialized_(false),
   time_step_(0.02),
-  max_speed_(mph2mps(50)),
-  max_acceleration_ (10),
-  max_jerk_(10),
-  state_(CarStateFactory::createState(States::ON)),
   map_(map),
+  state_(CarStateFactory::createState(States::ON)),
   surroundings_(map_.n_lanes + 2)
 {
   state_->onEnter(*this);
@@ -74,8 +70,8 @@ void Car::updateUnprocessedPath() {
   }
 }
 
-std::pair<std::vector<double>, std::vector<double>> Car::getClosestVehicles(uint8_t lane_id) const {
-  using car_in_lane = std::pair<double, car_state>;
+std::pair<std::vector<double>, std::vector<double>> Car::getClosestVehicles(uint16_t lane_id) const {
+  using car_in_lane = std::pair<double, std::vector<double>>;
   std::priority_queue<car_in_lane, std::vector<car_in_lane>, std::greater<car_in_lane>> front_cars;
   std::priority_queue<car_in_lane> rear_cars;
 
@@ -173,14 +169,6 @@ void Car::shiftLaneRight() {
 }
 
 Car::trajectory Car::getPath() { return path_; }
-
-
-Car::car_state Car::getCurrentState() const {
-  double ps0, vs0, as0;
-  double pd0, vd0, ad0;
-
-  return {ps0, vs0, as0, pd0, vd0, ad0};
-}
 
 double Car::getMaxSpeed() const { return max_speed_; }
 double Car::getMaxAcceleration() const { return max_acceleration_; }

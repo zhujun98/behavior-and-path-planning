@@ -10,8 +10,6 @@
 #include <cmath>
 #include <assert.h>
 
-#include "car.hpp"
-
 //
 // For converting back and forth between radians and degrees.
 //
