@@ -12,31 +12,31 @@
 #include "spline/spline.h"
 
 using position = std::pair<double, double>;
+using polynomial_coeff = std::vector<double>;
+using trajectory = std::vector<double>;
 
 
 /**
  * Calculate the index of the closest waypoint.
  */
-std::size_t closestWaypoint(double x, double y,
-                            const std::vector<double>& traj_x, const std::vector<double>& traj_y) {
-  std::size_t closest_waypoint = 0;
+std::size_t closestWaypoint(double x, double y, const trajectory& traj_x, const trajectory& traj_y) {
+  std::size_t closest_wpt = 0;
   double closest = std::numeric_limits<double>::max();
   for (std::size_t i=0; i < traj_x.size(); ++i) {
     double dist = distance(x, y, traj_x[i], traj_y[i]);
     if (dist < closest) {
       closest = dist;
-      closest_waypoint = i;
+      closest_wpt = i;
     }
   }
 
-  return closest_waypoint;
+  return closest_wpt;
 }
 
 /**
  * Get the index of the next waypoint.
  */
-std::size_t nextWaypoint(double x, double y, double yaw,
-                         const std::vector<double>& traj_x, const std::vector<double>& traj_y) {
+std::size_t nextWaypoint(double x, double y, double yaw, const trajectory& traj_x, const trajectory& traj_y) {
   std::size_t closest_wpt = closestWaypoint(x, y, traj_x, traj_y);
 
   double closest_x = traj_x[closest_wpt];
@@ -60,7 +60,7 @@ std::size_t nextWaypoint(double x, double y, double yaw,
  * Convert the Cartesian coordinate in a trajectory to the Frenet coordinate.
  */
 position cartesianToFrenet(double x, double y, double yaw, double max_s,
-                           const std::vector<double>& traj_x, const std::vector<double>& traj_y) {
+                           const trajectory& traj_x, const trajectory& traj_y) {
 
   std::size_t next_wpt = nextWaypoint(x, y, yaw, traj_x, traj_y);
   std::size_t prev_wpt;
@@ -68,7 +68,6 @@ position cartesianToFrenet(double x, double y, double yaw, double max_s,
   else prev_wpt = next_wpt - 1;
 
   // find the projection of x onto n
-
   double n_x = traj_x[next_wpt] - traj_x[prev_wpt];
   double n_y = traj_y[next_wpt] - traj_y[prev_wpt];
   double x_x = x - traj_x[prev_wpt];
@@ -79,11 +78,9 @@ position cartesianToFrenet(double x, double y, double yaw, double max_s,
   double proj_y = proj_norm * n_y;
 
   // calculate the Frenet coordinate d
-
   double d = distance(x_x, x_y, proj_x, proj_y);
 
   //see if d value is positive or negative by comparing it to a center point
-
   double center_x = 1000 - traj_x[prev_wpt];
   double center_y = 2000 - traj_y[prev_wpt];
   double center_to_pos = distance(center_x, center_y, x_x, x_y);
@@ -106,18 +103,18 @@ position cartesianToFrenet(double x, double y, double yaw, double max_s,
 /**
  * Convert the Frenet coordinate in a trajectory to the Cartesian coordinate.
  */
-position frenetToCartesian(double s, double d, const std::vector<double>& traj_s, double max_s,
-                           const std::vector<double>& traj_x, const std::vector<double>& traj_y) {
+position frenetToCartesian(double s, double d, const trajectory& traj_s, double max_s,
+                           const trajectory& traj_x, const trajectory& traj_y) {
   while (s > max_s) s -= max_s;
   while (s < 0) s += max_s;
 
   long next_wpt = std::distance(traj_s.begin(), std::lower_bound(traj_s.begin(), traj_s.end(), s));
 
-  std::vector<double> local_traj_s;
-  std::vector<double> local_traj_x;
-  std::vector<double> local_traj_y;
+  trajectory local_traj_s;
+  trajectory local_traj_x;
+  trajectory local_traj_y;
   // apply interpolation around the next waypoint
-  for (auto i = -5; i < 5; ++i ){
+  for (int i = -5; i < 5; ++i ) {
     long wpt = next_wpt + i;
 
     // we either have wpt < 0 or wpt > 0
@@ -155,7 +152,12 @@ position frenetToCartesian(double s, double d, const std::vector<double>& traj_s
 
 /**
  * Find the coefficients of a quinted polynomial which minimizes the
- * jerk between the initial state and the final state in a given period.
+ * jerk between the initial state and the final state in a given period,
+ * i.e., min(integral(d^3(x)/dt^3)^2))
+ *
+ *
+ * Reference: 10.1109/ROBOT.2010.5509799
+ *
  * Note:: for multi-dimensional scenario, one needs to apply this
  *        function to different directions separately.
  *
@@ -163,12 +165,11 @@ position frenetToCartesian(double s, double d, const std::vector<double>& traj_s
  * @param state1: final state [x, dx/dt, d^2(x)/dt^2]
  * @param duration: transition time (s) between the initial and final states
  *
- * @return
+ * @return a vector of coefficients (p0, p1, p2, p3, p4, p5, p6) for evaluating the polynomial
+ *         s(t) = p0 + p1*t + p2*t**2 + p3*t**3 + p4*t**4 + p5*t**5
  */
-std::vector<double>
-jerkMinimizingTrajectory(const std::vector<double>& state0,
-                         const std::vector<double>& state1,
-                         double dt) {
+polynomial_coeff
+jerkMinimizingTrajectory(const std::vector<double>& state0, const std::vector<double>& state1, double dt) {
   double dt2 = dt*dt;
   double dt3 = dt2*dt;
   double dt4 = dt3*dt;
@@ -184,9 +185,9 @@ jerkMinimizingTrajectory(const std::vector<double>& state0,
        state1[1] - (state0[1] + dt*state0[2]),
        state1[2] -  state0[2];
 
-  Eigen::VectorXd solution = a.colPivHouseholderQr().solve(b);
+  Eigen::VectorXd p = a.colPivHouseholderQr().solve(b);
 
-  return {solution[0], solution[1], solution[2]};
+  return {state0[0], state0[1], state0[2]/2.0, p[0], p[1], p[2]};
 }
 
 /**
@@ -199,14 +200,14 @@ jerkMinimizingTrajectory(const std::vector<double>& state0,
  *
  * @return: the derivative
  */
-double evalPolynomialDerivative(const std::vector<double>& p, double t, unsigned order) {
+double evalPolynomialDerivative(const polynomial_coeff& p, double t, unsigned order) {
   if (order > p.size()) throw std::invalid_argument("Invalid order!");
 
   double result = 0.0;
   double t_power = 1;
-  for ( auto i = order; i < p.size(); ++i ) {
+  for (std::size_t i = order; i < p.size(); ++i) {
     int multiplier = 1;
-    for (int j = i; j > i - order; --j) multiplier *= j;
+    for (std::size_t j = i; j > i - order; --j) multiplier *= j;
     result += multiplier * p[i] * t_power;
     t_power *= t;
   }
@@ -215,20 +216,16 @@ double evalPolynomialDerivative(const std::vector<double>& p, double t, unsigned
 }
 
 
-double evalTrajectory(const std::vector<double>& p, double t) {
+double evalTrajectory(const polynomial_coeff& p, double t) {
   return evalPolynomialDerivative(p, t, 0);
 }
 
-double evalVelocity(const std::vector<double>& p, double t) {
+double evalVelocity(const polynomial_coeff& p, double t) {
   return evalPolynomialDerivative(p, t, 1);
 }
 
-double evalAcceleration(const std::vector<double>& p, double t) {
+double evalAcceleration(const polynomial_coeff& p, double t) {
   return evalPolynomialDerivative(p, t, 2);
-}
-
-double evalJerk(const std::vector<double>& p, double t) {
-  return evalPolynomialDerivative(p, t, 3);
 }
 
 #endif //PATH_PLANNING_TRAJECTORY_H
