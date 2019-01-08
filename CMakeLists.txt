@@ -6,13 +6,18 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -g")
 
 OPTION(BUILD_TESTS "test suit" ON)
 
-set(SOURCES
-    src/main.cpp
-    src/car.cpp
-    src/car_states.cpp
-    src/car_transition_states.cpp
-    include/trajectory.hpp
-    include/map.hpp)
+set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(PROJECT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+set(CAR_SOURCES
+    ${PROJECT_SOURCE_DIR}/car.cpp
+    ${PROJECT_SOURCE_DIR}/car_states.cpp
+    ${PROJECT_SOURCE_DIR}/car_transition_states.cpp
+    ${PROJECT_INCLUDE_DIR}/trajectory.hpp
+    ${PROJECT_INCLUDE_DIR}/map.hpp
+    ${PROJECT_INCLUDE_DIR}/jmt.hpp)
+
+set(SOURCES ${PROJECT_SOURCE_DIR}/main.cpp)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -31,6 +36,7 @@ if(BUILD_TESTS)
 endif()
 
 set(TARGET run_app)
+add_library(car ${CAR_SOURCES})
 add_executable(${TARGET} ${SOURCES})
 
-target_link_libraries(${TARGET} z ssl uv uWS)
+target_link_libraries(${TARGET} car z ssl uv uWS)
