@@ -12,7 +12,7 @@ namespace {
 class TestMap : public testing::Test {
 
 protected:
-  // cwd is build/tests
+  // cwd is build/test
   std::string filename = "../../data/highway_map.csv";
   Map map_;
 

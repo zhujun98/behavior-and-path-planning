@@ -2,21 +2,13 @@
 // Created by jun on 12/10/18.
 //
 
-#ifndef PATH_PLANNING_TRAJECTORY_H
-#define PATH_PLANNING_TRAJECTORY_H
-
 #include <exception>
 
+#include "trajectory.hpp"
 #include "utilities.hpp"
 #include "spline/spline.h"
 
-using position = std::pair<double, double>;
-using trajectory = std::vector<double>;
 
-
-/**
- * Calculate the index of the closest waypoint.
- */
 std::size_t closestWaypoint(double x, double y, const trajectory& traj_x, const trajectory& traj_y) {
   std::size_t closest_wpt = 0;
   double closest = std::numeric_limits<double>::max();
@@ -31,9 +23,7 @@ std::size_t closestWaypoint(double x, double y, const trajectory& traj_x, const 
   return closest_wpt;
 }
 
-/**
- * Get the index of the next waypoint.
- */
+
 std::size_t nextWaypoint(double x, double y, double yaw, const trajectory& traj_x, const trajectory& traj_y) {
   std::size_t closest_wpt = closestWaypoint(x, y, traj_x, traj_y);
 
@@ -50,9 +40,6 @@ std::size_t nextWaypoint(double x, double y, double yaw, const trajectory& traj_
 }
 
 
-/**
- * Convert the Cartesian coordinate in a trajectory to the Frenet coordinate.
- */
 position cartesianToFrenet(double x, double y, double yaw, double max_s,
                            const trajectory& traj_x, const trajectory& traj_y) {
 
@@ -94,9 +81,7 @@ position cartesianToFrenet(double x, double y, double yaw, double max_s,
   return {s, d};
 }
 
-/**
- * Convert the Frenet coordinate in a trajectory to the Cartesian coordinate.
- */
+
 position frenetToCartesian(double s, double d, const trajectory& traj_s, double max_s,
                            const trajectory& traj_x, const trajectory& traj_y) {
   while (s > max_s) s -= max_s;
@@ -143,5 +128,3 @@ position frenetToCartesian(double s, double d, const trajectory& traj_s, double 
 
   return {x, y};
 }
-
-#endif //PATH_PLANNING_TRAJECTORY_H

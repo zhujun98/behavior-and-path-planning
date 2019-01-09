@@ -18,17 +18,19 @@ class CarState;
 class Car {
 
   using surroundings = std::vector<std::vector<std::vector<double>>>;
-  using trajectory = std::pair<std::vector<double>, std::vector<double>>;
+  using trajectory = std::vector<double>;
 
   bool is_initialized_;
 
   double time_step_; // time step in s
 
-  // parameters in global coordinate system
+  // parameters in Cartisian coordinate system
   double px_; // in m
   double py_; // in m
   double vx_; // in m/s
   double vy_; // in m/s
+  double ax_; // in m/s^2
+  double ay_; // in m/s^2
 
   // parameters in Frenet-Serret coordinate system
   double ps_; // in m
@@ -48,7 +50,8 @@ class Car {
 
   uint8_t target_lane_id_; // target lane ID
 
-  trajectory path_;
+  trajectory path_x_;
+  trajectory path_y_;
 
   double max_speed_ = mph2mps(50); // maximum speed (m/s)
   double max_acceleration_ = 10; // maximum acceleration (m/s^2)
@@ -68,7 +71,7 @@ public:
   /**
    * Update parameters based on the localization data.
    *
-   * @param localization: x, y, vx, vy, s, d
+   * @param localization: x, y, speed, yaw, s, d
    */
   void updateParameters(const std::vector<double>& localization);
 
@@ -106,7 +109,7 @@ public:
   /**
    * Append the new path to the end of the old path
    */
-  void extendPath(trajectory new_path);
+  void extendPath(trajectory path_s, trajectory path_d);
 
   /**
    * Plan the path in order to follow the traffic.
@@ -123,10 +126,8 @@ public:
    */
   void shiftLaneRight();
 
-  /**
-   * Get the unprocessed waypoints (x, y).
-   */
-  trajectory getPath();
+  trajectory getPathX() const;
+  trajectory getPathY() const;
 
   double getMaxSpeed() const;
   double getMaxAcceleration() const;

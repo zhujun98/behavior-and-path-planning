@@ -37,4 +37,17 @@ TEST_F(TestCar, UpdateParameters) {
   ASSERT_EQ(4, car_.getCurrentLaneId());
 }
 
+TEST_F(TestCar, FollowTraffic) {
+  car_.updateParameters({0, 0, 0, 0, 0, 0}); // x, y, vx, vy, s, d
+  car_.followTraffic();
+  auto path_x = car_.getPathX();
+  auto path_y = car_.getPathY();
+
+  car_.updateParameters({1, 1, 10, 5, 1.4, 0}); // x, y, vx, vy, s, d
+  car_.followTraffic();
+
+  path_x = car_.getPathX();
+  path_y = car_.getPathY();
+}
+
 }

@@ -41,10 +41,11 @@ int main() {
           // Car's localization data (without noise).
           double x = json_data[1]["x"];  // in m
           double y = json_data[1]["y"];  // in m
-          double speed = mph2mps(json_data[1]["speed"]);  // in MPH
+          double speed = mph2mps(json_data[1]["speed"]);  // in m/s
           double yaw = deg2rad(json_data[1]["yaw"]);  // in rad
           double s = json_data[1]["s"];  // in m
           double d = json_data[1]["d"];  // in m
+
           std::vector<double> localization = {x, y, speed * std::cos(yaw), speed * std::sin(yaw), s, d};
 
           // Unprocessed path data previously passed to the planner.
@@ -63,10 +64,9 @@ int main() {
 
           car.update(localization, sensor_fusion);
 
-          auto path = car.getPath();
           // define the path that the car will visit sequentially every .02 seconds
-          msgJson["next_x"] = path.first;
-          msgJson["next_y"] = path.second;
+          msgJson["next_x"] = car.getPathX();
+          msgJson["next_y"] = car.getPathY();
 
           auto msg = "42[\"control\"," + msgJson.dump() + "]";
 
