@@ -118,7 +118,7 @@ std::pair<std::vector<double>, std::vector<double>> Car::getClosestVehicles(uint
   return {front_cars.top().second, rear_cars.top().second};
 }
 
-Car::trajectory Car::estimateFinalState() const {
+Car::dynamics Car::estimateFinalDynamics() const {
   double ps, vs, as;
   double pd, vd, ad;
 
@@ -153,9 +153,9 @@ Car::trajectory Car::estimateFinalState() const {
 void Car::followTraffic() {
   truncatePath(5);
 
-  auto state0 = estimateFinalState();
-  std::vector<double> state_s0 = state0.first;
-  std::vector<double> state_d0 = state0.second;
+  auto dynamics0 = estimateFinalDynamics();
+  std::vector<double> dynamics_s0 = dynamics0.first;
+  std::vector<double> dynamics_d0 = dynamics0.second;
 
   double delta_t = 1.0; // prediction time
 
@@ -167,11 +167,11 @@ void Car::followTraffic() {
   double vd_f = 0;
   double ad_f = 0;
 
-  std::vector<double> state_s1 = {ps_f, vs_f, as_f};
-  std::vector<double> state_d1 = {pd_f, vd_f, ad_f};
+  std::vector<double> dynamics_s1 = {ps_f, vs_f, as_f};
+  std::vector<double> dynamics_d1 = {pd_f, vd_f, ad_f};
 
-  polynomial_coeff coeff_s = jerkMinimizingTrajectory(state_s0, state_s1, delta_t);
-  polynomial_coeff coeff_d = jerkMinimizingTrajectory(state_d0, state_d1, delta_t);
+  polynomial_coeff coeff_s = jerkMinimizingTrajectory(dynamics_s0, dynamics_s1, delta_t);
+  polynomial_coeff coeff_d = jerkMinimizingTrajectory(dynamics_d0, dynamics_d1, delta_t);
 
   double t = 0;
   while (t < delta_t) {

@@ -36,6 +36,7 @@ class Car {
 public:
   using surroundings = std::vector<std::vector<std::vector<double>>>;
   using trajectory = std::pair<std::vector<double>, std::vector<double>>;
+  using dynamics = std::pair<std::vector<double>, std::vector<double>>;
 
 private:
   bool is_initialized_;
@@ -117,10 +118,10 @@ public:
   std::pair<std::vector<double>, std::vector<double>> getClosestVehicles(uint16_t lane_id) const;
 
   /**
-   * Estimate the state of car at the path end.
+   * Estimate the dynamics of car at the path end.
    * @return: ((ps, vs, as), (pd, vd, ad))
    */
-  trajectory estimateFinalState() const;
+  dynamics estimateFinalDynamics() const;
 
   /**
    * Truncate a path (remove tail) to a given length
