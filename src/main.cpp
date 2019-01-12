@@ -21,7 +21,7 @@ int main() {
 
   uWS::Hub h;
 
-  Map map("../data/highway_map.csv");
+  Map map("../../data/highway_map.csv");
   Car car(map);
 
   h.onMessage([&car](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
