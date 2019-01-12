@@ -23,6 +23,7 @@
 #include <iostream>
 #include <vector>
 #include <list>
+#include <map>
 
 #include "map.hpp"
 #include "utilities.hpp"
@@ -34,7 +35,6 @@ class CarState;
 class Car {
 
 public:
-  using surroundings = std::vector<std::vector<std::vector<double>>>;
   using trajectory = std::pair<std::vector<double>, std::vector<double>>;
   using dynamics = std::pair<std::vector<double>, std::vector<double>>;
 
@@ -63,16 +63,19 @@ private:
 
   CarState* state_; // vehicle state
 
-  // surrounding vehicles information
-  // [[ID, x (m), y (m), vx (m/s), vy (m/s), s (m), d (m)]]
-  surroundings surroundings_;
+  // key: lane ID, value: vehicle dynamics
+  std::map<uint16_t, dynamics> closest_front_cars_;
+  std::map<uint16_t, dynamics> closest_rear_cars_;
 
   uint8_t target_lane_id_; // target lane ID
 
   std::vector<double> path_s_;
   std::vector<double> path_d_;
 
-  double max_speed_ = mph2mps(50); // maximum speed (m/s)
+  // ignore cars which are too far away (not detectable in real life)
+  double max_tracking_distance = 100; // in m
+
+  double max_speed_= mph2mps(50); // maximum speed (m/s)
   double max_acceleration_ = 10; // maximum acceleration (m/s^2)
   double max_jerk_ = 10; // maximum jerk (m/s^3)
   double max_steering_; // maximum steering angle (rad)
@@ -94,9 +97,9 @@ public:
   void updateParameters(const std::vector<double>& localization);
 
   /**
-   * Update information of the surrounding vehicles
+   * Update dynamics of the closest vehicles in each lane.
    */
-  void updateSurroundings(const std::vector<std::vector<double>>& sensor_fusion);
+  void updateClosestVehicles(const std::vector<std::vector<double>>& sensor_fusion);
 
   /**
    * Update the unprocessed waypoints.

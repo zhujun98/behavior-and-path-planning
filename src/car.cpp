@@ -1,8 +1,6 @@
 //
 // Created by jun on 7/25/17.
 //
-#include <queue>
-
 #include "car.hpp"
 #include "car_states.hpp"
 #include "trajectory.hpp"
@@ -13,8 +11,7 @@ Car::Car(const Map& map) :
   is_initialized_(false),
   map_(map),
   time_step_(0.02),
-  state_(CarStateFactory::createState(States::ON)),
-  surroundings_(map_.n_lanes + 2)
+  state_(CarStateFactory::createState(States::ON))
 {
   state_->onEnter(*this);
 }
@@ -24,8 +21,10 @@ Car::~Car() { delete state_; }
 void Car::update(const std::vector<double>& localization,
                  const std::vector<std::vector<double>>& sensor_fusion) {
   updateParameters(localization);
-  updateSurroundings(sensor_fusion);
+  updateClosestVehicles(sensor_fusion);
   updateUnprocessedPath();
+
+  info();
 
   CarState* state = state_->checkTransition(*this);
   if (state != nullptr) {
@@ -78,9 +77,37 @@ void Car::updateParameters(const std::vector<double>& localization) {
 }
 
 
-void Car::updateSurroundings(const std::vector<std::vector<double>>& sensor_fusion) {
-  for (auto& v : surroundings_) v.clear();
-  for (auto& v : sensor_fusion) surroundings_[map_.getLaneId(v[6])].push_back(v);
+void Car::updateClosestVehicles(const std::vector<std::vector<double>>& sensor_fusion) {
+  closest_front_cars_.clear();
+  closest_rear_cars_.clear();
+
+  // sensor_fusion: [[ID, x (m), y (m), vx (m/s), vy (m/s), s (m), d (m)]]
+  for (auto& v : sensor_fusion) {
+    if (std::abs(v[5] - ps_) > max_tracking_distance) continue;
+
+    uint16_t lane_id = map_.getLaneId(v[6]);
+    if (v[5] > ps_) {
+      // front vehicle
+      if (closest_front_cars_.find(lane_id) != closest_front_cars_.end()) {
+        double min_s = closest_front_cars_[lane_id].first[0];
+        if (v[5] < min_s) {
+          closest_front_cars_[lane_id] = {{v[5], 0, 0}, {0, 0, 0}};
+        }
+      } else {
+        closest_front_cars_[lane_id] = {{v[5], 0, 0}, {0, 0, 0}};
+      }
+    } else {
+      // rear vehicle
+      if (closest_rear_cars_.find(lane_id) != closest_rear_cars_.end()) {
+        double max_s = closest_rear_cars_[lane_id].first[0];
+        if (v[5] > max_s) {
+          closest_rear_cars_[lane_id] = {{v[5], 0, 0}, {0, 0, 0}};
+        }
+      } else {
+        closest_rear_cars_[lane_id] = {{v[5], 0, 0}, {0, 0, 0}};
+      }
+    }
+  }
 }
 
 
@@ -102,20 +129,6 @@ void Car::truncatePath(unsigned int n_keep) {
     path_s_.erase(path_s_.begin() + n_keep, path_s_.end());
     path_d_.erase(path_d_.begin() + n_keep, path_d_.end());
   }
-}
-
-std::pair<std::vector<double>, std::vector<double>> Car::getClosestVehicles(uint16_t lane_id) const {
-  using car_in_lane = std::pair<double, std::vector<double>>;
-  std::priority_queue<car_in_lane, std::vector<car_in_lane>, std::greater<car_in_lane>> front_cars;
-  std::priority_queue<car_in_lane> rear_cars;
-
-  for (auto &v : surroundings_[lane_id]) {
-    double ds = v[4] - ps_;
-    if (ds > 0) front_cars.emplace(ds, v);
-    else rear_cars.emplace(ds, v);
-  }
-
-  return {front_cars.top().second, rear_cars.top().second};
 }
 
 Car::dynamics Car::estimateFinalDynamics() const {
@@ -215,30 +228,22 @@ void Car::setTargetLaneId(uint8_t value) {
 }
 
 void Car::info() const {
-  std::cout << "Lane ID = " << getCurrentLaneId() << ", "
+  std::cout << "Car is running at lane " << getCurrentLaneId() << "\n"
             << "px = " << px_ << ", " << "py = " << py_ << ", "
-            << "vx = " << vx_ << ", " << "vy = " << vy_ << ", "
-            << "ps = " << ps_ << ", " << "pd = " << pd_ << ", " << std::endl;
+            << "vx = " << vx_ << ", " << "vy = " << vy_ << "\n"
+            << "ps = " << ps_ << ", " << "pd = " << pd_ << ", "
+            << "vs = " << vs_ << ", " << "vd = " << vd_ << "\n";
 
-  std::cout << "No. of vehicles on the lane (from left to right): ";
-  for (auto &v : surroundings_) std::cout << v.size() << ",\n";
-
-  for (auto i = 0; i < surroundings_.size(); ++i) {
-    auto closest_cars = getClosestVehicles(i);
-
-    auto front_car = closest_cars.first;
-    if ( !front_car.empty() ) {
-      std::cout << "Lane ID " << i << "Closest front car: ds = "
-                << front_car[0] - ps_ << ", v = " << front_car[1] << ", ";
-    }
-
-    auto rear_car = closest_cars.second;
-    if ( !rear_car.empty() ) {
-      std::cout << "Closest rear car: ds = "
-                << rear_car[0] - ps_ << ", v = " << rear_car[1] << ", ";
-    }
-    std::cout << std::endl;
+  for (uint16_t i=1; i<=map_.n_lanes; ++i) {
+    std::cout << "Lane " << i << ": ";
+    if (closest_front_cars_.find(i) != closest_front_cars_.end())
+      std::cout << "closest front car has ds = " << closest_front_cars_.at(i).first[0] - ps_ << ", ";
+    if (closest_rear_cars_.find(i) != closest_rear_cars_.end())
+      std::cout << "closest rear car has ds = " << closest_rear_cars_.at(i).first[0] - ps_;
+    std::cout << "\n";
   }
+
+  std::cout << std::endl;
 }
 
 uint16_t Car::getCurrentLaneId() const { return map_.getLaneId(pd_); }
