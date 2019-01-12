@@ -155,6 +155,7 @@ public:
   void info() const;
 
   uint16_t getCurrentLaneId() const;
+  double getCurrentLaneCenter() const;
   uint16_t getTargetLaneId() const;
 
   void setTargetLaneId(uint8_t value);

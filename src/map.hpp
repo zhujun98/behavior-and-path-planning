@@ -75,7 +75,7 @@ struct Map {
    * Get lane center from ID. If the lane ID does not exist, it returns the center
    * of the nearest valid lane.
    */
-  double getLaneCenter(uint8_t lane_id) {
+  double getLaneCenter(uint16_t lane_id) const {
     if (lane_id == 0) lane_id = 1;
     if (lane_id > n_lanes) lane_id = n_lanes;
     return (lane_id - 0.5) * lane_width;

@@ -163,7 +163,7 @@ void Car::followTraffic() {
   double vs_f = max_speed_;
   double as_f = 0;
 
-  double pd_f = 0;
+  double pd_f = getCurrentLaneCenter();
   double vd_f = 0;
   double ad_f = 0;
 
@@ -242,6 +242,8 @@ void Car::info() const {
 }
 
 uint16_t Car::getCurrentLaneId() const { return map_.getLaneId(pd_); }
+double Car::getCurrentLaneCenter() const { return map_.getLaneCenter(map_.getLaneId(pd_)); }
+
 uint16_t Car::getTargetLaneId() const { return target_lane_id_; }
 
 bool Car::isAroundOrigin() const { return (ps_ < 30 || map_.max_s - ps_ < 30); }
