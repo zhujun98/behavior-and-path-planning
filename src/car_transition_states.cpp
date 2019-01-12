@@ -41,21 +41,6 @@ CarTransitionState* CarTransitionStateFactory::createState(TransitionStates name
   }
 }
 
-/* CarTransitionCL2FT */
-
-CarTransitionCL2FT::CarTransitionCL2FT() = default;
-
-CarTransitionCL2FT::~CarTransitionCL2FT() = default;
-
-CarState* CarTransitionCL2FT::getNextState(Car& car) const {
-  return CarStateFactory::createState(States::FT);
-}
-
-bool CarTransitionCL2FT::isValid(Car &car) const {
-  return car.getTargetLaneId() == car.getCurrentLaneId();
-}
-
-
 /* CarTransitionON2FT */
 
 CarTransitionON2FT::CarTransitionON2FT() = default;
@@ -70,6 +55,19 @@ bool CarTransitionON2FT::isValid(Car &car) const {
   return true;
 }
 
+/* CarTransitionCL2FT */
+
+CarTransitionCL2FT::CarTransitionCL2FT() = default;
+
+CarTransitionCL2FT::~CarTransitionCL2FT() = default;
+
+CarState* CarTransitionCL2FT::getNextState(Car& car) const {
+  return CarStateFactory::createState(States::FT);
+}
+
+bool CarTransitionCL2FT::isValid(Car &car) const {
+  return car.getTargetLaneId() == car.getCurrentLaneId();
+}
 
 /* CarTransitionFT2CLL */
 

@@ -86,7 +86,6 @@ position frenetToCartesian(double s, double d, const trajectory& traj_s, double 
                            const trajectory& traj_x, const trajectory& traj_y) {
   while (s > max_s) s -= max_s;
   while (s < 0) s += max_s;
-
   long next_wpt = std::distance(traj_s.begin(), std::lower_bound(traj_s.begin(), traj_s.end(), s));
 
   trajectory local_traj_s;

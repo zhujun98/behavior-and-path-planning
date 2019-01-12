@@ -11,8 +11,8 @@
 
 Car::Car(const Map& map) :
   is_initialized_(false),
-  time_step_(0.02),
   map_(map),
+  time_step_(0.02),
   state_(CarStateFactory::createState(States::ON)),
   surroundings_(map_.n_lanes + 2)
 {
@@ -85,28 +85,23 @@ void Car::updateSurroundings(const std::vector<std::vector<double>>& sensor_fusi
 
 
 void Car::updateUnprocessedPath() {
-  if (!path_x_.empty()) {
+  if (!path_s_.empty()) {
+    // the path includes the starting point
+    if (path_s_.back() > map_.max_s && path_s_.front() > ps_) ps_ += map_.max_s;
 
-    auto unprocessed_s_begin = std::lower_bound(path_x_.begin(), path_x_.end(), ps_);
-    // remove processed way points
-    long n_removed = std::distance(path_x_.begin(), unprocessed_s_begin);
-    auto unprocessed_d_begin = std::next(path_y_.begin(), n_removed);
+    auto unprocessed_s0 = std::lower_bound(path_s_.begin(), path_s_.end(), ps_);
+    auto unprocessed_d0 = std::next(path_d_.begin(), std::distance(path_s_.begin(), unprocessed_s0));
 
-    path_x_.erase(path_x_.begin(), unprocessed_s_begin);
-    path_y_.erase(path_y_.begin(), unprocessed_d_begin);
+    path_s_.erase(path_s_.begin(), unprocessed_s0);
+    path_d_.erase(path_d_.begin(), unprocessed_d0);
   }
 }
 
 void Car::truncatePath(unsigned int n_keep) {
-  if (path_x_.size() > n_keep) {
-    path_x_.erase(path_x_.begin() + n_keep, path_x_.end());
-    path_y_.erase(path_y_.begin() + n_keep, path_y_.end());
+  if (path_s_.size() > n_keep) {
+    path_s_.erase(path_s_.begin() + n_keep, path_s_.end());
+    path_d_.erase(path_d_.begin() + n_keep, path_d_.end());
   }
-}
-
-void Car::extendPath(trajectory path_x, trajectory path_y) {
-  path_x_.insert(path_x_.end(), path_x.begin(), path_x.end());
-  path_y_.insert(path_y_.end(), path_y.begin(), path_y.end());
 }
 
 std::pair<std::vector<double>, std::vector<double>> Car::getClosestVehicles(uint16_t lane_id) const {
@@ -123,32 +118,69 @@ std::pair<std::vector<double>, std::vector<double>> Car::getClosestVehicles(uint
   return {front_cars.top().second, rear_cars.top().second};
 }
 
+Car::trajectory Car::estimateFinalState() const {
+  double ps, vs, as;
+  double pd, vd, ad;
+
+  if (path_s_.empty() || path_s_.size() < 2) {
+    ps = ps_;
+    pd = pd_;
+    vs = vs_;
+    vd = vd_;
+    as = as_;
+    ad = ad_;
+  } else if (path_s_.size() == 2) {
+    ps = ps_;
+    pd = pd_;
+    vs = (path_s_[1] - path_s_[0]) / time_step_;
+    vd = (path_d_[1] - path_d_[0]) / time_step_;
+    as = (vs - vs_) / time_step_;
+    ad = (vd - vd_) / time_step_;
+  } else {
+    std::size_t n = path_s_.size();
+
+    ps = path_s_[n-1];
+    pd = path_d_[n-1];
+    vs = (ps - path_s_[n-2]) / time_step_;
+    vd = (pd - path_d_[n-2]) / time_step_;
+    as = (ps + path_s_[n-3] - 2*path_s_[n-2]) / time_step_;
+    ad = (pd + path_d_[n-3] - 2*path_d_[n-2]) / time_step_;
+  }
+
+  return {{ps, vs, as}, {pd, vd, ad}};
+}
+
 void Car::followTraffic() {
   truncatePath(5);
 
-  std::vector<double> state_s0 = {ps_, vx_, as_};
-  std::vector<double> state_d0 = {pd_, vd_, ad_};
+  auto state0 = estimateFinalState();
+  std::vector<double> state_s0 = state0.first;
+  std::vector<double> state_d0 = state0.second;
 
-  std::vector<double> state_s1 = {ps_ + 1, max_speed_, 0};
-  std::vector<double> state_d1 = {pd_, 0, 0};
+  double delta_t = 1.0; // prediction time
 
-  polynomial_coeff coeff_s = jerkMinimizingTrajectory(state_s0, state_s1, 1);
-  polynomial_coeff coeff_d = jerkMinimizingTrajectory(state_d0, state_d1, 1);
+  double ps_f = ps_ + 2 * delta_t * max_speed_;
+  double vs_f = max_speed_;
+  double as_f = 0;
 
-  trajectory path_x;
-  trajectory path_y;
+  double pd_f = 0;
+  double vd_f = 0;
+  double ad_f = 0;
+
+  std::vector<double> state_s1 = {ps_f, vs_f, as_f};
+  std::vector<double> state_d1 = {pd_f, vd_f, ad_f};
+
+  polynomial_coeff coeff_s = jerkMinimizingTrajectory(state_s0, state_s1, delta_t);
+  polynomial_coeff coeff_d = jerkMinimizingTrajectory(state_d0, state_d1, delta_t);
+
   double t = 0;
-  while (t < 1) {
+  while (t < delta_t) {
     t += time_step_;
     double ps = evalTrajectory(coeff_s, t);
     double pd = evalTrajectory(coeff_d, t);
-
-    position pxy = frenetToCartesian(ps, pd, map_.s, map_.max_s, map_.x, map_.y);
-    path_x.push_back(pxy.first);
-    path_y.push_back(pxy.second);
+    path_s_.push_back(ps);
+    path_d_.push_back(pd);
   }
-
-  extendPath(path_x, path_y);
 }
 
 void Car::shiftLaneLeft() {
@@ -159,8 +191,17 @@ void Car::shiftLaneRight() {
 
 }
 
-Car::trajectory Car::getPathX() const { return path_x_; }
-Car::trajectory Car::getPathY() const { return path_y_; }
+Car::trajectory Car::getPathXY() const {
+  std::vector<double> path_x;
+  std::vector<double> path_y;
+  for (auto i = 0; i < path_s_.size(); ++i) {
+    position pxy = frenetToCartesian(path_s_[i], path_d_[i], map_.s, map_.max_s, map_.x, map_.y);
+    path_x.push_back(pxy.first);
+    path_y.push_back(pxy.second);
+  }
+
+  return {path_x, path_y};
+}
 
 double Car::getMaxSpeed() const { return max_speed_; }
 double Car::getMaxAcceleration() const { return max_acceleration_; }

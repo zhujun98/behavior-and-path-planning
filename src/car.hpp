@@ -1,6 +1,22 @@
-//
-// Created by jun on 7/25/17.
-//
+/*
+ * Note!!!
+ *
+ * The simulator does not simulate the real physical movement of a car. Instead,
+ * every 20 ms the car moves to the next point on the list perfectly. The car's
+ * new rotation becomes the line between the previous waypoint and the car's new
+ * location.
+ *
+ * The simulator runs a cycle every 20 ms, but your C++ path planning program
+ * will provide a new path at least one 20 ms cycle behind. The simulator will
+ * simply keep progressing down its last given path while it waits for a new
+ * generated path. As a result, by the time a new path reaches the simulator,
+ * the vehicle has already passed the first few waypoints on that path. The
+ * simulator has built-in tools to deal with this timing difference. The
+ * simulator actually expects the received path to be a little out of date
+ * compared to where the car is, and the simulator will consider which point
+ * on the received path is closest to the car and adjust appropriately.
+ *
+ */
 #ifndef PATH_PLANNING_CAR_H
 #define PATH_PLANNING_CAR_H
 
@@ -17,12 +33,14 @@ class CarState;
 
 class Car {
 
+public:
   using surroundings = std::vector<std::vector<std::vector<double>>>;
-  using trajectory = std::vector<double>;
+  using trajectory = std::pair<std::vector<double>, std::vector<double>>;
 
+private:
   bool is_initialized_;
 
-  double time_step_; // time step in s
+  double time_step_; // timestep in second
 
   // parameters in Cartisian coordinate system
   double px_; // in m
@@ -50,8 +68,8 @@ class Car {
 
   uint8_t target_lane_id_; // target lane ID
 
-  trajectory path_x_;
-  trajectory path_y_;
+  std::vector<double> path_s_;
+  std::vector<double> path_d_;
 
   double max_speed_ = mph2mps(50); // maximum speed (m/s)
   double max_acceleration_ = 10; // maximum acceleration (m/s^2)
@@ -63,7 +81,6 @@ class Car {
   double max_evaluation_distance_; // in m
 
 public:
-
   explicit Car(const Map& map);
 
   ~Car();
@@ -100,16 +117,17 @@ public:
   std::pair<std::vector<double>, std::vector<double>> getClosestVehicles(uint16_t lane_id) const;
 
   /**
+   * Estimate the state of car at the path end.
+   * @return: ((ps, vs, as), (pd, vd, ad))
+   */
+  trajectory estimateFinalState() const;
+
+  /**
    * Truncate a path (remove tail) to a given length
    *
    * @param n_keep: number of points to keep
    */
   void truncatePath(unsigned int n_keep);
-
-  /**
-   * Append the new path to the end of the old path
-   */
-  void extendPath(trajectory path_s, trajectory path_d);
 
   /**
    * Plan the path in order to follow the traffic.
@@ -126,8 +144,7 @@ public:
    */
   void shiftLaneRight();
 
-  trajectory getPathX() const;
-  trajectory getPathY() const;
+  trajectory getPathXY() const;
 
   double getMaxSpeed() const;
   double getMaxAcceleration() const;

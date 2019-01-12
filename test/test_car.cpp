@@ -14,11 +14,9 @@ namespace {
 class TestCar : public testing::Test {
 
 protected:
-  std::string filename = "../../data/highway_map.csv";
-
   Car car_;
 
-  TestCar() : car_(Map(filename)) {}
+  TestCar() : car_(Map("../../data/highway_map.csv")) {}
 };
 
 
@@ -40,14 +38,12 @@ TEST_F(TestCar, UpdateParameters) {
 TEST_F(TestCar, FollowTraffic) {
   car_.updateParameters({0, 0, 0, 0, 0, 0}); // x, y, vx, vy, s, d
   car_.followTraffic();
-  auto path_x = car_.getPathX();
-  auto path_y = car_.getPathY();
+  auto path_xy = car_.getPathXY();
 
   car_.updateParameters({1, 1, 10, 5, 1.4, 0}); // x, y, vx, vy, s, d
   car_.followTraffic();
 
-  path_x = car_.getPathX();
-  path_y = car_.getPathY();
+  path_xy = car_.getPathXY();
 }
 
 }

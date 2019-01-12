@@ -17,10 +17,9 @@ class TestTrajectory : public testing::Test {
 
 protected:
   // cwd is build/test
-  std::string filename = "../../data/highway_map.csv";
   Map map_;
 
-  TestTrajectory() : map_(filename) {}
+  TestTrajectory() : map_("../../data/highway_map.csv") {}
 };
 
 
