@@ -156,11 +156,6 @@ public:
 
   trajectory getPathXY() const;
 
-  double getMaxSpeed() const;
-  double getMaxAcceleration() const;
-  double getMaxJerk() const;
-  double getMaxSteering() const;
-
   // Print out the vehicle's information
   void info() const;
 
@@ -169,11 +164,9 @@ public:
 
   uint16_t getCurrentLaneId() const;
   double getCurrentLaneCenter() const;
+
   uint16_t getTargetLaneId() const;
 
-  void setTargetLaneId(uint8_t value);
-
-  bool isAroundOrigin() const;
 };
 
 

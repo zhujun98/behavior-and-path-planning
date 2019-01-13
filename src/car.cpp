@@ -210,8 +210,6 @@ Car::dynamics Car::estimateFinalDynamics() const {
 void Car::followTraffic() {
   truncatePath(5);
 
-  double delta_t = 1.0; // prediction time
-
   path_opt_.setOptimizedPath(this);
 }
 
@@ -233,17 +231,6 @@ Car::trajectory Car::getPathXY() const {
   }
 
   return {path_x, path_y};
-}
-
-double Car::getMaxSpeed() const { return max_speed_; }
-double Car::getMaxAcceleration() const { return max_acceleration_; }
-double Car::getMaxJerk() const { return max_jerk_; }
-double Car::getMaxSteering() const { return max_steering_; }
-
-void Car::setTargetLaneId(uint8_t value) {
-  if (value >= 1 && value <= map_.n_lanes)
-    target_lane_id_ = value;
-  else std::cerr << "Invalid target lane ID: " << value << std::endl;
 }
 
 void Car::info() const {
@@ -272,5 +259,3 @@ uint16_t Car::getCurrentLaneId() const { return map_.getLaneId(pd_); }
 double Car::getCurrentLaneCenter() const { return map_.getLaneCenter(map_.getLaneId(pd_)); }
 
 uint16_t Car::getTargetLaneId() const { return target_lane_id_; }
-
-bool Car::isAroundOrigin() const { return (ps_ < 30 || map_.max_s - ps_ < 30); }
