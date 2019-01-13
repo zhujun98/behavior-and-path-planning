@@ -8,7 +8,8 @@ add_executable(${TEST}
     test_trajectory.cpp
     test_jmt.cpp
     test_map.cpp
-    test_utilities.cpp)
+    test_utilities.cpp
+    )
 
 target_link_libraries(${TEST} car gtest pthread )
 add_test(NAME ${TEST} COMMAND test)

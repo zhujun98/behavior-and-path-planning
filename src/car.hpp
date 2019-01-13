@@ -28,6 +28,20 @@
 #include "map.hpp"
 #include "utilities.hpp"
 
+class Car;
+
+
+class PathOptimizer {
+
+public:
+
+  PathOptimizer();
+
+  ~PathOptimizer();
+
+  void setOptimizedPath(Car* car);
+};
+
 
 class CarState;
 
@@ -39,6 +53,8 @@ public:
   using dynamics = std::pair<std::vector<double>, std::vector<double>>;
 
 private:
+  friend class PathOptimizer;
+
   bool is_initialized_;
 
   double time_step_; // timestep in second
@@ -61,6 +77,8 @@ private:
 
   Map map_;
 
+  PathOptimizer path_opt_;
+
   CarState* state_; // vehicle state
 
   // key: lane ID, value: vehicle dynamics
@@ -79,10 +97,6 @@ private:
   double max_acceleration_ = 10; // maximum acceleration (m/s^2)
   double max_jerk_ = 10; // maximum jerk (m/s^3)
   double max_steering_; // maximum steering angle (rad)
-
-  // We care about traffic within this distance (m) since the detector
-  // has its own range in reality.
-  double max_evaluation_distance_; // in m
 
 public:
   explicit Car(const Map& map);

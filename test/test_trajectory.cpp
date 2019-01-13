@@ -1,14 +1,9 @@
-//
-// Created by jun on 12/12/18.
-//
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 #include "map.hpp"
 #include "utilities.hpp"
 #include "trajectory.hpp"
-
-using ::testing::ElementsAre;
 
 
 namespace {

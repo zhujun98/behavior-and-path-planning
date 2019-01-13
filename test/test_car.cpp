@@ -1,6 +1,3 @@
-//
-// Created by jun on 12/12/18.
-//
 #include <vector>
 
 #include <gtest/gtest.h>

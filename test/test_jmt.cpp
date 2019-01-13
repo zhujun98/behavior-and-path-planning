@@ -1,6 +1,3 @@
-//
-// Created by jun on 1/8/19.
-//
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 

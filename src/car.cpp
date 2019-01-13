@@ -1,16 +1,59 @@
-//
-// Created by jun on 7/25/17.
-//
 #include "car.hpp"
 #include "car_states.hpp"
 #include "trajectory.hpp"
 #include "jmt.hpp"
 
 
+/*
+ * PathOptimizer
+ */
+
+PathOptimizer::PathOptimizer() = default;
+
+PathOptimizer::~PathOptimizer() = default;
+
+void PathOptimizer::setOptimizedPath(Car* car) {
+
+  auto dynamics0 = car->estimateFinalDynamics();
+  std::vector<double> dynamics_s0 = dynamics0.first;
+  std::vector<double> dynamics_d0 = dynamics0.second;
+
+  double delta_t = 1.0;
+
+  double ps_f = dynamics_s0[0] + 2 * delta_t * car->max_speed_;
+  double vs_f = car->max_speed_;
+  double as_f = 0;
+
+  double pd_f = car->getCurrentLaneCenter();
+  double vd_f = 0;
+  double ad_f = 0;
+
+  std::vector<double> dynamics_s1 = {ps_f, vs_f, as_f};
+  std::vector<double> dynamics_d1 = {pd_f, vd_f, ad_f};
+
+  polynomial_coeff coeff_s = jerkMinimizingTrajectory(dynamics_s0, dynamics_s1, delta_t);
+  polynomial_coeff coeff_d = jerkMinimizingTrajectory(dynamics_d0, dynamics_d1, delta_t);
+
+  double t = 0;
+  double time_step = car->time_step_;
+  while (t < delta_t) {
+    t += time_step;
+    double ps = evalTrajectory(coeff_s, t);
+    double pd = evalTrajectory(coeff_d, t);
+    car->path_s_.push_back(ps);
+    car->path_d_.push_back(pd);
+  }
+}
+
+
+/*
+ * Car
+ */
+
 Car::Car(const Map& map) :
   is_initialized_(false),
-  map_(map),
   time_step_(0.02),
+  map_(map),
   state_(CarStateFactory::createState(States::ON))
 {
   state_->onEnter(*this);
@@ -167,34 +210,9 @@ Car::dynamics Car::estimateFinalDynamics() const {
 void Car::followTraffic() {
   truncatePath(5);
 
-  auto dynamics0 = estimateFinalDynamics();
-  std::vector<double> dynamics_s0 = dynamics0.first;
-  std::vector<double> dynamics_d0 = dynamics0.second;
-
   double delta_t = 1.0; // prediction time
 
-  double ps_f = ps_ + 2 * delta_t * max_speed_;
-  double vs_f = max_speed_;
-  double as_f = 0;
-
-  double pd_f = getCurrentLaneCenter();
-  double vd_f = 0;
-  double ad_f = 0;
-
-  std::vector<double> dynamics_s1 = {ps_f, vs_f, as_f};
-  std::vector<double> dynamics_d1 = {pd_f, vd_f, ad_f};
-
-  polynomial_coeff coeff_s = jerkMinimizingTrajectory(dynamics_s0, dynamics_s1, delta_t);
-  polynomial_coeff coeff_d = jerkMinimizingTrajectory(dynamics_d0, dynamics_d1, delta_t);
-
-  double t = 0;
-  while (t < delta_t) {
-    t += time_step_;
-    double ps = evalTrajectory(coeff_s, t);
-    double pd = evalTrajectory(coeff_d, t);
-    path_s_.push_back(ps);
-    path_d_.push_back(pd);
-  }
+  path_opt_.setOptimizedPath(this);
 }
 
 void Car::shiftLaneLeft() {
