@@ -1,6 +1,3 @@
-//
-// Created by jun on 7/24/17.
-//
 #include <iostream>
 
 #include "car.hpp"

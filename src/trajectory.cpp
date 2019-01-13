@@ -1,7 +1,3 @@
-//
-// Created by jun on 12/10/18.
-//
-
 #include <exception>
 
 #include "trajectory.hpp"

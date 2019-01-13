@@ -1,7 +1,3 @@
-//
-// Created by jun on 1/8/19.
-//
-
 #include "eigen3/Eigen/Dense"
 
 #include "jmt.hpp"

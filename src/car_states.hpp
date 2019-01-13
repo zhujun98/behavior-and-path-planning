@@ -1,6 +1,3 @@
-//
-// Created by jun on 7/24/17.
-//
 #ifndef PATH_PLANNING_CAR_STATES_H
 #define PATH_PLANNING_CAR_STATES_H
 

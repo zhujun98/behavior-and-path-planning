@@ -1,7 +1,3 @@
-//
-// Created by jun on 1/9/19.
-//
-
 #ifndef BEHAVIOR_AND_PATH_PLANNING_JMT_H
 #define BEHAVIOR_AND_PATH_PLANNING_JMT_H
 

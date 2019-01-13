@@ -1,6 +1,3 @@
-//
-// Created by jun on 7/16/17.
-//
 #include <iostream>
 #include <fstream>
 #include <uWS/uWS.h>
