@@ -86,6 +86,7 @@ void Car::update(const std::vector<double>& localization,
 
   info();
 
+  state_->onUpdate(*this);
   CarState* state = state_->getNextState(*this);
   if (state != nullptr) {
     state_->onExit(*this);
@@ -93,7 +94,6 @@ void Car::update(const std::vector<double>& localization,
     state_ = state;
     state_->onEnter(*this);
   }
-  state_->onUpdate(*this);
 }
 
 
