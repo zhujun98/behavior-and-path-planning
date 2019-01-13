@@ -113,14 +113,6 @@ public:
               const std::vector<std::vector<double>>& sensor_fusion);
 
   /**
-   * Get the closest vehicles (front and rear) on a given lane.
-   *
-   * @param lane_id: lane ID
-   * @return: (front car_state, rear car_state)
-   */
-  std::pair<std::vector<double>, std::vector<double>> getClosestVehicles(uint16_t lane_id) const;
-
-  /**
    * Estimate the dynamics of car at the path end.
    * @return: ((ps, vs, as), (pd, vd, ad))
    */
@@ -157,6 +149,9 @@ public:
 
   // Print out the vehicle's information
   void info() const;
+
+  std::map<uint16_t, dynamics> getClosestFrontVehicles() const;
+  std::map<uint16_t, dynamics> getClosestRearVehicles() const;
 
   uint16_t getCurrentLaneId() const;
   double getCurrentLaneCenter() const;

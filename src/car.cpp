@@ -86,25 +86,26 @@ void Car::updateClosestVehicles(const std::vector<std::vector<double>>& sensor_f
     if (std::abs(v[5] - ps_) > max_tracking_distance) continue;
 
     uint16_t lane_id = map_.getLaneId(v[6]);
+    double vs = std::sqrt(v[3]*v[3] + v[4]*v[4]); // an estimation
     if (v[5] > ps_) {
       // front vehicle
       if (closest_front_cars_.find(lane_id) != closest_front_cars_.end()) {
         double min_s = closest_front_cars_[lane_id].first[0];
         if (v[5] < min_s) {
-          closest_front_cars_[lane_id] = {{v[5], 0, 0}, {0, 0, 0}};
+          closest_front_cars_[lane_id] = {{v[5], vs, 0}, {0, 0, 0}};
         }
       } else {
-        closest_front_cars_[lane_id] = {{v[5], 0, 0}, {0, 0, 0}};
+        closest_front_cars_[lane_id] = {{v[5], vs, 0}, {0, 0, 0}};
       }
     } else {
       // rear vehicle
       if (closest_rear_cars_.find(lane_id) != closest_rear_cars_.end()) {
         double max_s = closest_rear_cars_[lane_id].first[0];
         if (v[5] > max_s) {
-          closest_rear_cars_[lane_id] = {{v[5], 0, 0}, {0, 0, 0}};
+          closest_rear_cars_[lane_id] = {{v[5], vs, 0}, {0, 0, 0}};
         }
       } else {
-        closest_rear_cars_[lane_id] = {{v[5], 0, 0}, {0, 0, 0}};
+        closest_rear_cars_[lane_id] = {{v[5], vs, 0}, {0, 0, 0}};
       }
     }
   }
@@ -245,6 +246,9 @@ void Car::info() const {
 
   std::cout << std::endl;
 }
+
+std::map<uint16_t, Car::dynamics> Car::getClosestFrontVehicles() const { return closest_front_cars_; }
+std::map<uint16_t, Car::dynamics> Car::getClosestRearVehicles() const { return closest_rear_cars_; }
 
 uint16_t Car::getCurrentLaneId() const { return map_.getLaneId(pd_); }
 double Car::getCurrentLaneCenter() const { return map_.getLaneCenter(map_.getLaneId(pd_)); }
