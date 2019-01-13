@@ -4,7 +4,6 @@
 #include <vector>
 
 class Car;
-class CarTransitionState;
 
 //
 // CLR: change to the right lane
@@ -19,19 +18,13 @@ class CarState {
 protected:
   CarState();
 
-  // Storing the transition states which is belong to this state.
-  // The order of the states matter!
-  std::vector<CarTransitionState *> transition_states_;
-
-  double timer_;  // track how long the state lasts
-
 public:
 
   virtual ~CarState();
 
   // Check the validity of the transition states one-by-one. If valid.
-  // Switch to the next state.
-  CarState* checkTransition(Car& car);
+  // return the next state.
+  virtual CarState* getNextState(Car& car) = 0;
 
   // action when entering a state
   virtual void onEnter(Car& car) = 0;
@@ -58,13 +51,15 @@ public:
 };
 
 
-class CarStateKeepLane : public CarState {
+class CarStateOn : public CarState {
 
 public:
 
-  CarStateKeepLane();
+  CarStateOn();
 
-  ~CarStateKeepLane() override;
+  ~CarStateOn() override;
+
+  CarState* getNextState(Car& car) override;
 
   void onEnter(Car& car) override;
 
@@ -74,13 +69,15 @@ public:
 };
 
 
-class CarStateOn : public CarState {
+class CarStateKeepLane : public CarState {
 
 public:
 
-  CarStateOn();
+  CarStateKeepLane();
 
-  ~CarStateOn() override;
+  ~CarStateKeepLane() override;
+
+  CarState* getNextState(Car& car) override;
 
   void onEnter(Car& car) override;
 
@@ -98,6 +95,8 @@ public:
 
   ~CarStateChangeLaneLeft() override;
 
+  CarState* getNextState(Car& car) override;
+
   void onEnter(Car& car) override;
 
   void onUpdate(Car& car) override;
@@ -112,6 +111,8 @@ public:
   CarStateChangeLaneRight();
 
   ~CarStateChangeLaneRight() override;
+
+  CarState* getNextState(Car& car) override;
 
   void onEnter(Car& car) override;
 

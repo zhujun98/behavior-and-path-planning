@@ -86,7 +86,7 @@ void Car::update(const std::vector<double>& localization,
 
   info();
 
-  CarState* state = state_->checkTransition(*this);
+  CarState* state = state_->getNextState(*this);
   if (state != nullptr) {
     state_->onExit(*this);
     delete state_;
@@ -228,6 +228,7 @@ void Car::planPath() {
   truncatePath(5);
 
   opt_paths_.clear();
+
   opt_paths_.push_back(path_optimizer_.keepLane(this));
   opt_paths_.push_back(path_optimizer_.changeLaneLeft(this));
   opt_paths_.push_back(path_optimizer_.changeLaneRight(this));
@@ -237,6 +238,10 @@ void Car::planPath() {
 
   path_s_.insert(path_s_.end(), new_path_s.begin(), new_path_s.end());
   path_d_.insert(path_d_.end(), new_path_d.begin(), new_path_d.end());
+}
+
+bool Car::validatePath() const {
+  return true;
 }
 
 Car::trajectory Car::getPathXY() const {

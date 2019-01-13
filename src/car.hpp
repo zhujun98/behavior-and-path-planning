@@ -160,6 +160,11 @@ public:
    */
   void planPath();
 
+  /**
+   * Check whether the current path is still valid.
+   */
+  bool validatePath() const;
+
   trajectory getPathXY() const;
 
   /**
