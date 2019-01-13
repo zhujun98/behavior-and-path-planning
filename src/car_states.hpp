@@ -12,10 +12,10 @@ class CarTransitionState;
 //
 // CLR: change to the right lane
 // CLL: change to the left lane
-// FT: follow traffic (keep lane)
+// KL: keep lane
 // ON: normal state, ready to go to the next state
 //
-enum class States {CLR, CLL, FT, ON};
+enum class States {CLR, CLL, KL, ON};
 
 class CarState {
 
@@ -61,13 +61,13 @@ public:
 };
 
 
-class CarStateFollowTraffic : public CarState {
+class CarStateKeepLane : public CarState {
 
 public:
 
-  CarStateFollowTraffic();
+  CarStateKeepLane();
 
-  ~CarStateFollowTraffic() override;
+  ~CarStateKeepLane() override;
 
   void onEnter(Car& car) override;
 

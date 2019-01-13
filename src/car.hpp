@@ -34,12 +34,26 @@ class Car;
 class PathOptimizer {
 
 public:
+  using trajectory = std::pair<std::vector<double>, std::vector<double>>;
 
   PathOptimizer();
 
   ~PathOptimizer();
 
-  void setOptimizedPath(Car* car);
+  /**
+   * Get the optimized path when keeping lane.
+   */
+  trajectory keepLane(Car* car);
+
+  /**
+   * Get the optimized path when changing to the left lane.
+   */
+  trajectory changeLaneLeft(Car* car);
+
+  /**
+   * Get the optimized path when changing to the right lane.
+   */
+  trajectory changeLaneRight(Car* car);
 };
 
 
@@ -77,7 +91,9 @@ private:
 
   Map map_;
 
-  PathOptimizer path_opt_;
+  PathOptimizer path_optimizer_;
+
+  std::vector<trajectory> opt_paths_;
 
   CarState* state_; // vehicle state
 
@@ -140,23 +156,15 @@ public:
   void truncatePath(unsigned int n_keep);
 
   /**
-   * Plan the path in order to follow the traffic.
+   * Plan and update the current path.
    */
-  void followTraffic();
-
-  /**
-   * Plan the path in order to shift to the left lane.
-   */
-  void shiftLaneLeft();
-
-  /**
-   * Plan the path in order to shift to the right lane.
-   */
-  void shiftLaneRight();
+  void planPath();
 
   trajectory getPathXY() const;
 
-  // Print out the vehicle's information
+  /**
+   * Print out the vehicle's information.
+   */
   void info() const;
 
   std::map<uint16_t, dynamics> getClosestFrontVehicles() const;

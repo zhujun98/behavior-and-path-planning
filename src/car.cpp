@@ -12,7 +12,7 @@ PathOptimizer::PathOptimizer() = default;
 
 PathOptimizer::~PathOptimizer() = default;
 
-void PathOptimizer::setOptimizedPath(Car* car) {
+PathOptimizer::trajectory PathOptimizer::keepLane(Car* car) {
 
   auto dynamics0 = car->estimateFinalDynamics();
   std::vector<double> dynamics_s0 = dynamics0.first;
@@ -36,15 +36,32 @@ void PathOptimizer::setOptimizedPath(Car* car) {
 
   double t = 0;
   double time_step = car->time_step_;
+  std::vector<double> path_s;
+  std::vector<double> path_d;
   while (t < delta_t) {
     t += time_step;
     double ps = evalTrajectory(coeff_s, t);
     double pd = evalTrajectory(coeff_d, t);
-    car->path_s_.push_back(ps);
-    car->path_d_.push_back(pd);
+    path_s.push_back(ps);
+    path_d.push_back(pd);
   }
+
+  return {path_s, path_d};
 }
 
+PathOptimizer::trajectory PathOptimizer::changeLaneLeft(Car* car) {
+  std::vector<double> path_s;
+  std::vector<double> path_d;
+
+  return {path_s, path_d};
+}
+
+PathOptimizer::trajectory PathOptimizer::changeLaneRight(Car* car) {
+  std::vector<double> path_s;
+  std::vector<double> path_d;
+
+  return {path_s, path_d};
+}
 
 /*
  * Car
@@ -207,18 +224,19 @@ Car::dynamics Car::estimateFinalDynamics() const {
   return {{ps, vs, as}, {pd, vd, ad}};
 }
 
-void Car::followTraffic() {
+void Car::planPath() {
   truncatePath(5);
 
-  path_opt_.setOptimizedPath(this);
-}
+  opt_paths_.clear();
+  opt_paths_.push_back(path_optimizer_.keepLane(this));
+  opt_paths_.push_back(path_optimizer_.changeLaneLeft(this));
+  opt_paths_.push_back(path_optimizer_.changeLaneRight(this));
 
-void Car::shiftLaneLeft() {
+  auto new_path_s = opt_paths_[0].first;
+  auto new_path_d = opt_paths_[0].second;
 
-}
-
-void Car::shiftLaneRight() {
-
+  path_s_.insert(path_s_.end(), new_path_s.begin(), new_path_s.end());
+  path_d_.insert(path_d_.end(), new_path_d.begin(), new_path_d.end());
 }
 
 Car::trajectory Car::getPathXY() const {

@@ -71,15 +71,4 @@ TEST_F(TestCar, updateClosestVehicles) {
   ASSERT_THAT(closest_rear_vehicles[3].first, ElementsAre(30, 4, 0));
 }
 
-TEST_F(TestCar, FollowTraffic) {
-  car_.updateParameters({0, 0, 0, 0, 0, 0}); // x, y, vx, vy, s, d
-  car_.followTraffic();
-  auto path_xy = car_.getPathXY();
-
-  car_.updateParameters({1, 1, 10, 5, 1.4, 0}); // x, y, vx, vy, s, d
-  car_.followTraffic();
-
-  path_xy = car_.getPathXY();
-}
-
 }

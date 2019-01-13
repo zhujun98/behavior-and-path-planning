@@ -1,6 +1,3 @@
-//
-// Created by jun on 7/28/17.
-//
 #include <iostream>
 #include <cmath>
 
@@ -24,75 +21,75 @@ CarTransitionStateFactory::~CarTransitionStateFactory() = default;
 
 CarTransitionState* CarTransitionStateFactory::createState(TransitionStates name) {
   switch (name) {
-    case TransitionStates::ON_TO_FT:
-      static CarTransitionON2FT ready_to_ft;
-      return &ready_to_ft;
-    case TransitionStates::CL_TO_FT:
-      static CarTransitionCL2FT cl_to_ft;
-      return &cl_to_ft;
-    case TransitionStates::FT_TO_CLL:
-      static CarTransitionFT2CLR ft_to_cll;
-      return &ft_to_cll;
-    case TransitionStates::FT_TO_CLR:
-      static CarTransitionFT2CLR ft_to_clr;
-      return &ft_to_clr;
+    case TransitionStates::ON_TO_KL:
+      static CarTransitionON2KL ready_to_kl;
+      return &ready_to_kl;
+    case TransitionStates::CL_TO_KL:
+      static CarTransitionCL2KL cl_to_kl;
+      return &cl_to_kl;
+    case TransitionStates::KL_TO_CLL:
+      static CarTransitionKL2CLR kl_to_cll;
+      return &kl_to_cll;
+    case TransitionStates::KL_TO_CLR:
+      static CarTransitionKL2CLR kl_to_clr;
+      return &kl_to_clr;
     default:
       throw std::invalid_argument("Unknown transition state!");
   }
 }
 
-/* CarTransitionON2FT */
+/* CarTransitionON2KL */
 
-CarTransitionON2FT::CarTransitionON2FT() = default;
+CarTransitionON2KL::CarTransitionON2KL() = default;
 
-CarTransitionON2FT::~CarTransitionON2FT() = default;
+CarTransitionON2KL::~CarTransitionON2KL() = default;
 
-CarState* CarTransitionON2FT::getNextState(Car& car) const {
-  return CarStateFactory::createState(States::FT);
+CarState* CarTransitionON2KL::getNextState(Car& car) const {
+  return CarStateFactory::createState(States::KL);
 }
 
-bool CarTransitionON2FT::isValid(Car &car) const {
+bool CarTransitionON2KL::isValid(Car &car) const {
   return true;
 }
 
-/* CarTransitionCL2FT */
+/* CarTransitionCL2KL */
 
-CarTransitionCL2FT::CarTransitionCL2FT() = default;
+CarTransitionCL2KL::CarTransitionCL2KL() = default;
 
-CarTransitionCL2FT::~CarTransitionCL2FT() = default;
+CarTransitionCL2KL::~CarTransitionCL2KL() = default;
 
-CarState* CarTransitionCL2FT::getNextState(Car& car) const {
-  return CarStateFactory::createState(States::FT);
+CarState* CarTransitionCL2KL::getNextState(Car& car) const {
+  return CarStateFactory::createState(States::KL);
 }
 
-bool CarTransitionCL2FT::isValid(Car &car) const {
+bool CarTransitionCL2KL::isValid(Car &car) const {
   return car.getTargetLaneId() == car.getCurrentLaneId();
 }
 
-/* CarTransitionFT2CLL */
+/* CarTransitionKL2CLL */
 
-CarTransitionFT2CLL::CarTransitionFT2CLL() = default;
+CarTransitionKL2CLL::CarTransitionKL2CLL() = default;
 
-CarTransitionFT2CLL::~CarTransitionFT2CLL() = default;
+CarTransitionKL2CLL::~CarTransitionKL2CLL() = default;
 
-CarState* CarTransitionFT2CLL::getNextState(Car& car) const {
+CarState* CarTransitionKL2CLL::getNextState(Car& car) const {
   return CarStateFactory::createState(States::CLL);
 }
 
-bool CarTransitionFT2CLL::isValid(Car &car) const {
+bool CarTransitionKL2CLL::isValid(Car &car) const {
   return false;
 }
 
-/* CarTransitionFT2CLR */
+/* CarTransitionKL2CLR */
 
-CarTransitionFT2CLR::CarTransitionFT2CLR() = default;
+CarTransitionKL2CLR::CarTransitionKL2CLR() = default;
 
-CarTransitionFT2CLR::~CarTransitionFT2CLR() = default;
+CarTransitionKL2CLR::~CarTransitionKL2CLR() = default;
 
-CarState* CarTransitionFT2CLR::getNextState(Car& car) const {
+CarState* CarTransitionKL2CLR::getNextState(Car& car) const {
   return CarStateFactory::createState(States::CLR);
 }
 
-bool CarTransitionFT2CLR::isValid(Car &car) const {
+bool CarTransitionKL2CLR::isValid(Car &car) const {
   return false;
 }

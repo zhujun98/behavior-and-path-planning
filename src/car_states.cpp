@@ -43,8 +43,8 @@ CarState* CarStateFactory::createState(States name) {
       return new CarStateChangeLaneRight;
     case States::CLL:
       return new CarStateChangeLaneLeft;
-    case States::FT:
-      return new CarStateFollowTraffic;
+    case States::KL:
+      return new CarStateKeepLane;
     case States::ON:
       return new CarStateOn;
     default:
@@ -56,23 +56,23 @@ CarState* CarStateFactory::createState(States name) {
  * CarStateFollowTraffic class
  */
 
-CarStateFollowTraffic::CarStateFollowTraffic() {
-  transition_states_.push_back(CarTransitionStateFactory::createState(TransitionStates::FT_TO_CLR));
-  transition_states_.push_back(CarTransitionStateFactory::createState(TransitionStates::FT_TO_CLL));
+CarStateKeepLane::CarStateKeepLane() {
+  transition_states_.push_back(CarTransitionStateFactory::createState(TransitionStates::KL_TO_CLR));
+  transition_states_.push_back(CarTransitionStateFactory::createState(TransitionStates::KL_TO_CLL));
 }
 
-CarStateFollowTraffic::~CarStateFollowTraffic() = default;
+CarStateKeepLane::~CarStateKeepLane() = default;
 
-void CarStateFollowTraffic::onEnter(Car& car) {
-  std::cout << "Enter state: *** FOLLOW TRAFFIC ***" << std::endl;
+void CarStateKeepLane::onEnter(Car& car) {
+  std::cout << "Enter state: *** KEEP LANE ***" << std::endl;
 }
 
-void CarStateFollowTraffic::onUpdate(Car &car) {
-  car.followTraffic();
+void CarStateKeepLane::onUpdate(Car &car) {
+  car.planPath();
 }
 
-void CarStateFollowTraffic::onExit(Car& car) {
-  std::cout << "Exit state: *** FOLLOW TRAFFIC ***" << std::endl;
+void CarStateKeepLane::onExit(Car& car) {
+  std::cout << "Exit state: *** KEEP LANE ***" << std::endl;
 }
 
 /*
@@ -80,7 +80,7 @@ void CarStateFollowTraffic::onExit(Car& car) {
  */
 
 CarStateOn::CarStateOn() {
-  transition_states_.push_back(CarTransitionStateFactory::createState(TransitionStates::ON_TO_FT));
+  transition_states_.push_back(CarTransitionStateFactory::createState(TransitionStates::ON_TO_KL));
 }
 
 CarStateOn::~CarStateOn() = default;
@@ -90,7 +90,7 @@ void CarStateOn::onEnter(Car& car) {
 }
 
 void CarStateOn::onUpdate(Car &car) {
-  car.followTraffic();
+  car.planPath();
 }
 
 void CarStateOn::onExit(Car& car) {
@@ -102,7 +102,7 @@ void CarStateOn::onExit(Car& car) {
  */
 
 CarStateChangeLaneLeft::CarStateChangeLaneLeft() {
-  transition_states_.push_back(CarTransitionStateFactory::createState(TransitionStates::CL_TO_FT));
+  transition_states_.push_back(CarTransitionStateFactory::createState(TransitionStates::CL_TO_KL));
 }
 
 CarStateChangeLaneLeft::~CarStateChangeLaneLeft() = default;
@@ -123,7 +123,7 @@ void CarStateChangeLaneLeft::onExit(Car& car) {
  */
 
 CarStateChangeLaneRight::CarStateChangeLaneRight() {
-  transition_states_.push_back(CarTransitionStateFactory::createState(TransitionStates::CL_TO_FT));
+  transition_states_.push_back(CarTransitionStateFactory::createState(TransitionStates::CL_TO_KL));
 }
 
 CarStateChangeLaneRight::~CarStateChangeLaneRight() = default;
@@ -133,7 +133,9 @@ void CarStateChangeLaneRight::onEnter(Car& car) {
             << " to Lane-" << car.getTargetLaneId() << std::endl;
 }
 
-void CarStateChangeLaneLeft::onUpdate(Car& car) {}
+void CarStateChangeLaneLeft::onUpdate(Car& car) {
+  car.planPath();
+}
 
 void CarStateChangeLaneRight::onExit(Car& carp) {
   std::cout << "Exit state: *** CHANGE TO THE RIGHT LANE *** " << std::endl;
