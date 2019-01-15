@@ -78,7 +78,11 @@ void CarStateKeepLane::onEnter(Car& car) {
 }
 
 void CarStateKeepLane::onUpdate(Car &car) {
-  car.planPath();
+  ++tick_;
+  if (tick_ == 5) {
+    car.planPath();
+    tick_ = 0;
+  }
 }
 
 void CarStateKeepLane::onExit(Car& car) {

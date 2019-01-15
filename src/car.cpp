@@ -12,30 +12,40 @@ PathOptimizer::PathOptimizer() = default;
 
 PathOptimizer::~PathOptimizer() = default;
 
-PathOptimizer::trajectory PathOptimizer::keepLane(Car* car) {
-
-  auto dynamics0 = car->estimateFinalDynamics();
-  std::vector<double> dynamics_s0 = dynamics0.first;
-  std::vector<double> dynamics_d0 = dynamics0.second;
-
-  double delta_t = 1.0;
-
-  double ps_f = dynamics_s0[0] + 2 * delta_t * car->max_speed_;
-  double vs_f = car->max_speed_;
-  double as_f = 0;
-
-  double pd_f = car->getCurrentLaneCenter();
-  double vd_f = 0;
-  double ad_f = 0;
-
-  std::vector<double> dynamics_s1 = {ps_f, vs_f, as_f};
-  std::vector<double> dynamics_d1 = {pd_f, vd_f, ad_f};
-
-  polynomial_coeff coeff_s = jerkMinimizingTrajectory(dynamics_s0, dynamics_s1, delta_t);
-  polynomial_coeff coeff_d = jerkMinimizingTrajectory(dynamics_d0, dynamics_d1, delta_t);
+bool PathOptimizer::validatePath(polynomial_coeff coeff_s, polynomial_coeff coeff_d,
+                                 double delta_t, double time_step,
+                                 double speed_limit, double acceleration_limit, double jerk_limit) {
+  double v_sqr_limit = speed_limit * speed_limit;
+  double a_sqr_limit = acceleration_limit * acceleration_limit;
+  double j_sqr_limit = jerk_limit * jerk_limit;
 
   double t = 0;
-  double time_step = car->time_step_;
+  while (t < delta_t) {
+    double vs = evalVelocity(coeff_s, t);
+    if (vs < 0) return false; // why there could be path with negative speed?
+    double vd = evalVelocity(coeff_d, t);
+    double v_sqr = vs*vs + vd*vd;
+    if (v_sqr > v_sqr_limit) return false;
+
+    double as = evalAcceleration(coeff_s, t);
+    double ad = evalAcceleration(coeff_d, t);
+    double a_sqr = as*as + ad*ad;
+    if (a_sqr > a_sqr_limit) return false;
+
+    double js = evalJerk(coeff_s, t);
+    double jd = evalJerk(coeff_d, t);
+    double j_sqr = js*js + jd*jd;
+    if (j_sqr > j_sqr_limit) return false;
+
+    t += time_step;
+  }
+
+  return true;
+}
+
+PathOptimizer::trajectory
+PathOptimizer::computePath(polynomial_coeff coeff_s, polynomial_coeff coeff_d, double delta_t, double time_step) {
+  double t = 0;
   std::vector<double> path_s;
   std::vector<double> path_d;
   while (t < delta_t) {
@@ -47,6 +57,84 @@ PathOptimizer::trajectory PathOptimizer::keepLane(Car* car) {
   }
 
   return {path_s, path_d};
+}
+
+PathOptimizer::trajectory PathOptimizer::keepLane(Car* car) {
+
+  auto dynamics0 = car->estimateFinalDynamics();
+  std::vector<double> dynamics_s0 = dynamics0.first;
+  std::vector<double> dynamics_d0 = dynamics0.second;
+
+  double time_step = car->time_step_;
+
+  // At very low speed, we apply a simple dynamics model:
+  // 1. The car is accelerated as much as allowed along the s direction;
+  // 2. The car does not move in the d direction.
+  if (dynamics_s0[1] < 10) {
+    double delta_t = 2.0;
+
+    std::vector<double> path_s;
+    std::vector<double> path_d;
+
+    double t = 0;
+    double ps_f = dynamics_s0[0];
+    double vs_f = dynamics_s0[1];
+    double as_f = dynamics_s0[2];
+    double pd_f = dynamics_d0[0];
+
+    while (t < delta_t) {
+      t += time_step;
+
+      if (as_f < car->max_acceleration_) {
+        as_f += time_step * car->max_jerk_;
+        if (as_f > car->max_acceleration_) as_f = car->max_acceleration_;
+      }
+
+      ps_f += 0.5 * time_step * (2 * vs_f + time_step * as_f);
+      path_s.push_back(ps_f);
+      vs_f += time_step * as_f;
+
+      path_d.push_back(pd_f);
+    }
+
+    return {path_s, path_d};
+  }
+
+  // we plan for the minimum of 30 m and the distance to the front car
+  double ps_f = dynamics_s0[0] + 30;
+  double vs_f = 0.95 * car->max_speed_;
+  uint16_t lane_id = car->getCurrentLaneId();
+  if (car->closest_front_cars_.find(lane_id) != car->closest_front_cars_.end())
+    if (car->closest_front_cars_[lane_id].first[0] < ps_f) {
+      ps_f = car->closest_front_cars_[lane_id].first[0];
+      vs_f = car->closest_front_cars_[lane_id].first[1];
+    }
+
+  polynomial_coeff coeff_s;
+  polynomial_coeff coeff_d;
+
+  double as_f = 0;
+  double pd_f = car->getCurrentLaneCenter();
+  double vd_f = 0;
+  double ad_f = 0;
+
+  double delta_t = 0;
+  bool valid = false;
+  // The first valid path is the path which takes the shortest time.
+  while (!valid) {
+    delta_t += time_step;
+
+    std::vector<double> dynamics_s1 = {ps_f, vs_f, as_f};
+    std::vector<double> dynamics_d1 = {pd_f, vd_f, ad_f};
+
+    coeff_s = jerkMinimizingTrajectory(dynamics_s0, dynamics_s1, delta_t);
+    coeff_d = jerkMinimizingTrajectory(dynamics_d0, dynamics_d1, delta_t);
+
+    valid = validatePath(coeff_s, coeff_d, delta_t, delta_t,
+                         car->max_speed_, car->max_acceleration_, car->max_jerk_);
+  }
+
+  return computePath(coeff_s, coeff_d, delta_t, car->time_step_);
 }
 
 PathOptimizer::trajectory PathOptimizer::changeLaneLeft(Car* car) {

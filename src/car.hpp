@@ -35,10 +35,25 @@ class PathOptimizer {
 
 public:
   using trajectory = std::pair<std::vector<double>, std::vector<double>>;
+  using polynomial_coeff = std::vector<double>;
 
   PathOptimizer();
 
   ~PathOptimizer();
+
+  /**
+   * Validate a JMT path.
+   */
+  bool validatePath(polynomial_coeff coeff_s, polynomial_coeff coeff_d,
+                    double delta_t, double time_step,
+                    double speed_limit, double acceleration_limit, double jerk_limit);
+
+  /**
+   * Compute the trajectory in the Frenet coordinate system.
+   */
+  PathOptimizer::trajectory
+  computePath(polynomial_coeff coeff_s, polynomial_coeff coeff_d, double delta_t, double time_step);
+
 
   /**
    * Get the optimized path when keeping lane.
@@ -112,7 +127,6 @@ private:
   double max_speed_= mph2mps(50); // maximum speed (m/s)
   double max_acceleration_ = 10; // maximum acceleration (m/s^2)
   double max_jerk_ = 10; // maximum jerk (m/s^3)
-  double max_steering_; // maximum steering angle (rad)
 
 public:
   explicit Car(const Map& map);

@@ -53,3 +53,7 @@ double evalVelocity(const polynomial_coeff& p, double t) {
 double evalAcceleration(const polynomial_coeff& p, double t) {
   return evalPolynomialDerivative(p, t, 2);
 }
+
+double evalJerk(const polynomial_coeff& p, double t) {
+  return evalPolynomialDerivative(p, t, 3);
+}

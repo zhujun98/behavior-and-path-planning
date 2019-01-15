@@ -16,6 +16,8 @@ enum class States {CLR, CLL, KL, ON};
 class CarState {
 
 protected:
+  uint16_t tick_ = 0;
+
   CarState();
 
 public:

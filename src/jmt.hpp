@@ -44,5 +44,7 @@ double evalVelocity(const polynomial_coeff& p, double t);
 
 double evalAcceleration(const polynomial_coeff& p, double t);
 
+double evalJerk(const polynomial_coeff& p, double t);
+
 #endif //BEHAVIOR_AND_PATH_PLANNING_JMT_H
 
