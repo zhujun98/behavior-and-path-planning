@@ -29,7 +29,6 @@ class TestPathOptimizer : public QuickTest {
 protected:
   double time_step_ = 0.02;
   Car car_;
-  PathOptimizer optimizer_;
 
   TestPathOptimizer() : car_(Map("../../data/highway_map.csv", time_step_)) {}
 };
@@ -40,7 +39,7 @@ TEST_F(TestPathOptimizer, keepLane) {
   double pd0 = 7;
 
   car_.updateParameters({0, 0, 0, 0, ps0, pd0}); // start at the center of lane 2, but not centered
-  auto path_sd = optimizer_.startUp(&car_);
+  auto path_sd = PathOptimizer::startUp(&car_);
 
   std::vector<double> path_s = path_sd.first;
   std::vector<double> path_d = path_sd.second;
@@ -58,7 +57,7 @@ TEST_F(TestPathOptimizer, keepLane) {
   car_.extendPath(path_s, path_d);
 
   // keepLane only estimate the dynamics from the path
-  path_sd = optimizer_.keepLane(&car_);
+  path_sd = PathOptimizer::keepLane(&car_);
 
   path_s = path_sd.first;
   path_d = path_sd.second;
@@ -79,7 +78,7 @@ TEST_F(TestPathOptimizer, keepLane) {
   car_.extendPath(path_s, path_d);
 
   // keepLane only estimate the dynamics from the path
-  path_sd = optimizer_.keepLane(&car_);
+  path_sd = PathOptimizer::keepLane(&car_);
 
   path_s = path_sd.first;
   path_d = path_sd.second;

@@ -33,36 +33,36 @@ class Car;
 
 class PathOptimizer {
 
+  PathOptimizer();
+
 public:
   using trajectory = std::pair<std::vector<double>, std::vector<double>>;
   using polynomial_coeff = std::vector<double>;
-
-  PathOptimizer();
 
   ~PathOptimizer();
 
   /**
    * Validate a JMT path.
    */
-  bool validatePath(polynomial_coeff coeff_s, polynomial_coeff coeff_d,
-                    double delta_t, double time_step,
-                    double speed_limit, double acceleration_limit, double jerk_limit);
+  static bool validatePath(polynomial_coeff coeff_s, polynomial_coeff coeff_d,
+                           double delta_t, double time_step,
+                           double speed_limit, double acceleration_limit, double jerk_limit);
 
   /**
    * Compute the trajectory in the Frenet coordinate system.
    */
-  PathOptimizer::trajectory
+  static PathOptimizer::trajectory
   computeJmtPath(polynomial_coeff coeff_s, polynomial_coeff coeff_d, double delta_t, double time_step);
 
   /**
    * Get the optimized path when starting up.
    */
-  PathOptimizer::trajectory startUp(Car* car);
+  static PathOptimizer::trajectory startUp(Car* car);
 
   /**
    * Get the optimized path when keeping lane.
    */
-  trajectory keepLane(Car* car);
+  static trajectory keepLane(Car* car);
 
   /**
    * Get the optimized path when changing to the left lane.
@@ -108,8 +108,6 @@ private:
   double ad_; // in m/s^2
 
   Map map_;
-
-  PathOptimizer path_optimizer_;
 
   std::vector<trajectory> opt_paths_;
 

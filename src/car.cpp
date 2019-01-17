@@ -353,7 +353,7 @@ Car::dynamics Car::estimateFinalDynamics() const {
 void Car::startUp() {
   truncatePath(5);
 
-  auto path_sd = path_optimizer_.startUp(this);
+  auto path_sd = PathOptimizer::startUp(this);
   auto path_s = path_sd.first;
   auto path_d = path_sd.second;
 
@@ -363,7 +363,7 @@ void Car::startUp() {
 void Car::keepLane() {
   truncatePath(5);
 
-  auto path_sd = path_optimizer_.keepLane(this);
+  auto path_sd = PathOptimizer::keepLane(this);
   auto path_s = path_sd.first;
   auto path_d = path_sd.second;
 
