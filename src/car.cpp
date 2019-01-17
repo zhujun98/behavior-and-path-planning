@@ -44,7 +44,7 @@ bool PathOptimizer::validatePath(polynomial_coeff coeff_s, polynomial_coeff coef
 }
 
 PathOptimizer::trajectory
-PathOptimizer::computePath(polynomial_coeff coeff_s, polynomial_coeff coeff_d, double delta_t, double time_step) {
+PathOptimizer::computeJmtPath(polynomial_coeff coeff_s, polynomial_coeff coeff_d, double delta_t, double time_step) {
   double t = 0;
   std::vector<double> path_s;
   std::vector<double> path_d;
@@ -134,7 +134,7 @@ PathOptimizer::trajectory PathOptimizer::keepLane(Car* car) {
                          car->max_speed_, car->max_acceleration_, car->max_jerk_);
   }
 
-  return computePath(coeff_s, coeff_d, delta_t, car->time_step_);
+  return computeJmtPath(coeff_s, coeff_d, delta_t, car->time_step_);
 }
 
 PathOptimizer::trajectory PathOptimizer::changeLaneLeft(Car* car) {

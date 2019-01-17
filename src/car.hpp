@@ -52,8 +52,7 @@ public:
    * Compute the trajectory in the Frenet coordinate system.
    */
   PathOptimizer::trajectory
-  computePath(polynomial_coeff coeff_s, polynomial_coeff coeff_d, double delta_t, double time_step);
-
+  computeJmtPath(polynomial_coeff coeff_s, polynomial_coeff coeff_d, double delta_t, double time_step);
 
   /**
    * Get the optimized path when keeping lane.
