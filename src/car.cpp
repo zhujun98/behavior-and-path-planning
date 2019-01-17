@@ -383,7 +383,7 @@ void Car::keepLane() {
 Car::trajectory Car::getPathXY() const {
   std::vector<double> path_x;
   std::vector<double> path_y;
-  for (auto i = 0; i < path_s_.size(); ++i) {
+  for (std::size_t i = 0; i < path_s_.size(); ++i) {
     position pxy = frenetToCartesian(path_s_[i], path_d_[i], map_.s, map_.max_s, map_.x, map_.y);
     path_x.push_back(pxy.first);
     path_y.push_back(pxy.second);

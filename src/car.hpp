@@ -131,10 +131,33 @@ private:
   double max_acceleration_ = 10; // maximum acceleration (m/s^2)
   double max_jerk_ = 10; // maximum jerk (m/s^3)
 
+  /**
+   * Update the unprocessed waypoints.
+   */
+  void updateUnprocessedPath();
+
+  /**
+   * Truncate a path (remove tail) to a given length
+   *
+   * @param n_keep: number of points to keep
+   */
+  void truncatePath(unsigned int n_keep);
+
+  /**
+   * Print out the vehicle's information.
+   */
+  void info() const;
+
 public:
   explicit Car(const Map& map, double time_step=0.02);
 
   ~Car();
+
+  /**
+   * Update all parameters and states.
+   */
+  void update(const std::vector<double>& localization,
+              const std::vector<std::vector<double>>& sensor_fusion);
 
   /**
    * Update parameters based on the localization data.
@@ -149,43 +172,30 @@ public:
   void updateClosestVehicles(const std::vector<std::vector<double>>& sensor_fusion);
 
   /**
-   * Update the unprocessed waypoints.
-   */
-  void updateUnprocessedPath();
-
-  /**
-   * Update all parameters and states.
-   */
-  void update(const std::vector<double>& localization,
-              const std::vector<std::vector<double>>& sensor_fusion);
-
-  /**
    * Estimate the dynamics of car at the path end.
    * @return: ((ps, vs, as), (pd, vd, ad))
    */
   dynamics estimateFinalDynamics() const;
 
   /**
-   * Truncate a path (remove tail) to a given length
-   *
-   * @param n_keep: number of points to keep
-   */
-  void truncatePath(unsigned int n_keep);
-
-  /**
    * Extend the current path.
    */
   void extendPath(std::vector<double> path_s, std::vector<double> path_d);
 
+  /**
+   * Update path when starting up.
+   */
   void startUp();
-  void keepLane();
-
-  trajectory getPathXY() const;
 
   /**
-   * Print out the vehicle's information.
+   * Update path when keeping lane.
    */
-  void info() const;
+  void keepLane();
+
+  /**
+   * Return the corresponding Cartisian path of the current Frenet path.
+   */
+  trajectory getPathXY() const;
 
   std::map<uint16_t, dynamics> getClosestFrontVehicles() const;
   std::map<uint16_t, dynamics> getClosestRearVehicles() const;
