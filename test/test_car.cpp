@@ -5,7 +5,6 @@
 
 #include "car.hpp"
 
-
 using ::testing::ElementsAre;
 
 

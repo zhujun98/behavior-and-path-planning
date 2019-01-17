@@ -46,7 +46,9 @@ CarStateOn::CarStateOn() = default;
 CarStateOn::~CarStateOn() = default;
 
 CarState* CarStateOn::getNextState(Car &car) {
-  return CarStateFactory::createState(States::KL);
+  if (car.getCurrentSpeed() > 10)
+    return CarStateFactory::createState(States::KL);
+  else return nullptr;
 }
 
 void CarStateOn::onEnter(Car& car) {
@@ -54,7 +56,9 @@ void CarStateOn::onEnter(Car& car) {
 }
 
 void CarStateOn::onUpdate(Car &car) {
-  car.planPath();
+  if (tick_ == 0) car.startUp();
+  ++tick_;
+  if (tick_ == 5) tick_ = 0;
 }
 
 void CarStateOn::onExit(Car& car) {
@@ -78,11 +82,9 @@ void CarStateKeepLane::onEnter(Car& car) {
 }
 
 void CarStateKeepLane::onUpdate(Car &car) {
+  if (tick_ == 0) car.keepLane();
   ++tick_;
-  if (tick_ == 5) {
-    car.planPath();
-    tick_ = 0;
-  }
+  if (tick_ == 5) tick_ = 0;
 }
 
 void CarStateKeepLane::onExit(Car& car) {
@@ -130,7 +132,6 @@ void CarStateChangeLaneRight::onEnter(Car& car) {
 }
 
 void CarStateChangeLaneLeft::onUpdate(Car& car) {
-  car.planPath();
 }
 
 void CarStateChangeLaneRight::onExit(Car& carp) {

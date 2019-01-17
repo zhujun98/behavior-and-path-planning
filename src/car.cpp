@@ -21,23 +21,35 @@ bool PathOptimizer::validatePath(polynomial_coeff coeff_s, polynomial_coeff coef
 
   double t = 0;
   while (t < delta_t) {
+    t += time_step;
+
     double vs = evalVelocity(coeff_s, t);
-    if (vs < 0) return false; // why there could be path with negative speed?
+    if (vs < 0) {
+//      std::cout << "vs cannot be negative: " << vs << std::endl;
+      return false; // why there could be path with negative speed?
+    }
     double vd = evalVelocity(coeff_d, t);
     double v_sqr = vs*vs + vd*vd;
-    if (v_sqr > v_sqr_limit) return false;
+    if (v_sqr > v_sqr_limit) {
+//      std::cout << "violate the speed limit: " << vs << ", " << vd << std::endl;
+      return false;
+    }
 
     double as = evalAcceleration(coeff_s, t);
     double ad = evalAcceleration(coeff_d, t);
     double a_sqr = as*as + ad*ad;
-    if (a_sqr > a_sqr_limit) return false;
+    if (a_sqr > a_sqr_limit) {
+//      std::cout << "violate the acceleration limit: " << as << ", " << ad << std::endl;
+      return false;
+    }
 
     double js = evalJerk(coeff_s, t);
     double jd = evalJerk(coeff_d, t);
     double j_sqr = js*js + jd*jd;
-    if (j_sqr > j_sqr_limit) return false;
-
-    t += time_step;
+    if (j_sqr > j_sqr_limit) {
+//      std::cout << "violate the jerk limit: " << js << ", " << jd << std::endl;
+      return false;
+    }
   }
 
   return true;
@@ -59,56 +71,69 @@ PathOptimizer::computeJmtPath(polynomial_coeff coeff_s, polynomial_coeff coeff_d
   return {path_s, path_d};
 }
 
-PathOptimizer::trajectory PathOptimizer::keepLane(Car* car) {
-
+PathOptimizer::trajectory  PathOptimizer::startUp(Car* car) {
   auto dynamics0 = car->estimateFinalDynamics();
   std::vector<double> dynamics_s0 = dynamics0.first;
   std::vector<double> dynamics_d0 = dynamics0.second;
 
   double time_step = car->time_step_;
+  std::vector<double> path_s;
+  std::vector<double> path_d;
 
   // At very low speed, we apply a simple dynamics model:
   // 1. The car is accelerated as much as allowed along the s direction;
   // 2. The car does not move in the d direction.
-  if (dynamics_s0[1] < 10) {
-    double delta_t = 2.0;
+  double delta_t = 2.0;
 
-    std::vector<double> path_s;
-    std::vector<double> path_d;
+  double t = 0;
+  double ps_f = dynamics_s0[0];
+  double vs_f = dynamics_s0[1];
+  double as_f = dynamics_s0[2];
+  double pd_f = dynamics_d0[0];
 
-    double t = 0;
-    double ps_f = dynamics_s0[0];
-    double vs_f = dynamics_s0[1];
-    double as_f = dynamics_s0[2];
-    double pd_f = dynamics_d0[0];
+  while (t < delta_t) {
+    t += time_step;
 
-    while (t < delta_t) {
-      t += time_step;
-
-      if (as_f < car->max_acceleration_) {
-        as_f += time_step * car->max_jerk_;
-        if (as_f > car->max_acceleration_) as_f = car->max_acceleration_;
-      }
-
-      ps_f += 0.5 * time_step * (2 * vs_f + time_step * as_f);
-      path_s.push_back(ps_f);
-      vs_f += time_step * as_f;
-
-      path_d.push_back(pd_f);
+    if (as_f < car->max_acceleration_) {
+      as_f += time_step * car->max_jerk_;
+      if (as_f > car->max_acceleration_) as_f = car->max_acceleration_;
     }
 
-    return {path_s, path_d};
+    ps_f += 0.5 * time_step * (2 * vs_f + time_step * as_f);
+    path_s.push_back(ps_f);
+    vs_f += time_step * as_f;
+
+    path_d.push_back(pd_f);
   }
 
-  // we plan for the minimum of 30 m and the distance to the front car
-  double ps_f = dynamics_s0[0] + 30;
-  double vs_f = 0.95 * car->max_speed_;
+  return {path_s, path_d};
+}
+
+PathOptimizer::trajectory PathOptimizer::keepLane(Car* car) {
+
+  double time_step = car->time_step_;
+
+  double safe_distance = 20; // safe distance (in meter) after a front car
+  double max_delta_t = 5; // max time span (in second) for a path
+  double min_dist_no_car = 30; // min delta s of a path if there is no front car
+  double search_time_step = 10 * time_step; // step in search valid time span of a path
+  double search_dist_step = 1.0; // step in searching valid ps
+
+  auto dynamics0 = car->estimateFinalDynamics();
+  std::vector<double> dynamics_s0 = dynamics0.first;
+  std::vector<double> dynamics_d0 = dynamics0.second;
+
+  double ps_f = dynamics_s0[0] + min_dist_no_car;
+  double vs_f = car->max_speed_;
   uint16_t lane_id = car->getCurrentLaneId();
-  if (car->closest_front_cars_.find(lane_id) != car->closest_front_cars_.end())
-    if (car->closest_front_cars_[lane_id].first[0] < ps_f) {
+  if (car->closest_front_cars_.find(lane_id) != car->closest_front_cars_.end()) {
+    double ps_front_car = car->closest_front_cars_[lane_id].first[0];
+    double vs_front_car = car->closest_front_cars_[lane_id].first[1];
+    if (ps_front_car < dynamics_s0[0] + safe_distance) {
       ps_f = car->closest_front_cars_[lane_id].first[0];
-      vs_f = car->closest_front_cars_[lane_id].first[1];
+      vs_f = std::min(vs_f, vs_front_car * (ps_front_car - dynamics_s0[0]) / safe_distance);
     }
+  }
 
   polynomial_coeff coeff_s;
   polynomial_coeff coeff_d;
@@ -120,9 +145,15 @@ PathOptimizer::trajectory PathOptimizer::keepLane(Car* car) {
 
   double delta_t = 0;
   bool valid = false;
-  // The first valid path is the path which takes the shortest time.
+
   while (!valid) {
-    delta_t += time_step;
+    // Increase the distance and reset time if no valid path is found.
+    if (delta_t > max_delta_t) {
+      delta_t = 0;
+      ps_f += search_dist_step;
+    }
+
+    delta_t += search_time_step;
 
     std::vector<double> dynamics_s1 = {ps_f, vs_f, as_f};
     std::vector<double> dynamics_d1 = {pd_f, vd_f, ad_f};
@@ -130,11 +161,13 @@ PathOptimizer::trajectory PathOptimizer::keepLane(Car* car) {
     coeff_s = jerkMinimizingTrajectory(dynamics_s0, dynamics_s1, delta_t);
     coeff_d = jerkMinimizingTrajectory(dynamics_d0, dynamics_d1, delta_t);
 
-    valid = validatePath(coeff_s, coeff_d, delta_t, delta_t,
+    // For a given ps_f, the algorithm guarantees that is a valid path exists, the first
+    // valid path found takes the shortest time.
+    valid = validatePath(coeff_s, coeff_d, delta_t, time_step,
                          car->max_speed_, car->max_acceleration_, car->max_jerk_);
   }
 
-  return computeJmtPath(coeff_s, coeff_d, delta_t, car->time_step_);
+  return computeJmtPath(coeff_s, coeff_d, delta_t, time_step);
 }
 
 PathOptimizer::trajectory PathOptimizer::changeLaneLeft(Car* car) {
@@ -155,9 +188,9 @@ PathOptimizer::trajectory PathOptimizer::changeLaneRight(Car* car) {
  * Car
  */
 
-Car::Car(const Map& map) :
+Car::Car(const Map& map, double time_step) :
   is_initialized_(false),
-  time_step_(0.02),
+  time_step_(time_step),
   map_(map),
   state_(CarStateFactory::createState(States::ON))
 {
@@ -280,6 +313,11 @@ void Car::truncatePath(unsigned int n_keep) {
   }
 }
 
+void Car::extendPath(std::vector<double> path_s, std::vector<double> path_d) {
+  path_s_.insert(path_s_.end(), path_s.begin(), path_s.end());
+  path_d_.insert(path_d_.end(), path_d.begin(), path_d.end());
+}
+
 Car::dynamics Car::estimateFinalDynamics() const {
   double ps, vs, as;
   double pd, vd, ad;
@@ -312,24 +350,34 @@ Car::dynamics Car::estimateFinalDynamics() const {
   return {{ps, vs, as}, {pd, vd, ad}};
 }
 
-void Car::planPath() {
+void Car::startUp() {
   truncatePath(5);
 
-  opt_paths_.clear();
+  auto path_sd = path_optimizer_.startUp(this);
+  auto path_s = path_sd.first;
+  auto path_d = path_sd.second;
 
-  opt_paths_.push_back(path_optimizer_.keepLane(this));
-  opt_paths_.push_back(path_optimizer_.changeLaneLeft(this));
-  opt_paths_.push_back(path_optimizer_.changeLaneRight(this));
-
-  auto new_path_s = opt_paths_[0].first;
-  auto new_path_d = opt_paths_[0].second;
-
-  path_s_.insert(path_s_.end(), new_path_s.begin(), new_path_s.end());
-  path_d_.insert(path_d_.end(), new_path_d.begin(), new_path_d.end());
+  extendPath(path_s, path_d);
 }
 
-bool Car::validatePath() const {
-  return true;
+void Car::keepLane() {
+  truncatePath(5);
+
+  auto path_sd = path_optimizer_.keepLane(this);
+  auto path_s = path_sd.first;
+  auto path_d = path_sd.second;
+
+  //  std::cout << "Old path: \n";
+  //  for (auto i=0; i<path_s_.size(); ++i)
+  //    std::cout << path_s_[i] << ", " << path_d_[i] << "\n";
+  //  std::cout << std::endl;
+
+  extendPath(path_s, path_d);
+
+  //  std::cout << "New path: \n";
+  //  for (auto i=0; i<path_s_.size(); ++i)
+  //    std::cout << path_s_[i] << ", " << path_d_[i] << "\n";
+  //  std::cout << std::endl;
 }
 
 Car::trajectory Car::getPathXY() const {
@@ -370,3 +418,6 @@ uint16_t Car::getCurrentLaneId() const { return map_.getLaneId(pd_); }
 double Car::getCurrentLaneCenter() const { return map_.getLaneCenter(map_.getLaneId(pd_)); }
 
 uint16_t Car::getTargetLaneId() const { return target_lane_id_; }
+
+double Car::getCurrentSpeed() const { return vs_; }
+double Car::getMaxSpeed() const { return max_speed_; }

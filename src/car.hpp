@@ -55,6 +55,11 @@ public:
   computeJmtPath(polynomial_coeff coeff_s, polynomial_coeff coeff_d, double delta_t, double time_step);
 
   /**
+   * Get the optimized path when starting up.
+   */
+  PathOptimizer::trajectory startUp(Car* car);
+
+  /**
    * Get the optimized path when keeping lane.
    */
   trajectory keepLane(Car* car);
@@ -72,7 +77,6 @@ public:
 
 
 class CarState;
-
 
 class Car {
 
@@ -128,7 +132,7 @@ private:
   double max_jerk_ = 10; // maximum jerk (m/s^3)
 
 public:
-  explicit Car(const Map& map);
+  explicit Car(const Map& map, double time_step=0.02);
 
   ~Car();
 
@@ -169,14 +173,12 @@ public:
   void truncatePath(unsigned int n_keep);
 
   /**
-   * Plan and update the current path.
+   * Extend the current path.
    */
-  void planPath();
+  void extendPath(std::vector<double> path_s, std::vector<double> path_d);
 
-  /**
-   * Check whether the current path is still valid.
-   */
-  bool validatePath() const;
+  void startUp();
+  void keepLane();
 
   trajectory getPathXY() const;
 
@@ -193,6 +195,8 @@ public:
 
   uint16_t getTargetLaneId() const;
 
+  double getCurrentSpeed() const;
+  double getMaxSpeed() const;
 };
 
 

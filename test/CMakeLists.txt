@@ -5,6 +5,7 @@ set(TEST run_test)
 add_executable(${TEST}
     main.cpp
     test_car.cpp
+    test_path_optimizer.cpp
     test_trajectory.cpp
     test_jmt.cpp
     test_map.cpp
