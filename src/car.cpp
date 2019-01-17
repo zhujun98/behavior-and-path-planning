@@ -208,38 +208,38 @@ CarState* CarStateFactory::createState(States name) {
       return new CarStateChangeLaneLeft;
     case States::KL:
       return new CarStateKeepLane;
-    case States::ON:
-      return new CarStateOn;
+    case States::ST:
+      return new CarStateStartUp;
     default:
       throw std::invalid_argument("Unknown state!");
   }
 }
 
 /*
- * CarStateReady class
+ * CarStateStartUp class
  */
 
-CarStateOn::CarStateOn() = default;
+CarStateStartUp::CarStateStartUp() = default;
 
-CarStateOn::~CarStateOn() = default;
+CarStateStartUp::~CarStateStartUp() = default;
 
-CarState* CarStateOn::getNextState(Car &car) {
+CarState* CarStateStartUp::getNextState(Car &car) {
   if (car.getCurrentSpeed() > 10)
     return CarStateFactory::createState(States::KL);
   else return nullptr;
 }
 
-void CarStateOn::onEnter(Car& car) {
+void CarStateStartUp::onEnter(Car& car) {
   std::cout << "Enter state: *** ON ***" << std::endl;
 }
 
-void CarStateOn::onUpdate(Car &car) {
+void CarStateStartUp::onUpdate(Car &car) {
   if (tick_ == 0) car.startUp();
   ++tick_;
   if (tick_ == 5) tick_ = 0;
 }
 
-void CarStateOn::onExit(Car& car) {
+void CarStateStartUp::onExit(Car& car) {
   std::cout << "Exit state: *** ON ***" << std::endl;
 }
 
@@ -324,7 +324,7 @@ Car::Car(const Map& map, double time_step) :
   is_initialized_(false),
   time_step_(time_step),
   map_(map),
-  state_(CarStateFactory::createState(States::ON))
+  state_(CarStateFactory::createState(States::ST))
 {
   state_->onEnter(*this);
 }

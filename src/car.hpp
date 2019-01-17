@@ -87,9 +87,9 @@ public:
 // CLR: change to the right lane
 // CLL: change to the left lane
 // KL: keep lane
-// ON: normal state, ready to go to the next state
+// ST: start up
 //
-enum class States {CLR, CLL, KL, ON};
+enum class States {CLR, CLL, KL, ST};
 
 class CarState {
 
@@ -131,13 +131,13 @@ public:
 };
 
 
-class CarStateOn : public CarState {
+class CarStateStartUp : public CarState {
 
 public:
 
-  CarStateOn();
+  CarStateStartUp();
 
-  ~CarStateOn() override;
+  ~CarStateStartUp() override;
 
   CarState* getNextState(Car& car) override;
 
@@ -215,7 +215,7 @@ public:
 private:
   friend class PathOptimizer;
   friend class CarStateKeepLane;
-  friend class CarStateOn;
+  friend class CarStateStartUp;
 
   bool is_initialized_;
 
