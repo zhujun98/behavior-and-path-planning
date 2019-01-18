@@ -341,7 +341,7 @@ public:
   }
 
   void onEnter(Car& car) override {
-    std::cout << "Enter state: *** CHANGE TO THE LEFT LANE *** from Lane-" << car.getCurrentLaneId()
+    std::cout << "Enter state: *** CHANGE LANE *** from Lane-" << car.getCurrentLaneId()
               << " to Lane-" << car.getTargetLaneId() << std::endl;
   }
 
@@ -350,7 +350,7 @@ public:
   }
 
   void onExit(Car& car) override {
-    std::cout << "Exit state: *** CHANGE TO THE LEFT LANE *** " << std::endl;
+    std::cout << "Exit state: *** CHANGE LANE *** " << std::endl;
   }
 };
 
@@ -555,7 +555,11 @@ void Car::keepLane() {
 
 void Car::changeLane() {
   truncatePath(5);
-  extendPath(PathOptimizer::changeLane(this));
+
+  auto new_path = PathOptimizer::changeLane(this);
+  if (checkCollision(new_path))
+    extendPath(PathOptimizer::keepLane(this));
+  else extendPath(std::move(new_path));
 }
 
 trajectory Car::getPathXY() const {
@@ -590,19 +594,21 @@ void Car::info() const {
 }
 
 uint16_t Car::getOptimizedLaneId() const {
+  double prediction_time = 5;
+
+  // This function does not take care of whether it is feasible to change
+  // lane in order to reach the optimized lane.
   uint16_t n_lanes = map_.n_lanes;
   uint16_t current_id = getCurrentLaneId();
-  double safe_dist_to_front = 10;
-  double safe_dist_to_rear = 10;
   double opt_dist; // distance to the front car
 
   if (closest_front_cars_.find(current_id) == closest_front_cars_.end())
     // If there is no car in the current lane, we stay.
     return current_id;
   else {
-    opt_dist = closest_front_cars_.at(current_id).first[0];
-    // If the space to the front vehicle is too small, we stay.
-    if (opt_dist - ps_ < safe_dist_to_front) return current_id;
+    auto dyn = closest_front_cars_.at(current_id);
+    // assume the car moves at a constant speed
+    opt_dist = dyn.first[0] + prediction_time * dyn.first[1];
   }
 
   uint16_t opt_id = current_id;
@@ -615,7 +621,8 @@ uint16_t Car::getOptimizedLaneId() const {
       opt_id = i;
       break;
     } else {
-      auto dist = closest_front_cars_.at(i).first[0];
+      auto dyn = closest_front_cars_.at(i);
+      auto dist = dyn.first[0] + prediction_time * dyn.first[1];
       if (dist > opt_dist) {
         opt_id = i;
         opt_dist = dist;
@@ -623,19 +630,48 @@ uint16_t Car::getOptimizedLaneId() const {
     }
   }
 
+  std::cout << "Optimized land ID is: " << opt_id << std::endl;
+
   // only allow to change to the next lane
   if (opt_id - current_id > 1) opt_id = current_id + 1u;
   if (current_id - opt_id > 1) opt_id = current_id - 1u;
+  return opt_id;
+}
 
-  if (opt_id != current_id && closest_rear_cars_.find(opt_id) != closest_rear_cars_.end()) {
-    auto rear_car = closest_rear_cars_.at(opt_id);
-    if (ps_ - rear_car.first[0] < safe_dist_to_rear && vs_ < rear_car.first[1])
-      // If it is slower than the rear car in the next lane and the distance is too small,
-      // we do not consider to change lane.
-      return current_id;
+bool Car::checkCollision(trajectory path) const {
+  for (auto it=closest_front_cars_.begin(); it!=closest_front_cars_.end(); ++it) {
+    double ps = it->second.first[0];
+    double vs = it->second.first[1];
+    double pd = it->second.second[0];
+    double vd = it->second.second[1];
+
+    auto path_s = path.first;
+    auto path_d = path.second;
+    for (uint16_t i=0; i<path_s.size(); ++i) {
+      ps += vs * time_step_;
+      pd += vd * time_step_;
+      // We assume if distance is less than 5 m, it has a high probability to collide.
+      if (distance(path_s[i], path_d[i], ps, pd) < 5) return true;
+    }
   }
 
-  return opt_id;
+  for (auto it=closest_rear_cars_.begin(); it!=closest_rear_cars_.end(); ++it) {
+    double ps = it->second.first[0];
+    double vs = it->second.first[1];
+    double pd = it->second.second[0];
+    double vd = it->second.second[1];
+
+    auto path_s = path.first;
+    auto path_d = path.second;
+    for (uint16_t i=0; i<path_s.size(); ++i) {
+      ps += vs * time_step_;
+      pd += vd * time_step_;
+      // We assume if distance is less than 5 m, it has a high probability to collide.
+      if (distance(path_s[i], path_d[i], ps, pd) < 5) return true;
+    }
+  }
+
+  return false;
 }
 
 std::map<uint16_t, dynamics> Car::getClosestFrontVehicles() const { return closest_front_cars_; }

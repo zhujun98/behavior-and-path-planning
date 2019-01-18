@@ -72,8 +72,6 @@ class Car {
 
   Map map_;
 
-  std::vector<trajectory> opt_paths_;
-
   std::unique_ptr<State> state_; // vehicle state
 
   // key: lane ID, value: vehicle dynamics
@@ -128,7 +126,12 @@ class Car {
   /**
    * Update path when changing lane.
    */
-   void changeLane();
+  void changeLane();
+
+  /**
+   * Check whether the given path has collision with the path of surrounding cars.
+   */
+  bool checkCollision(trajectory path) const;
 
   /**
    * construct a new state
