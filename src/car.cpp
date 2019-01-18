@@ -574,9 +574,35 @@ void Car::info() const {
 }
 
 uint16_t Car::getOptimizedLaneId() const {
-  if (getCurrentLaneId() == 2)
-    return 1;
-  else return 2;
+  uint16_t n_lanes = map_.n_lanes;
+  uint16_t current_id = getCurrentLaneId();
+  double opt_dist; // distance to the front car
+
+  if (closest_front_cars_.find(current_id) == closest_front_cars_.end())
+    // If there is no car in the current lane, we stay.
+    return current_id;
+  else opt_dist = closest_front_cars_.at(current_id).first[0];
+
+  uint16_t opt_id = current_id;
+  // from the left lane to the right lane
+  for (uint16_t i=1; i<=n_lanes; ++i) {
+    if (i == current_id) continue;
+    if (closest_front_cars_.find(i) == closest_front_cars_.end()) {
+      // prefer to overtake via the left lane
+      return i;
+    } else {
+      auto dist = closest_front_cars_.at(i).first[0];
+      if (dist > opt_dist) {
+        opt_id = i;
+        opt_dist = dist;
+      }
+    }
+  }
+
+  // only allow to change to the next lane
+  if (opt_id - current_id > 1) return current_id + 1u;
+  if (current_id - opt_id > 1) return current_id - 1u;
+  return opt_id;
 }
 
 std::map<uint16_t, dynamics> Car::getClosestFrontVehicles() const { return closest_front_cars_; }
