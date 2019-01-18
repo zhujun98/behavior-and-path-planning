@@ -232,131 +232,148 @@ trajectory PathOptimizer::changeLane(Car* car) {
 }
 
 /*
- * CarState class
+ * Car
  */
 
-CarState::CarState() = default;
+class Car::State {
 
-CarState::~CarState() = default;
+protected:
+  uint16_t tick_ = 0;
+
+  State() = default;
+
+public:
+
+  virtual ~State() = default;
+
+  // Check the validity of the transition states one-by-one. If valid.
+  // return the next state.
+  virtual State* getNextState(Car& car) = 0;
+
+  // action when entering a state
+  virtual void onEnter(Car& car) = 0;
+
+  // action when updating a state
+  virtual void onUpdate(Car& car) = 0;
+
+  // action when exiting a state
+  virtual void onExit(Car& car) = 0;
+
+};
 
 
-/*
- * CarStateFactory class
- */
+class Car::StateStartUp : public Car::State {
 
-CarStateFactory::CarStateFactory() = default;
+public:
 
-CarStateFactory::~CarStateFactory() = default;
+  StateStartUp() = default;
 
-CarState* CarStateFactory::createState(States name) {
+  ~StateStartUp() override = default;
+
+  State* getNextState(Car &car) override {
+    if (car.getCurrentSpeed() > 10)
+      return createState(States::KL);
+    else return nullptr;
+  }
+
+  void onEnter(Car& car) override {
+    std::cout << "Enter state: *** ON ***" << std::endl;
+  }
+
+  void onUpdate(Car &car) override {
+    if (tick_ == 0) car.startUp();
+    ++tick_;
+    if (tick_ == 5) tick_ = 0;
+  }
+
+  void onExit(Car& car) override {
+    std::cout << "Exit state: *** ON ***" << std::endl;
+  }
+};
+
+
+class Car::StateKeepLane : public Car::State {
+
+public:
+
+  StateKeepLane() = default;
+
+  ~StateKeepLane() override = default;
+
+  State*getNextState(Car &car) override {
+    auto opt_id = car.getOptimizedLaneId();
+    if (opt_id != car.getCurrentLaneId()) {
+      car.setTargetLaneId(opt_id);
+      return createState(States::CL);
+    }
+
+    return nullptr;
+  }
+
+  void onEnter(Car& car) override {
+    std::cout << "Enter state: *** KEEP LANE ***" << std::endl;
+  }
+
+  void onUpdate(Car &car) override {
+    if (tick_ == 0) car.keepLane();
+    ++tick_;
+    if (tick_ == 5) tick_ = 0;
+  }
+
+  void onExit(Car& car) override {
+    std::cout << "Exit state: *** KEEP LANE ***" << std::endl;
+  }
+};
+
+
+class Car::StateChangeLane : public Car::State {
+
+public:
+
+  StateChangeLane() = default;
+
+  ~StateChangeLane() override = default;
+
+  State* getNextState(Car &car) override {
+    if (car.getCurrentLaneId() == car.getTargetLaneId())
+      return createState(States::KL);
+    return nullptr;
+  }
+
+  void onEnter(Car& car) override {
+    std::cout << "Enter state: *** CHANGE TO THE LEFT LANE *** from Lane-" << car.getCurrentLaneId()
+              << " to Lane-" << car.getTargetLaneId() << std::endl;
+  }
+
+  void onUpdate(Car& car) override {
+    car.changeLane();
+  }
+
+  void onExit(Car& car) override {
+    std::cout << "Exit state: *** CHANGE TO THE LEFT LANE *** " << std::endl;
+  }
+};
+
+
+Car::State* Car::createState(States name) {
   switch(name) {
     case States::CL:
-      return new CarStateChangeLane;
+      return new Car::StateChangeLane;
     case States::KL:
-      return new CarStateKeepLane;
+      return new Car::StateKeepLane;
     case States::ST:
-      return new CarStateStartUp;
+      return new Car::StateStartUp;
     default:
       throw std::invalid_argument("Unknown state!");
   }
 }
 
-/*
- * CarStateStartUp class
- */
-
-CarStateStartUp::CarStateStartUp() = default;
-
-CarStateStartUp::~CarStateStartUp() = default;
-
-CarState* CarStateStartUp::getNextState(Car &car) {
-  if (car.getCurrentSpeed() > 10)
-    return CarStateFactory::createState(States::KL);
-  else return nullptr;
-}
-
-void CarStateStartUp::onEnter(Car& car) {
-  std::cout << "Enter state: *** ON ***" << std::endl;
-}
-
-void CarStateStartUp::onUpdate(Car &car) {
-  if (tick_ == 0) car.startUp();
-  ++tick_;
-  if (tick_ == 5) tick_ = 0;
-}
-
-void CarStateStartUp::onExit(Car& car) {
-  std::cout << "Exit state: *** ON ***" << std::endl;
-}
-
-/*
- * CarStateFollowTraffic class
- */
-
-CarStateKeepLane::CarStateKeepLane() = default;
-
-CarStateKeepLane::~CarStateKeepLane() = default;
-
-CarState* CarStateKeepLane::getNextState(Car &car) {
-  auto opt_id = car.getOptimizedLaneId();
-  if (opt_id != car.getCurrentLaneId()) {
-    car.setTargetLaneId(opt_id);
-    return CarStateFactory::createState(States::CL);
-  }
-
-  return nullptr;
-}
-
-void CarStateKeepLane::onEnter(Car& car) {
-  std::cout << "Enter state: *** KEEP LANE ***" << std::endl;
-}
-
-void CarStateKeepLane::onUpdate(Car &car) {
-  if (tick_ == 0) car.keepLane();
-  ++tick_;
-  if (tick_ == 5) tick_ = 0;
-}
-
-void CarStateKeepLane::onExit(Car& car) {
-  std::cout << "Exit state: *** KEEP LANE ***" << std::endl;
-}
-
-/*
- * CarStateChangeLane class
- */
-
-CarStateChangeLane::CarStateChangeLane() = default;
-
-CarStateChangeLane::~CarStateChangeLane() = default;
-
-CarState* CarStateChangeLane::getNextState(Car &car) {
-  if (car.getCurrentLaneId() == car.getTargetLaneId())
-    return CarStateFactory::createState(States::KL);
-  return nullptr;
-}
-
-void CarStateChangeLane::onEnter(Car& car) {
-  std::cout << "Enter state: *** CHANGE TO THE LEFT LANE *** from Lane-" << car.getCurrentLaneId()
-            << " to Lane-" << car.getTargetLaneId() << std::endl;
-}
-
-void CarStateChangeLane::onUpdate(Car& car) {
-  car.changeLane();
-}
-
-void CarStateChangeLane::onExit(Car& car) {
-  std::cout << "Exit state: *** CHANGE TO THE LEFT LANE *** " << std::endl;
-}
-
-/*
- * Car
- */
 
 Car::Car(const Map& map, double time_step) :
   is_initialized_(false),
   time_step_(time_step),
   map_(map),
-  state_(CarStateFactory::createState(States::ST))
+  state_(createState(States::ST))
 {
   state_->onEnter(*this);
 }
@@ -372,7 +389,7 @@ void Car::update(const std::vector<double>& localization,
 //  info();
 
   state_->onUpdate(*this);
-  std::unique_ptr<CarState> state(state_->getNextState(*this));
+  std::unique_ptr<State> state(state_->getNextState(*this));
   if (state != nullptr) {
     state_->onExit(*this);
     state_ = std::move(state);

@@ -33,165 +33,22 @@ using trajectory = std::pair<std::vector<double>, std::vector<double>>;
 using polynomial_coeff = std::vector<double>;
 using dynamics = std::pair<std::vector<double>, std::vector<double>>;
 
-class Car;
-
-/*
- * PathOptimizer
- */
-
-class PathOptimizer {
-
-  PathOptimizer();
-
-public:
-
-  ~PathOptimizer();
-
-  /**
-   * Validate a JMT path.
-   */
-  static bool validatePath(const polynomial_coeff& coeff_s, const polynomial_coeff& coeff_d,
-                           double delta_t, double time_step,
-                           double speed_limit, double acceleration_limit, double jerk_limit);
-
-  /**
-   * Compute the trajectory in the Frenet coordinate system.
-   */
-  static trajectory
-  computeJmtPath(const polynomial_coeff& coeff_s, const polynomial_coeff& coeff_d,
-                 double delta_t, double time_step);
-
-  /**
-   * Get the optimized path when starting up.
-   */
-  static trajectory startUp(Car* car);
-
-  /**
-   * Get the optimized path when keeping lane.
-   */
-  static trajectory keepLane(Car* car);
-
-  /**
-   * Get the optimized path when changing lane.
-   */
-  static trajectory changeLane(Car* car);
-};
-
-
-/*
- * CarStates
- */
-
-//
-// CL: change lane (to left or right)
-// KL: keep lane
-// ST: start up
-//
-enum class States {CL, KL, ST};
-
-class CarState {
-
-protected:
-  uint16_t tick_ = 0;
-
-  CarState();
-
-public:
-
-  virtual ~CarState();
-
-  // Check the validity of the transition states one-by-one. If valid.
-  // return the next state.
-  virtual CarState* getNextState(Car& car) = 0;
-
-  // action when entering a state
-  virtual void onEnter(Car& car) = 0;
-
-  // action when updating a state
-  virtual void onUpdate(Car& car) = 0;
-
-  // action when exiting a state
-  virtual void onExit(Car& car) = 0;
-
-};
-
-
-class CarStateFactory {
-
-public:
-
-  CarStateFactory();
-
-  ~CarStateFactory();
-
-  // construct a new state
-  static CarState* createState(States name);
-};
-
-
-class CarStateStartUp : public CarState {
-
-public:
-
-  CarStateStartUp();
-
-  ~CarStateStartUp() override;
-
-  CarState* getNextState(Car& car) override;
-
-  void onEnter(Car& car) override;
-
-  void onUpdate(Car& car) override;
-
-  void onExit(Car& car) override;
-};
-
-
-class CarStateKeepLane : public CarState {
-
-public:
-
-  CarStateKeepLane();
-
-  ~CarStateKeepLane() override;
-
-  CarState* getNextState(Car& car) override;
-
-  void onEnter(Car& car) override;
-
-  void onUpdate(Car& car) override;
-
-  void onExit(Car& car) override;
-};
-
-
-class CarStateChangeLane : public CarState {
-
-public:
-
-  CarStateChangeLane();
-
-  ~CarStateChangeLane() override;
-
-  CarState* getNextState(Car& car) override;
-
-  void onEnter(Car& car) override;
-
-  void onUpdate(Car& car) override;
-
-  void onExit(Car& car) override;
-};
-
-/*
- * Car
- */
 
 class Car {
 
+  //
+  // CL: change lane (to left or right)
+  // KL: keep lane
+  // ST: start up
+  //
+  enum class States {CL, KL, ST};
+
+  class State;
+  class StateStartUp;
+  class StateKeepLane;
+  class StateChangeLane;
+
   friend class PathOptimizer;
-  friend class CarStateStartUp;
-  friend class CarStateKeepLane;
-  friend class CarStateChangeLane;
 
   bool is_initialized_;
 
@@ -217,7 +74,7 @@ class Car {
 
   std::vector<trajectory> opt_paths_;
 
-  std::unique_ptr<CarState> state_; // vehicle state
+  std::unique_ptr<State> state_; // vehicle state
 
   // key: lane ID, value: vehicle dynamics
   std::map<uint16_t, dynamics> closest_front_cars_;
@@ -273,6 +130,11 @@ class Car {
    */
    void changeLane();
 
+  /**
+   * construct a new state
+   */
+  static State* createState(States name);
+
 public:
   explicit Car(const Map& map, double time_step=0.02);
 
@@ -323,6 +185,48 @@ public:
 
   double getCurrentSpeed() const;
   double getMaxSpeed() const;
+};
+
+/*
+ * PathOptimizer
+ */
+
+class PathOptimizer {
+
+  PathOptimizer();
+
+public:
+
+  ~PathOptimizer();
+
+  /**
+   * Validate a JMT path.
+   */
+  static bool validatePath(const polynomial_coeff& coeff_s, const polynomial_coeff& coeff_d,
+                           double delta_t, double time_step,
+                           double speed_limit, double acceleration_limit, double jerk_limit);
+
+  /**
+   * Compute the trajectory in the Frenet coordinate system.
+   */
+  static trajectory
+  computeJmtPath(const polynomial_coeff& coeff_s, const polynomial_coeff& coeff_d,
+                 double delta_t, double time_step);
+
+  /**
+   * Get the optimized path when starting up.
+   */
+  static trajectory startUp(Car* car);
+
+  /**
+   * Get the optimized path when keeping lane.
+   */
+  static trajectory keepLane(Car* car);
+
+  /**
+   * Get the optimized path when changing lane.
+   */
+  static trajectory changeLane(Car* car);
 };
 
 
