@@ -260,6 +260,12 @@ private:
   double max_jerk_ = 10; // maximum jerk (m/s^3)
 
   /**
+   * Estimate the dynamics of car at the path end.
+   * @return: ((ps, vs, as), (pd, vd, ad))
+   */
+  dynamics estimateFinalDynamics() const;
+
+  /**
    * Update the unprocessed waypoints.
    */
   void updateUnprocessedPath();
@@ -308,12 +314,6 @@ public:
    * Update dynamics of the closest vehicles in each lane.
    */
   void updateClosestVehicles(const std::vector<std::vector<double>>& sensor_fusion);
-
-  /**
-   * Estimate the dynamics of car at the path end.
-   * @return: ((ps, vs, as), (pd, vd, ad))
-   */
-  dynamics estimateFinalDynamics() const;
 
   /**
    * Extend the current path.
