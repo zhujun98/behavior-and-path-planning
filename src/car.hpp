@@ -28,6 +28,10 @@
 #include "map.hpp"
 #include "utilities.hpp"
 
+using trajectory = std::pair<std::vector<double>, std::vector<double>>;
+using polynomial_coeff = std::vector<double>;
+using dynamics = std::pair<std::vector<double>, std::vector<double>>;
+
 class Car;
 
 /*
@@ -39,28 +43,27 @@ class PathOptimizer {
   PathOptimizer();
 
 public:
-  using trajectory = std::pair<std::vector<double>, std::vector<double>>;
-  using polynomial_coeff = std::vector<double>;
 
   ~PathOptimizer();
 
   /**
    * Validate a JMT path.
    */
-  static bool validatePath(polynomial_coeff coeff_s, polynomial_coeff coeff_d,
+  static bool validatePath(const polynomial_coeff& coeff_s, const polynomial_coeff& coeff_d,
                            double delta_t, double time_step,
                            double speed_limit, double acceleration_limit, double jerk_limit);
 
   /**
    * Compute the trajectory in the Frenet coordinate system.
    */
-  static PathOptimizer::trajectory
-  computeJmtPath(polynomial_coeff coeff_s, polynomial_coeff coeff_d, double delta_t, double time_step);
+  static trajectory
+  computeJmtPath(const polynomial_coeff& coeff_s, const polynomial_coeff& coeff_d,
+                 double delta_t, double time_step);
 
   /**
    * Get the optimized path when starting up.
    */
-  static PathOptimizer::trajectory startUp(Car* car);
+  static trajectory startUp(Car* car);
 
   /**
    * Get the optimized path when keeping lane.
@@ -68,14 +71,9 @@ public:
   static trajectory keepLane(Car* car);
 
   /**
-   * Get the optimized path when changing to the left lane.
+   * Get the optimized path when changing lane.
    */
-  trajectory changeLaneLeft(Car* car);
-
-  /**
-   * Get the optimized path when changing to the right lane.
-   */
-  trajectory changeLaneRight(Car* car);
+  static trajectory changeLane(Car* car);
 };
 
 
@@ -84,12 +82,11 @@ public:
  */
 
 //
-// CLR: change to the right lane
-// CLL: change to the left lane
+// CL: change lane (to left or right)
 // KL: keep lane
 // ST: start up
 //
-enum class States {CLR, CLL, KL, ST};
+enum class States {CL, KL, ST};
 
 class CarState {
 
@@ -167,13 +164,13 @@ public:
 };
 
 
-class CarStateChangeLaneLeft : public CarState {
+class CarStateChangeLane : public CarState {
 
 public:
 
-  CarStateChangeLaneLeft();
+  CarStateChangeLane();
 
-  ~CarStateChangeLaneLeft() override;
+  ~CarStateChangeLane() override;
 
   CarState* getNextState(Car& car) override;
 
@@ -182,24 +179,6 @@ public:
   void onUpdate(Car& car) override;
 
   void onExit(Car& car) override;
-};
-
-
-class CarStateChangeLaneRight : public CarState {
-public:
-
-  CarStateChangeLaneRight();
-
-  ~CarStateChangeLaneRight() override;
-
-  CarState* getNextState(Car& car) override;
-
-  void onEnter(Car& car) override;
-
-  void onUpdate(Car& car) override;
-
-  void onExit(Car& car) override;
-
 };
 
 /*
@@ -208,14 +187,10 @@ public:
 
 class Car {
 
-public:
-  using trajectory = std::pair<std::vector<double>, std::vector<double>>;
-  using dynamics = std::pair<std::vector<double>, std::vector<double>>;
-
-private:
   friend class PathOptimizer;
-  friend class CarStateKeepLane;
   friend class CarStateStartUp;
+  friend class CarStateKeepLane;
+  friend class CarStateChangeLane;
 
   bool is_initialized_;
 
@@ -247,7 +222,7 @@ private:
   std::map<uint16_t, dynamics> closest_front_cars_;
   std::map<uint16_t, dynamics> closest_rear_cars_;
 
-  uint8_t target_lane_id_; // target lane ID
+  uint16_t target_lane_id_; // target lane ID
 
   std::vector<double> path_s_;
   std::vector<double> path_d_;
@@ -292,6 +267,11 @@ private:
    */
   void keepLane();
 
+  /**
+   * Update path when changing lane.
+   */
+   void changeLane();
+
 public:
   explicit Car(const Map& map, double time_step=0.02);
 
@@ -318,12 +298,17 @@ public:
   /**
    * Extend the current path.
    */
-  void extendPath(std::vector<double> path_s, std::vector<double> path_d);
+  void extendPath(trajectory&& traj);
 
   /**
    * Return the corresponding Cartisian path of the current Frenet path.
    */
   trajectory getPathXY() const;
+
+  /**
+   * Analyze and return the optimized lane ID.
+   */
+  uint16_t getOptimizedLaneId() const;
 
   std::map<uint16_t, dynamics> getClosestFrontVehicles() const;
   std::map<uint16_t, dynamics> getClosestRearVehicles() const;
@@ -332,6 +317,8 @@ public:
   double getCurrentLaneCenter() const;
 
   uint16_t getTargetLaneId() const;
+  void setTargetLaneId(uint16_t id);
+  double getTargetLaneCenter() const;
 
   double getCurrentSpeed() const;
   double getMaxSpeed() const;

@@ -5,7 +5,8 @@
 #include "spline/spline.h"
 
 
-std::size_t closestWaypoint(double x, double y, const trajectory& traj_x, const trajectory& traj_y) {
+std::size_t closestWaypoint(double x, double y, 
+                            const std::vector<double>& traj_x, const std::vector<double>& traj_y) {
   std::size_t closest_wpt = 0;
   double closest = std::numeric_limits<double>::max();
   for (std::size_t i=0; i < traj_x.size(); ++i) {
@@ -20,7 +21,8 @@ std::size_t closestWaypoint(double x, double y, const trajectory& traj_x, const 
 }
 
 
-std::size_t nextWaypoint(double x, double y, double yaw, const trajectory& traj_x, const trajectory& traj_y) {
+std::size_t nextWaypoint(double x, double y, double yaw, 
+                         const std::vector<double>& traj_x, const std::vector<double>& traj_y) {
   std::size_t closest_wpt = closestWaypoint(x, y, traj_x, traj_y);
 
   double closest_yaw = atan2(traj_y[closest_wpt] - y, traj_x[closest_wpt] - x);
@@ -37,7 +39,7 @@ std::size_t nextWaypoint(double x, double y, double yaw, const trajectory& traj_
 
 
 position cartesianToFrenet(double x, double y, double yaw, double max_s,
-                           const trajectory& traj_x, const trajectory& traj_y) {
+                           const std::vector<double>& traj_x, const std::vector<double>& traj_y) {
 
   std::size_t next_wpt = nextWaypoint(x, y, yaw, traj_x, traj_y);
   std::size_t prev_wpt;
@@ -78,15 +80,15 @@ position cartesianToFrenet(double x, double y, double yaw, double max_s,
 }
 
 
-position frenetToCartesian(double s, double d, const trajectory& traj_s, double max_s,
-                           const trajectory& traj_x, const trajectory& traj_y) {
+position frenetToCartesian(double s, double d, const std::vector<double>& traj_s, double max_s,
+                           const std::vector<double>& traj_x, const std::vector<double>& traj_y) {
   while (s > max_s) s -= max_s;
   while (s < 0) s += max_s;
   long next_wpt = std::distance(traj_s.begin(), std::lower_bound(traj_s.begin(), traj_s.end(), s));
 
-  trajectory local_traj_s;
-  trajectory local_traj_x;
-  trajectory local_traj_y;
+  std::vector<double> local_traj_s;
+  std::vector<double> local_traj_x;
+  std::vector<double> local_traj_y;
   // apply interpolation around the next waypoint
   for (int i = -5; i < 5; ++i ) {
     long wpt = next_wpt + i;

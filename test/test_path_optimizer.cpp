@@ -54,7 +54,7 @@ TEST_F(TestPathOptimizer, keepLane) {
     path_s.push_back(ps0 + i * time_step_ * 10);
     path_d.push_back(pd0);
   }
-  car_.extendPath(path_s, path_d);
+  car_.extendPath({path_s, path_d});
 
   // keepLane only estimate the dynamics from the path
   path_sd = PathOptimizer::keepLane(&car_);
@@ -75,7 +75,7 @@ TEST_F(TestPathOptimizer, keepLane) {
     path_s.push_back(ps0 + i * time_step_ * 10);
     path_d.push_back(pd0);
   }
-  car_.extendPath(path_s, path_d);
+  car_.extendPath({path_s, path_d});
 
   // keepLane only estimate the dynamics from the path
   path_sd = PathOptimizer::keepLane(&car_);

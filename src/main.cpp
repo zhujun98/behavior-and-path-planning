@@ -61,7 +61,7 @@ int main() {
 
           car.update(localization, sensor_fusion);
 
-          Car::trajectory path_xy = car.getPathXY();
+          trajectory path_xy = car.getPathXY();
           // define the path that the car will visit sequentially every .02 seconds
           msgJson["next_x"] = path_xy.first;
           msgJson["next_y"] = path_xy.second;

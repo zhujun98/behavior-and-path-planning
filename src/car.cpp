@@ -11,7 +11,7 @@ PathOptimizer::PathOptimizer() = default;
 
 PathOptimizer::~PathOptimizer() = default;
 
-bool PathOptimizer::validatePath(polynomial_coeff coeff_s, polynomial_coeff coeff_d,
+bool PathOptimizer::validatePath(const polynomial_coeff& coeff_s, const polynomial_coeff& coeff_d,
                                  double delta_t, double time_step,
                                  double speed_limit, double acceleration_limit, double jerk_limit) {
   double v_sqr_limit = speed_limit * speed_limit;
@@ -54,8 +54,9 @@ bool PathOptimizer::validatePath(polynomial_coeff coeff_s, polynomial_coeff coef
   return true;
 }
 
-PathOptimizer::trajectory
-PathOptimizer::computeJmtPath(polynomial_coeff coeff_s, polynomial_coeff coeff_d, double delta_t, double time_step) {
+trajectory
+PathOptimizer::computeJmtPath(const polynomial_coeff& coeff_s, const polynomial_coeff& coeff_d,
+                              double delta_t, double time_step) {
   double t = 0;
   std::vector<double> path_s;
   std::vector<double> path_d;
@@ -70,7 +71,7 @@ PathOptimizer::computeJmtPath(polynomial_coeff coeff_s, polynomial_coeff coeff_d
   return {path_s, path_d};
 }
 
-PathOptimizer::trajectory  PathOptimizer::startUp(Car* car) {
+trajectory  PathOptimizer::startUp(Car* car) {
   auto dynamics0 = car->estimateFinalDynamics();
   std::vector<double> dynamics_s0 = dynamics0.first;
   std::vector<double> dynamics_d0 = dynamics0.second;
@@ -108,7 +109,7 @@ PathOptimizer::trajectory  PathOptimizer::startUp(Car* car) {
   return {path_s, path_d};
 }
 
-PathOptimizer::trajectory PathOptimizer::keepLane(Car* car) {
+trajectory PathOptimizer::keepLane(Car* car) {
 
   double time_step = car->time_step_;
 
@@ -169,18 +170,65 @@ PathOptimizer::trajectory PathOptimizer::keepLane(Car* car) {
   return computeJmtPath(coeff_s, coeff_d, delta_t, time_step);
 }
 
-PathOptimizer::trajectory PathOptimizer::changeLaneLeft(Car* car) {
-  std::vector<double> path_s;
-  std::vector<double> path_d;
+trajectory PathOptimizer::changeLane(Car* car) {
 
-  return {path_s, path_d};
-}
+  double time_step = car->time_step_;
 
-PathOptimizer::trajectory PathOptimizer::changeLaneRight(Car* car) {
-  std::vector<double> path_s;
-  std::vector<double> path_d;
+  double safe_distance = 20; // safe distance (in meter) after a front car
+  double max_delta_t = 5; // max time span (in second) for a path
+  double min_dist_no_car = 30; // min delta s of a path if there is no front car
+  double search_time_step = 10 * time_step; // step in search valid time span of a path
+  double search_dist_step = 1.0; // step in searching valid ps
 
-  return {path_s, path_d};
+  auto dynamics0 = car->estimateFinalDynamics();
+  std::vector<double> dynamics_s0 = dynamics0.first;
+  std::vector<double> dynamics_d0 = dynamics0.second;
+
+  double ps_f = dynamics_s0[0] + min_dist_no_car;
+  double vs_f = car->max_speed_;
+  uint16_t lane_id = car->getTargetLaneId();
+  if (car->closest_front_cars_.find(lane_id) != car->closest_front_cars_.end()) {
+    double ps_front_car = car->closest_front_cars_[lane_id].first[0];
+    double vs_front_car = car->closest_front_cars_[lane_id].first[1];
+    if (ps_front_car < dynamics_s0[0] + safe_distance) {
+      ps_f = car->closest_front_cars_[lane_id].first[0];
+      vs_f = std::min(vs_f, vs_front_car * (ps_front_car - dynamics_s0[0]) / safe_distance);
+    }
+  }
+
+  polynomial_coeff coeff_s;
+  polynomial_coeff coeff_d;
+
+  double as_f = 0;
+  double pd_f = car->getTargetLaneCenter();
+  double vd_f = 0;
+  double ad_f = 0;
+
+  double delta_t = 0;
+  bool valid = false;
+
+  while (!valid) {
+    // Increase the distance and reset time if no valid path is found.
+    if (delta_t > max_delta_t) {
+      delta_t = 0;
+      ps_f += search_dist_step;
+    }
+
+    delta_t += search_time_step;
+
+    std::vector<double> dynamics_s1 = {ps_f, vs_f, as_f};
+    std::vector<double> dynamics_d1 = {pd_f, vd_f, ad_f};
+
+    coeff_s = jerkMinimizingTrajectory(dynamics_s0, dynamics_s1, delta_t);
+    coeff_d = jerkMinimizingTrajectory(dynamics_d0, dynamics_d1, delta_t);
+
+    // For a given ps_f, the algorithm guarantees that is a valid path exists, the first
+    // valid path found takes the shortest time.
+    valid = validatePath(coeff_s, coeff_d, delta_t, time_step,
+                         car->max_speed_, car->max_acceleration_, car->max_jerk_);
+  }
+
+  return computeJmtPath(coeff_s, coeff_d, delta_t, time_step);
 }
 
 /*
@@ -202,10 +250,8 @@ CarStateFactory::~CarStateFactory() = default;
 
 CarState* CarStateFactory::createState(States name) {
   switch(name) {
-    case States::CLR:
-      return new CarStateChangeLaneRight;
-    case States::CLL:
-      return new CarStateChangeLaneLeft;
+    case States::CL:
+      return new CarStateChangeLane;
     case States::KL:
       return new CarStateKeepLane;
     case States::ST:
@@ -252,6 +298,12 @@ CarStateKeepLane::CarStateKeepLane() = default;
 CarStateKeepLane::~CarStateKeepLane() = default;
 
 CarState* CarStateKeepLane::getNextState(Car &car) {
+  auto opt_id = car.getOptimizedLaneId();
+  if (opt_id != car.getCurrentLaneId()) {
+    car.setTargetLaneId(opt_id);
+    return CarStateFactory::createState(States::CL);
+  }
+
   return nullptr;
 }
 
@@ -270,50 +322,30 @@ void CarStateKeepLane::onExit(Car& car) {
 }
 
 /*
- * CarStateChangeLaneLeft class
+ * CarStateChangeLane class
  */
 
-CarStateChangeLaneLeft::CarStateChangeLaneLeft() = default;
+CarStateChangeLane::CarStateChangeLane() = default;
 
-CarStateChangeLaneLeft::~CarStateChangeLaneLeft() = default;
+CarStateChangeLane::~CarStateChangeLane() = default;
 
-CarState* CarStateChangeLaneLeft::getNextState(Car &car) {
+CarState* CarStateChangeLane::getNextState(Car &car) {
+  if (car.getCurrentLaneId() == car.getTargetLaneId())
+    return CarStateFactory::createState(States::KL);
   return nullptr;
 }
 
-void CarStateChangeLaneLeft::onEnter(Car& car) {
+void CarStateChangeLane::onEnter(Car& car) {
   std::cout << "Enter state: *** CHANGE TO THE LEFT LANE *** from Lane-" << car.getCurrentLaneId()
             << " to Lane-" << car.getTargetLaneId() << std::endl;
 }
 
-void CarStateChangeLaneRight::onUpdate(Car& car) {}
+void CarStateChangeLane::onUpdate(Car& car) {
+  car.changeLane();
+}
 
-void CarStateChangeLaneLeft::onExit(Car& car) {
+void CarStateChangeLane::onExit(Car& car) {
   std::cout << "Exit state: *** CHANGE TO THE LEFT LANE *** " << std::endl;
-}
-
-/*
- * CarStateChangeLaneRight class
- */
-
-CarStateChangeLaneRight::CarStateChangeLaneRight() = default;
-
-CarStateChangeLaneRight::~CarStateChangeLaneRight() = default;
-
-CarState* CarStateChangeLaneRight::getNextState(Car &car) {
-  return nullptr;
-}
-
-void CarStateChangeLaneRight::onEnter(Car& car) {
-  std::cout << "Enter state: *** CHANGE TO THE RIGHT LANE *** from Lane-" << car.getCurrentLaneId()
-            << " to Lane-" << car.getTargetLaneId() << std::endl;
-}
-
-void CarStateChangeLaneLeft::onUpdate(Car& car) {
-}
-
-void CarStateChangeLaneRight::onExit(Car& carp) {
-  std::cout << "Exit state: *** CHANGE TO THE RIGHT LANE *** " << std::endl;
 }
 
 /*
@@ -337,7 +369,7 @@ void Car::update(const std::vector<double>& localization,
   updateClosestVehicles(sensor_fusion);
   updateUnprocessedPath();
 
-  info();
+//  info();
 
   state_->onUpdate(*this);
   CarState* state = state_->getNextState(*this);
@@ -445,12 +477,25 @@ void Car::truncatePath(unsigned int n_keep) {
   }
 }
 
-void Car::extendPath(std::vector<double> path_s, std::vector<double> path_d) {
+void Car::extendPath(trajectory&& traj) {
+  auto path_s = traj.first;
+  auto path_d = traj.second;
+
+  //  std::cout << "Old path: \n";
+  //  for (auto i=0; i<path_s_.size(); ++i)
+  //    std::cout << path_s_[i] << ", " << path_d_[i] << "\n";
+  //  std::cout << std::endl;
+
   path_s_.insert(path_s_.end(), path_s.begin(), path_s.end());
   path_d_.insert(path_d_.end(), path_d.begin(), path_d.end());
+
+  //  std::cout << "New path: \n";
+  //  for (auto i=0; i<path_s_.size(); ++i)
+  //    std::cout << path_s_[i] << ", " << path_d_[i] << "\n";
+  //  std::cout << std::endl;
 }
 
-Car::dynamics Car::estimateFinalDynamics() const {
+dynamics Car::estimateFinalDynamics() const {
   double ps, vs, as;
   double pd, vd, ad;
 
@@ -484,35 +529,20 @@ Car::dynamics Car::estimateFinalDynamics() const {
 
 void Car::startUp() {
   truncatePath(5);
-
-  auto path_sd = PathOptimizer::startUp(this);
-  auto path_s = path_sd.first;
-  auto path_d = path_sd.second;
-
-  extendPath(path_s, path_d);
+  extendPath(PathOptimizer::startUp(this));
 }
 
 void Car::keepLane() {
   truncatePath(5);
-
-  auto path_sd = PathOptimizer::keepLane(this);
-  auto path_s = path_sd.first;
-  auto path_d = path_sd.second;
-
-  //  std::cout << "Old path: \n";
-  //  for (auto i=0; i<path_s_.size(); ++i)
-  //    std::cout << path_s_[i] << ", " << path_d_[i] << "\n";
-  //  std::cout << std::endl;
-
-  extendPath(path_s, path_d);
-
-  //  std::cout << "New path: \n";
-  //  for (auto i=0; i<path_s_.size(); ++i)
-  //    std::cout << path_s_[i] << ", " << path_d_[i] << "\n";
-  //  std::cout << std::endl;
+  extendPath(PathOptimizer::keepLane(this));
 }
 
-Car::trajectory Car::getPathXY() const {
+void Car::changeLane() {
+  truncatePath(5);
+  extendPath(PathOptimizer::changeLane(this));
+}
+
+trajectory Car::getPathXY() const {
   std::vector<double> path_x;
   std::vector<double> path_y;
   for (std::size_t i = 0; i < path_s_.size(); ++i) {
@@ -543,13 +573,21 @@ void Car::info() const {
   std::cout << std::endl;
 }
 
-std::map<uint16_t, Car::dynamics> Car::getClosestFrontVehicles() const { return closest_front_cars_; }
-std::map<uint16_t, Car::dynamics> Car::getClosestRearVehicles() const { return closest_rear_cars_; }
+uint16_t Car::getOptimizedLaneId() const {
+  if (getCurrentLaneId() == 2)
+    return 1;
+  else return 2;
+}
+
+std::map<uint16_t, dynamics> Car::getClosestFrontVehicles() const { return closest_front_cars_; }
+std::map<uint16_t, dynamics> Car::getClosestRearVehicles() const { return closest_rear_cars_; }
 
 uint16_t Car::getCurrentLaneId() const { return map_.getLaneId(pd_); }
 double Car::getCurrentLaneCenter() const { return map_.getLaneCenter(map_.getLaneId(pd_)); }
 
+void Car::setTargetLaneId(uint16_t id) { target_lane_id_ = id; }
 uint16_t Car::getTargetLaneId() const { return target_lane_id_; }
+double Car::getTargetLaneCenter() const { return map_.getLaneCenter(target_lane_id_); }
 
 double Car::getCurrentSpeed() const { return vs_; }
 double Car::getMaxSpeed() const { return max_speed_; }
