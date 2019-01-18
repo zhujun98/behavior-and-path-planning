@@ -24,6 +24,7 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <memory>
 
 #include "map.hpp"
 #include "utilities.hpp"
@@ -216,7 +217,7 @@ class Car {
 
   std::vector<trajectory> opt_paths_;
 
-  CarState* state_; // vehicle state
+  std::unique_ptr<CarState> state_; // vehicle state
 
   // key: lane ID, value: vehicle dynamics
   std::map<uint16_t, dynamics> closest_front_cars_;

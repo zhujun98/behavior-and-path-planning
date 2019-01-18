@@ -361,7 +361,7 @@ Car::Car(const Map& map, double time_step) :
   state_->onEnter(*this);
 }
 
-Car::~Car() { delete state_; }
+Car::~Car() = default;
 
 void Car::update(const std::vector<double>& localization,
                  const std::vector<std::vector<double>>& sensor_fusion) {
@@ -372,11 +372,10 @@ void Car::update(const std::vector<double>& localization,
 //  info();
 
   state_->onUpdate(*this);
-  CarState* state = state_->getNextState(*this);
+  std::unique_ptr<CarState> state(state_->getNextState(*this));
   if (state != nullptr) {
     state_->onExit(*this);
-    delete state_;
-    state_ = state;
+    state_ = std::move(state);
     state_->onEnter(*this);
   }
 }
