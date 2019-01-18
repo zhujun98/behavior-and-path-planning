@@ -50,8 +50,8 @@ int main() {
           auto previous_path_y = json_data[1]["previous_path_y"];
 
           // End point of the previous path.
-          double end_path_s = json_data[1]["end_path_s"];
-          double end_path_d = json_data[1]["end_path_d"];
+//          double end_path_s = json_data[1]["end_path_s"];
+//          double end_path_d = json_data[1]["end_path_d"];
 
           // All other car's data on the same side of the road
           // in the format [[ID, x (m), y (m), vx (m/s), vy (m/s), s (m), d (m)]].
