@@ -576,20 +576,28 @@ void Car::info() const {
 uint16_t Car::getOptimizedLaneId() const {
   uint16_t n_lanes = map_.n_lanes;
   uint16_t current_id = getCurrentLaneId();
+  double safe_dist_to_front = 10;
+  double safe_dist_to_rear = 10;
   double opt_dist; // distance to the front car
 
   if (closest_front_cars_.find(current_id) == closest_front_cars_.end())
     // If there is no car in the current lane, we stay.
     return current_id;
-  else opt_dist = closest_front_cars_.at(current_id).first[0];
+  else {
+    opt_dist = closest_front_cars_.at(current_id).first[0];
+    // If the space to the front vehicle is too small, we stay.
+    if (opt_dist - ps_ < safe_dist_to_front) return current_id;
+  }
 
   uint16_t opt_id = current_id;
   // from the left lane to the right lane
   for (uint16_t i=1; i<=n_lanes; ++i) {
     if (i == current_id) continue;
+
     if (closest_front_cars_.find(i) == closest_front_cars_.end()) {
       // prefer to overtake via the left lane
-      return i;
+      opt_id = i;
+      break;
     } else {
       auto dist = closest_front_cars_.at(i).first[0];
       if (dist > opt_dist) {
@@ -600,8 +608,17 @@ uint16_t Car::getOptimizedLaneId() const {
   }
 
   // only allow to change to the next lane
-  if (opt_id - current_id > 1) return current_id + 1u;
-  if (current_id - opt_id > 1) return current_id - 1u;
+  if (opt_id - current_id > 1) opt_id = current_id + 1u;
+  if (current_id - opt_id > 1) opt_id = current_id - 1u;
+
+  if (opt_id != current_id && closest_rear_cars_.find(opt_id) != closest_rear_cars_.end()) {
+    auto rear_car = closest_rear_cars_.at(opt_id);
+    if (ps_ - rear_car.first[0] < safe_dist_to_rear && vs_ < rear_car.first[1])
+      // If it is slower than the rear car in the next lane and the distance is too small,
+      // we do not consider to change lane.
+      return current_id;
+  }
+
   return opt_id;
 }
 
