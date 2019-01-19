@@ -86,9 +86,9 @@ class Car {
   // ignore cars which are too far away (not detectable in real life)
   double max_tracking_distance = 100; // in m
 
-  double max_speed_= mph2mps(50); // maximum speed (m/s)
-  double max_acceleration_ = 10; // maximum acceleration (m/s^2)
-  double max_jerk_ = 10; // maximum jerk (m/s^3)
+  double max_speed_= mph2mps(47.5); // maximum speed (m/s)
+  double max_acceleration_ = 9.5; // maximum acceleration (m/s^2)
+  double max_jerk_ = 9.5; // maximum jerk (m/s^3)
 
   /**
    * Estimate the dynamics of car at the path end.
