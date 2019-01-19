@@ -66,6 +66,7 @@ TEST_F(TestPathOptimizer, keepLane) {
   auto path_sd = PathOptimizer::keepLane(&car_);
   path_s = path_sd.first;
   path_d = path_sd.second;
+  ASSERT_TRUE(!path_s.empty());
 
   // test the car will finally move to the lane center
   ASSERT_NEAR(path_d.back(), car_.getCurrentLaneCenter(), 1e-3);
@@ -86,6 +87,7 @@ TEST_F(TestPathOptimizer, keepLane) {
   path_sd = PathOptimizer::keepLane(&car_);
   path_s = path_sd.first;
   path_d = path_sd.second;
+  ASSERT_TRUE(!path_s.empty());
 
   // test the car will stay at the lane center
   ASSERT_NEAR(path_d.back(), car_.getCurrentLaneCenter(), 1e-3);
@@ -118,6 +120,7 @@ TEST_F(TestPathOptimizer, changeLane) {
   auto path_sd = PathOptimizer::changeLane(&car_);
   path_s = path_sd.first;
   path_d = path_sd.second;
+  ASSERT_TRUE(!path_s.empty());
 
   // test lane has been changed
   ASSERT_NEAR(path_d.back(), car_.getTargetLaneCenter(), 1e-3);
