@@ -72,9 +72,9 @@ PathOptimizer::computeJmtPath(const polynomial_coeff& coeff_s, const polynomial_
 }
 
 trajectory  PathOptimizer::startUp(Car* car) {
-  auto dynamics0 = car->estimateFinalDynamics();
-  std::vector<double> dynamics_s0 = dynamics0.first;
-  std::vector<double> dynamics_d0 = dynamics0.second;
+  auto dyn = car->estimateFinalDynamics();
+  std::vector<double> dyn_s = dyn.first;
+  std::vector<double> dyn_d = dyn.second;
 
   double time_step = car->time_step_;
   std::vector<double> path_s;
@@ -86,10 +86,10 @@ trajectory  PathOptimizer::startUp(Car* car) {
   double delta_t = 2.0;
 
   double t = 0;
-  double ps_f = dynamics_s0[0];
-  double vs_f = dynamics_s0[1];
-  double as_f = dynamics_s0[2];
-  double pd_f = dynamics_d0[0];
+  double ps_f = dyn_s[0];
+  double vs_f = dyn_s[1];
+  double as_f = dyn_s[2];
+  double pd_f = dyn_d[0];
 
   while (t < delta_t) {
     t += time_step;
