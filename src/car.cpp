@@ -536,7 +536,7 @@ bool Car::changeLane() {
   truncatePath(5);
 
   auto new_path = PathOptimizer::changeLane(this);
-  if (checkCollision(new_path)) {
+  if (checkAllCollisions(new_path)) {
     extendPath(PathOptimizer::keepLane(this));
     return false;
   }
@@ -621,36 +621,49 @@ uint16_t Car::getOptimizedLaneId() const {
   return opt_id;
 }
 
-bool Car::checkCollision(trajectory path) const {
-  for (auto it=closest_front_cars_.begin(); it!=closest_front_cars_.end(); ++it) {
-    double ps = it->second.first[0];
-    double vs = it->second.first[1];
-    double pd = it->second.second[0];
-    double vd = it->second.second[1];
+bool Car::checkCollision(const trajectory& path, const dynamics& dyn) const {
 
-    auto path_s = path.first;
-    auto path_d = path.second;
-    for (uint16_t i=0; i<path_s.size(); ++i) {
-      ps += vs * time_step_;
-      pd += vd * time_step_;
-      // We assume if distance is less than 5 m, it has a high probability to collide.
-      if (distance(path_s[i], path_d[i], ps, pd) < 5) return true;
-    }
+  double safe_dist = 10; // safe distance between vehicles (in m)
+
+  double ps = dyn.first[0];
+  double vs = dyn.first[1];
+  double pd = dyn.second[0];
+  double vd = dyn.second[1];
+
+  auto path_s = path.first;
+  auto path_d = path.second;
+  for (uint16_t i=0; i<path_s.size(); ++i) {
+    ps += vs * time_step_;
+    pd += vd * time_step_;
+
+    // two vehicles are in different lanes
+    if (std::abs(pd - path_d[i]) >= map_.lane_width) continue;
+
+    if (distance(path_s[i], path_d[i], ps, pd) < safe_dist) return true;
   }
 
-  for (auto it=closest_rear_cars_.begin(); it!=closest_rear_cars_.end(); ++it) {
-    double ps = it->second.first[0];
-    double vs = it->second.first[1];
-    double pd = it->second.second[0];
-    double vd = it->second.second[1];
+  return false;
+}
 
-    auto path_s = path.first;
-    auto path_d = path.second;
-    for (uint16_t i=0; i<path_s.size(); ++i) {
-      ps += vs * time_step_;
-      pd += vd * time_step_;
-      // We assume if distance is less than 5 m, it has a high probability to collide.
-      if (distance(path_s[i], path_d[i], ps, pd) < 5) return true;
+bool Car::checkAllCollisions(const trajectory& path) const {
+  uint16_t current_id = getCurrentLaneId();
+  uint16_t target_id = getTargetLaneId();
+
+  // check the front vehicle in the current line
+  if (closest_front_cars_.find(current_id) != closest_front_cars_.end()) {
+    dynamics dyn = closest_front_cars_.at(current_id);
+    if (checkCollision(path, dyn)) return true;
+  }
+
+  // check the front and rear vehicles in the target line
+  if (target_id != current_id) {
+    if (closest_front_cars_.find(target_id) != closest_front_cars_.end()) {
+      dynamics dyn = closest_front_cars_.at(target_id);
+      if (checkCollision(path, dyn)) return true;
+    }
+    if (closest_rear_cars_.find(target_id) != closest_rear_cars_.end()) {
+      dynamics dyn = closest_rear_cars_.at(target_id);
+      if (checkCollision(path, dyn)) return true;
     }
   }
 

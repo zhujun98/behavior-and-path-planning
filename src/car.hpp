@@ -129,9 +129,15 @@ class Car {
   bool changeLane();
 
   /**
-   * Check whether the given path has collision with the path of surrounding cars.
+   * Check whether the given path could collide with a given car.
    */
-  bool checkCollision(trajectory path) const;
+  bool checkCollision(const trajectory& path, const dynamics& dyn) const;
+
+  /**
+   * Check whether the given path could collide the front car in the current lane
+   * or the cars in the target lane.
+   */
+  bool checkAllCollisions(const trajectory& path) const;
 
   /**
    * construct a new state
