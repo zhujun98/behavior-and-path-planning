@@ -188,9 +188,13 @@ PathOptimizer::searchOptimizedJMT(const std::vector<double>& dyn_s, const std::v
     if (delta_t > time_limit) {
       delta_t = 0;
       ps_f += dist_step;
+
+      // reach the maximum possible distance and failed to find a path, return an empty path?
+      if (ps_f - dyn_s[0] > time_limit * speed_limit) return {{}, {}};
     }
 
-    delta_t += 10 * time_step; // use a course time grid for searching
+    delta_t += 5 * time_step; // use a course time grid for searching
+    if (delta_t * speed_limit < ps_f - dyn_s[0]) continue;
 
     std::vector<double> dyn_s_f = {ps_f, vs_f, as_f};
     std::vector<double> dyn_d_f = {pd_f, vd_f, ad_f};
@@ -202,9 +206,6 @@ PathOptimizer::searchOptimizedJMT(const std::vector<double>& dyn_s, const std::v
     // valid path found takes the shortest time.
     valid = validatePath(coeff_s, coeff_d, delta_t, time_step, speed_limit, acc_limit, jerk_limit);
     if (valid) return computeJmtPath(coeff_s, coeff_d, delta_t, time_step);
-
-    // reach the maximum possible distance and failed to find a path, return an empty path?
-    if (ps_f - dyn_s[0] > time_limit * speed_limit) return {{}, {}};
   }
 
 

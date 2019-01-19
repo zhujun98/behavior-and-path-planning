@@ -17,7 +17,7 @@ protected:
   void TearDown() override {
     const time_t end_time = time(nullptr);
 
-    EXPECT_TRUE(end_time - start_time_ <= 0.3) << "The test took too long.";
+    EXPECT_TRUE(end_time - start_time_ <= 0.1) << "The test took too long.";
   }
 
   // The UTC time (in seconds) when the test starts
