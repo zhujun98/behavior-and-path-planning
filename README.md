@@ -37,6 +37,8 @@ $ ./run_app
 ## Highway map
 The map data of the highway is listed in [highway_map.csv](data/highway_map.csv). Each row of the data contains  [x, y, s, dx, dy] values for a waypoint, where x and y are the coordinates in the global coordinate system, s is the longitudinal coordinate along the reference trajectory, dx and dy define the x and y components of the unit vector d which is normal (pointing to the right of the traffic direction) to the reference trajectory.
 
+![highway map](./data/highway_map.png)
+
 ## Simulator output
 
 * Localization data (without noise)
