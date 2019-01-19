@@ -179,7 +179,7 @@ PathOptimizer::searchOptimizedJMT(const std::vector<double>& dyn_s, const std::v
   double delta_t = 0;
 
   bool valid = false;
-  while (!valid) {
+  while (true) {
     // Increase the distance and reset time if no valid path is found.
     if (delta_t > time_limit) {
       delta_t = 0;
@@ -197,9 +197,13 @@ PathOptimizer::searchOptimizedJMT(const std::vector<double>& dyn_s, const std::v
     // For a given ps_f, the algorithm guarantees that is a valid path exists, the first
     // valid path found takes the shortest time.
     valid = validatePath(coeff_s, coeff_d, delta_t, time_step, speed_limit, acc_limit, jerk_limit);
+    if (valid) return computeJmtPath(coeff_s, coeff_d, delta_t, time_step);
+
+    // reach the maximum possible distance and failed to find a path, return an empty path?
+    if (ps_f - dyn_s[0] > time_limit * speed_limit) return {{}, {}};
   }
 
-  return computeJmtPath(coeff_s, coeff_d, delta_t, time_step);
+
 }
 
 /*
@@ -528,7 +532,10 @@ bool Car::startUp() {
 
 bool Car::keepLane() {
   truncatePath(5);
-  extendPath(PathOptimizer::keepLane(this));
+
+  auto new_path = PathOptimizer::keepLane(this);
+  if (new_path.first.empty()) return false;
+  extendPath(std::move(new_path));
   return true;
 }
 
