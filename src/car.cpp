@@ -612,6 +612,10 @@ uint16_t Car::getOptimizedLaneId() const {
 
     // assume the car moves at a constant speed
     opt_dist = dyn.first[0] + prediction_time * dyn.first[1];
+    // bonus for the current lane
+    double bonus = 0.5 * dyn.first[1];
+    // to avoid the car switches bach and force in two lanes
+    opt_dist += bonus;
   }
 
   uint16_t opt_id = current_id;
