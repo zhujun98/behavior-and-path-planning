@@ -608,7 +608,9 @@ uint16_t Car::getOptimizedLaneId() const {
   else {
     auto dyn = closest_front_cars_.at(current_id);
 
-    if (dyn.first[0] - ps_ > max_dist_at_lane_change) return current_id;
+    // Do not change lane if the front car is far away or significantly faster
+    if (dyn.first[0] - ps_ > max_dist_at_lane_change || dyn.first[1] > 1.2 * vs_)
+      return current_id;
 
     // assume the car moves at a constant speed
     opt_dist = dyn.first[0] + prediction_time * dyn.first[1];
