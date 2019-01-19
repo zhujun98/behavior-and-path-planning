@@ -116,9 +116,9 @@ position frenetToCartesian(double s, double d, const std::vector<double>& traj_s
   double x = spline_sx(s);
   double y = spline_sy(s);
 
-  double dx = spline_sx(s + 0.1) - spline_sx(s - 0.1);
-  double dy = spline_sy(s + 0.1) - spline_sy(s - 0.1);
-  double yaw = std::atan2(dy, dx) - pi()/2;
+  double slope_x = spline_sx.deriv(1, s);
+  double slope_y = spline_sy.deriv(1, s);
+  double yaw = std::atan2(slope_y, slope_x) - pi()/2;
 
   x += d * std::cos(yaw);
   y += d * std::sin(yaw);
