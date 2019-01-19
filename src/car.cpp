@@ -577,6 +577,9 @@ void Car::info() const {
 }
 
 uint16_t Car::getOptimizedLaneId() const {
+  // Lane change will not be considered if the distance to the front
+  // vehicle is large.
+  double max_dist_at_lane_change = 50;
   double prediction_time = 5;
 
   // This function does not take care of whether it is feasible to change
@@ -590,6 +593,9 @@ uint16_t Car::getOptimizedLaneId() const {
     return current_id;
   else {
     auto dyn = closest_front_cars_.at(current_id);
+
+    if (dyn.first[0] - ps_ > max_dist_at_lane_change) return current_id;
+
     // assume the car moves at a constant speed
     opt_dist = dyn.first[0] + prediction_time * dyn.first[1];
   }
