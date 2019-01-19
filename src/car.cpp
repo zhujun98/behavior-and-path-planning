@@ -111,12 +111,13 @@ trajectory  PathOptimizer::startUp(Car* car) {
 
 trajectory PathOptimizer::keepLane(Car* car) {
 
-  double safe_distance = 20; // safe distance (in meter) after a front car
-  double min_dist_no_car = 30; // min delta s of a path if there is no front car
+  double min_dist_no_car = 30; // min advance in s if there is no front car
 
   auto dyn = car->estimateFinalDynamics();
   std::vector<double> dyn_s = dyn.first;
   std::vector<double> dyn_d = dyn.second;
+
+  double safe_distance = 10 + dyn_s[1]; // safe distance (in meter) after a front car
 
   double ps_f = dyn_s[0] + min_dist_no_car;
   double vs_f = car->max_speed_;
@@ -125,8 +126,9 @@ trajectory PathOptimizer::keepLane(Car* car) {
     double ps_front_car = car->closest_front_cars_[lane_id].first[0];
     double vs_front_car = car->closest_front_cars_[lane_id].first[1];
     if (ps_front_car < dyn_s[0] + safe_distance) {
-      ps_f = car->closest_front_cars_[lane_id].first[0];
-      vs_f = std::min(vs_f, vs_front_car * (ps_front_car - dyn_s[0]) / safe_distance);
+      double frac = (ps_front_car - dyn_s[0]) / safe_distance;
+      ps_f = dyn_s[0] + frac * (ps_front_car - dyn_s[0]);
+      vs_f = std::min(vs_f, frac * vs_front_car);
     }
   }
 
@@ -138,12 +140,13 @@ trajectory PathOptimizer::keepLane(Car* car) {
 }
 
 trajectory PathOptimizer::changeLane(Car* car) {
-  double safe_distance = 20; // safe distance (in meter) after a front car
-  double min_dist_no_car = 30; // min delta s of a path if there is no front car
+  double min_dist_no_car = 30; // min advance in s if there is no front car
 
   auto dyn = car->estimateFinalDynamics();
   std::vector<double> dyn_s = dyn.first;
   std::vector<double> dyn_d = dyn.second;
+
+  double safe_distance = 10 + dyn_s[1]; // safe distance (in meter) after a front car
 
   double ps_f = dyn_s[0] + min_dist_no_car;
   double vs_f = car->max_speed_;
@@ -152,8 +155,9 @@ trajectory PathOptimizer::changeLane(Car* car) {
     double ps_front_car = car->closest_front_cars_[lane_id].first[0];
     double vs_front_car = car->closest_front_cars_[lane_id].first[1];
     if (ps_front_car < dyn_s[0] + safe_distance) {
-      ps_f = car->closest_front_cars_[lane_id].first[0];
-      vs_f = std::min(vs_f, vs_front_car * (ps_front_car - dyn_s[0]) / safe_distance);
+      double frac = (ps_front_car - dyn_s[0]) / safe_distance;
+      ps_f = dyn_s[0] + frac * (ps_front_car - dyn_s[0]);
+      vs_f = std::min(vs_f, frac * vs_front_car);
     }
   }
 
@@ -534,7 +538,10 @@ bool Car::keepLane() {
   truncatePath(5);
 
   auto new_path = PathOptimizer::keepLane(this);
-  if (new_path.first.empty()) return false;
+  if (new_path.first.empty()) {
+    std::cerr << "Failed to find a path when keepLane! \n";
+    return false;
+  }
   extendPath(std::move(new_path));
   return true;
 }
@@ -543,7 +550,7 @@ bool Car::changeLane() {
   truncatePath(5);
 
   auto new_path = PathOptimizer::changeLane(this);
-  if (checkAllCollisions(new_path)) {
+  if (new_path.first.empty() || checkAllCollisions(new_path)) {
     extendPath(PathOptimizer::keepLane(this));
     return false;
   }
