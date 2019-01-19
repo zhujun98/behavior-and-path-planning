@@ -179,7 +179,7 @@ PathOptimizer::searchOptimizedJMT(const std::vector<double>& dyn_s, const std::v
   double delta_t = 0;
 
   bool valid = false;
-  while (!valid) {
+  while (true) {
     // Increase the distance and reset time if no valid path is found.
     if (delta_t > time_limit) {
       delta_t = 0;
@@ -197,9 +197,13 @@ PathOptimizer::searchOptimizedJMT(const std::vector<double>& dyn_s, const std::v
     // For a given ps_f, the algorithm guarantees that is a valid path exists, the first
     // valid path found takes the shortest time.
     valid = validatePath(coeff_s, coeff_d, delta_t, time_step, speed_limit, acc_limit, jerk_limit);
+    if (valid) return computeJmtPath(coeff_s, coeff_d, delta_t, time_step);
+
+    // reach the maximum possible distance and failed to find a path, return an empty path?
+    if (ps_f - dyn_s[0] > time_limit * speed_limit) return {{}, {}};
   }
 
-  return computeJmtPath(coeff_s, coeff_d, delta_t, time_step);
+
 }
 
 /*
@@ -299,6 +303,9 @@ public:
 
 class Car::StateChangeLane : public Car::State {
 
+  uint16_t nf_ = 0; // number of failures of finding lane change path
+  uint16_t max_attempt_ = 5;
+
 public:
 
   StateChangeLane() = default;
@@ -306,7 +313,7 @@ public:
   ~StateChangeLane() override = default;
 
   State* getNextState(Car &car) override {
-    if (car.getCurrentLaneId() == car.getTargetLaneId())
+    if (nf_ >= max_attempt_ || car.getCurrentLaneId() == car.getTargetLaneId())
       return createState(States::KL);
     return nullptr;
   }
@@ -317,7 +324,10 @@ public:
   }
 
   void onUpdate(Car& car) override {
-    car.changeLane();
+    if (!car.changeLane()) {
+      ++nf_;
+      std::cout << "Failed to find a path! Number of attempts: " << nf_ << "\n";
+    } else nf_ = 0;
   }
 
   void onExit(Car& car) override {
@@ -514,23 +524,32 @@ dynamics Car::estimateFinalDynamics() const {
   return {{ps, vs, as}, {pd, vd, ad}};
 }
 
-void Car::startUp() {
+bool Car::startUp() {
   truncatePath(5);
   extendPath(PathOptimizer::startUp(this));
+  return true;
 }
 
-void Car::keepLane() {
+bool Car::keepLane() {
   truncatePath(5);
-  extendPath(PathOptimizer::keepLane(this));
+
+  auto new_path = PathOptimizer::keepLane(this);
+  if (new_path.first.empty()) return false;
+  extendPath(std::move(new_path));
+  return true;
 }
 
-void Car::changeLane() {
+bool Car::changeLane() {
   truncatePath(5);
 
   auto new_path = PathOptimizer::changeLane(this);
-  if (checkCollision(new_path))
+  if (checkAllCollisions(new_path)) {
     extendPath(PathOptimizer::keepLane(this));
-  else extendPath(std::move(new_path));
+    return false;
+  }
+
+  extendPath(std::move(new_path));
+  return true;
 }
 
 trajectory Car::getPathXY() const {
@@ -565,6 +584,9 @@ void Car::info() const {
 }
 
 uint16_t Car::getOptimizedLaneId() const {
+  // Lane change will not be considered if the distance to the front
+  // vehicle is large.
+  double max_dist_at_lane_change = 50;
   double prediction_time = 5;
 
   // This function does not take care of whether it is feasible to change
@@ -578,6 +600,9 @@ uint16_t Car::getOptimizedLaneId() const {
     return current_id;
   else {
     auto dyn = closest_front_cars_.at(current_id);
+
+    if (dyn.first[0] - ps_ > max_dist_at_lane_change) return current_id;
+
     // assume the car moves at a constant speed
     opt_dist = dyn.first[0] + prediction_time * dyn.first[1];
   }
@@ -609,36 +634,49 @@ uint16_t Car::getOptimizedLaneId() const {
   return opt_id;
 }
 
-bool Car::checkCollision(trajectory path) const {
-  for (auto it=closest_front_cars_.begin(); it!=closest_front_cars_.end(); ++it) {
-    double ps = it->second.first[0];
-    double vs = it->second.first[1];
-    double pd = it->second.second[0];
-    double vd = it->second.second[1];
+bool Car::checkCollision(const trajectory& path, const dynamics& dyn) const {
 
-    auto path_s = path.first;
-    auto path_d = path.second;
-    for (uint16_t i=0; i<path_s.size(); ++i) {
-      ps += vs * time_step_;
-      pd += vd * time_step_;
-      // We assume if distance is less than 5 m, it has a high probability to collide.
-      if (distance(path_s[i], path_d[i], ps, pd) < 5) return true;
-    }
+  double safe_dist = 10; // safe distance between vehicles (in m)
+
+  double ps = dyn.first[0];
+  double vs = dyn.first[1];
+  double pd = dyn.second[0];
+  double vd = dyn.second[1];
+
+  auto path_s = path.first;
+  auto path_d = path.second;
+  for (uint16_t i=0; i<path_s.size(); ++i) {
+    ps += vs * time_step_;
+    pd += vd * time_step_;
+
+    // two vehicles are in different lanes
+    if (std::abs(pd - path_d[i]) >= map_.lane_width) continue;
+
+    if (distance(path_s[i], path_d[i], ps, pd) < safe_dist) return true;
   }
 
-  for (auto it=closest_rear_cars_.begin(); it!=closest_rear_cars_.end(); ++it) {
-    double ps = it->second.first[0];
-    double vs = it->second.first[1];
-    double pd = it->second.second[0];
-    double vd = it->second.second[1];
+  return false;
+}
 
-    auto path_s = path.first;
-    auto path_d = path.second;
-    for (uint16_t i=0; i<path_s.size(); ++i) {
-      ps += vs * time_step_;
-      pd += vd * time_step_;
-      // We assume if distance is less than 5 m, it has a high probability to collide.
-      if (distance(path_s[i], path_d[i], ps, pd) < 5) return true;
+bool Car::checkAllCollisions(const trajectory& path) const {
+  uint16_t current_id = getCurrentLaneId();
+  uint16_t target_id = getTargetLaneId();
+
+  // check the front vehicle in the current line
+  if (closest_front_cars_.find(current_id) != closest_front_cars_.end()) {
+    dynamics dyn = closest_front_cars_.at(current_id);
+    if (checkCollision(path, dyn)) return true;
+  }
+
+  // check the front and rear vehicles in the target line
+  if (target_id != current_id) {
+    if (closest_front_cars_.find(target_id) != closest_front_cars_.end()) {
+      dynamics dyn = closest_front_cars_.at(target_id);
+      if (checkCollision(path, dyn)) return true;
+    }
+    if (closest_rear_cars_.find(target_id) != closest_rear_cars_.end()) {
+      dynamics dyn = closest_rear_cars_.at(target_id);
+      if (checkCollision(path, dyn)) return true;
     }
   }
 
