@@ -1,4 +1,4 @@
-# Behavior and path Planning
+# Behavior and Path Planning
 [![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
    
 Jun Zhu
@@ -15,6 +15,10 @@ be able to make one complete loop around the 6946 m highway. Since the car
 is trying to go 50 MPH, it should take a little over 5 minutes to complete 1 
 loop. Also the car should not experience total acceleration over 10 m/s^2 and 
 jerk over 10 m/s^3.
+
+## Dependencies
+
+- [uWebSockets](https://github.com/uNetworking/uWebSockets)
 
 ## Setup and run
 
