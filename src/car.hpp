@@ -116,17 +116,17 @@ class Car {
   /**
    * Update path when starting up.
    */
-  void startUp();
+  bool startUp();
 
   /**
    * Update path when keeping lane.
    */
-  void keepLane();
+  bool keepLane();
 
   /**
    * Update path when changing lane.
    */
-  void changeLane();
+  bool changeLane();
 
   /**
    * Check whether the given path has collision with the path of surrounding cars.

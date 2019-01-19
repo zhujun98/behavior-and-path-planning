@@ -299,6 +299,9 @@ public:
 
 class Car::StateChangeLane : public Car::State {
 
+  uint16_t nf_ = 0; // number of failures of finding lane change path
+  uint16_t max_attempt_ = 5;
+
 public:
 
   StateChangeLane() = default;
@@ -306,7 +309,7 @@ public:
   ~StateChangeLane() override = default;
 
   State* getNextState(Car &car) override {
-    if (car.getCurrentLaneId() == car.getTargetLaneId())
+    if (nf_ >= max_attempt_ || car.getCurrentLaneId() == car.getTargetLaneId())
       return createState(States::KL);
     return nullptr;
   }
@@ -317,7 +320,10 @@ public:
   }
 
   void onUpdate(Car& car) override {
-    car.changeLane();
+    if (!car.changeLane()) {
+      ++nf_;
+      std::cout << "Failed to find a path! Number of attempts: " << nf_ << "\n";
+    } else nf_ = 0;
   }
 
   void onExit(Car& car) override {
@@ -514,23 +520,29 @@ dynamics Car::estimateFinalDynamics() const {
   return {{ps, vs, as}, {pd, vd, ad}};
 }
 
-void Car::startUp() {
+bool Car::startUp() {
   truncatePath(5);
   extendPath(PathOptimizer::startUp(this));
+  return true;
 }
 
-void Car::keepLane() {
+bool Car::keepLane() {
   truncatePath(5);
   extendPath(PathOptimizer::keepLane(this));
+  return true;
 }
 
-void Car::changeLane() {
+bool Car::changeLane() {
   truncatePath(5);
 
   auto new_path = PathOptimizer::changeLane(this);
-  if (checkCollision(new_path))
+  if (checkCollision(new_path)) {
     extendPath(PathOptimizer::keepLane(this));
-  else extendPath(std::move(new_path));
+    return false;
+  }
+
+  extendPath(std::move(new_path));
+  return true;
 }
 
 trajectory Car::getPathXY() const {
