@@ -230,7 +230,28 @@ public:
    * Get the optimized path when changing lane.
    */
   static trajectory changeLane(Car* car);
-};
 
+  /**
+   * Search the optimized JMT path for a given condition.
+   *
+   * :param dyn_s: initial longitudinal dynamics
+   * :param dyn_d: initial transverse dynamics
+   * :param ps_f: final longitudinal position
+   * :param pd_f: final transverse position
+   * :param vs_f: final longitudinal speed
+   * :param vd_f: final transverse speed
+   * :param time_step: step in search valid time span of a path (in second).
+   * :param dist_step: step in searching valid ps (in meter).
+   * :param time_limit: time span limit for the path
+   * :param speed_limit: upper limit of speed
+   * :param acc_limit: upper limit of acceleration
+   * :param jerk_limit upper limit of jerk
+   */
+  static trajectory
+  searchOptimizedJMT(const std::vector<double>& dyn_s, const std::vector<double>& dyn_d,
+                     double ps_f, double vs_f, double pd_f, double vd_f,
+                     double time_step, double dist_step, double time_limit,
+                     double speed_limit, double acc_limit, double jerk_limit);
+};
 
 #endif //PATH_PLANNING_CAR_H

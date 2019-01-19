@@ -111,121 +111,92 @@ trajectory  PathOptimizer::startUp(Car* car) {
 
 trajectory PathOptimizer::keepLane(Car* car) {
 
-  double time_step = car->time_step_;
-
   double safe_distance = 20; // safe distance (in meter) after a front car
-  double max_delta_t = 5; // max time span (in second) for a path
   double min_dist_no_car = 30; // min delta s of a path if there is no front car
-  double search_time_step = 10 * time_step; // step in search valid time span of a path
-  double search_dist_step = 1.0; // step in searching valid ps
 
-  auto dynamics0 = car->estimateFinalDynamics();
-  std::vector<double> dynamics_s0 = dynamics0.first;
-  std::vector<double> dynamics_d0 = dynamics0.second;
+  auto dyn = car->estimateFinalDynamics();
+  std::vector<double> dyn_s = dyn.first;
+  std::vector<double> dyn_d = dyn.second;
 
-  double ps_f = dynamics_s0[0] + min_dist_no_car;
+  double ps_f = dyn_s[0] + min_dist_no_car;
   double vs_f = car->max_speed_;
   uint16_t lane_id = car->getCurrentLaneId();
   if (car->closest_front_cars_.find(lane_id) != car->closest_front_cars_.end()) {
     double ps_front_car = car->closest_front_cars_[lane_id].first[0];
     double vs_front_car = car->closest_front_cars_[lane_id].first[1];
-    if (ps_front_car < dynamics_s0[0] + safe_distance) {
+    if (ps_front_car < dyn_s[0] + safe_distance) {
       ps_f = car->closest_front_cars_[lane_id].first[0];
-      vs_f = std::min(vs_f, vs_front_car * (ps_front_car - dynamics_s0[0]) / safe_distance);
+      vs_f = std::min(vs_f, vs_front_car * (ps_front_car - dyn_s[0]) / safe_distance);
     }
   }
 
-  polynomial_coeff coeff_s;
-  polynomial_coeff coeff_d;
-
-  double as_f = 0;
   double pd_f = car->getCurrentLaneCenter();
   double vd_f = 0;
-  double ad_f = 0;
 
-  double delta_t = 0;
-  bool valid = false;
-
-  while (!valid) {
-    // Increase the distance and reset time if no valid path is found.
-    if (delta_t > max_delta_t) {
-      delta_t = 0;
-      ps_f += search_dist_step;
-    }
-
-    delta_t += search_time_step;
-
-    std::vector<double> dynamics_s1 = {ps_f, vs_f, as_f};
-    std::vector<double> dynamics_d1 = {pd_f, vd_f, ad_f};
-
-    coeff_s = jerkMinimizingTrajectory(dynamics_s0, dynamics_s1, delta_t);
-    coeff_d = jerkMinimizingTrajectory(dynamics_d0, dynamics_d1, delta_t);
-
-    // For a given ps_f, the algorithm guarantees that is a valid path exists, the first
-    // valid path found takes the shortest time.
-    valid = validatePath(coeff_s, coeff_d, delta_t, time_step,
-                         car->max_speed_, car->max_acceleration_, car->max_jerk_);
-  }
-
-  return computeJmtPath(coeff_s, coeff_d, delta_t, time_step);
+  return searchOptimizedJMT(dyn_s, dyn_d, ps_f, vs_f, pd_f, vd_f, car->time_step_, 1.0, 5.0,
+                            car->max_speed_, car->max_acceleration_, car->max_jerk_);
 }
 
 trajectory PathOptimizer::changeLane(Car* car) {
-
-  double time_step = car->time_step_;
-
   double safe_distance = 20; // safe distance (in meter) after a front car
-  double max_delta_t = 5; // max time span (in second) for a path
   double min_dist_no_car = 30; // min delta s of a path if there is no front car
-  double search_time_step = 10 * time_step; // step in search valid time span of a path
-  double search_dist_step = 1.0; // step in searching valid ps
 
-  auto dynamics0 = car->estimateFinalDynamics();
-  std::vector<double> dynamics_s0 = dynamics0.first;
-  std::vector<double> dynamics_d0 = dynamics0.second;
+  auto dyn = car->estimateFinalDynamics();
+  std::vector<double> dyn_s = dyn.first;
+  std::vector<double> dyn_d = dyn.second;
 
-  double ps_f = dynamics_s0[0] + min_dist_no_car;
+  double ps_f = dyn_s[0] + min_dist_no_car;
   double vs_f = car->max_speed_;
   uint16_t lane_id = car->getTargetLaneId();
   if (car->closest_front_cars_.find(lane_id) != car->closest_front_cars_.end()) {
     double ps_front_car = car->closest_front_cars_[lane_id].first[0];
     double vs_front_car = car->closest_front_cars_[lane_id].first[1];
-    if (ps_front_car < dynamics_s0[0] + safe_distance) {
+    if (ps_front_car < dyn_s[0] + safe_distance) {
       ps_f = car->closest_front_cars_[lane_id].first[0];
-      vs_f = std::min(vs_f, vs_front_car * (ps_front_car - dynamics_s0[0]) / safe_distance);
+      vs_f = std::min(vs_f, vs_front_car * (ps_front_car - dyn_s[0]) / safe_distance);
     }
   }
 
+  double pd_f = car->getTargetLaneCenter();
+  double vd_f = 0;
+
+  return searchOptimizedJMT(dyn_s, dyn_d, ps_f, vs_f, pd_f, vd_f, car->time_step_, 1.0, 5.0,
+                            car->max_speed_, car->max_acceleration_, car->max_jerk_);
+}
+
+trajectory
+PathOptimizer::searchOptimizedJMT(const std::vector<double>& dyn_s, const std::vector<double>& dyn_d,
+                                  double ps_f, double vs_f, double pd_f, double vd_f,
+                                  double time_step, double dist_step, double time_limit,
+                                  double speed_limit, double acc_limit, double jerk_limit) {
   polynomial_coeff coeff_s;
   polynomial_coeff coeff_d;
 
+  // (for simplicity) final accelerations and transverse accelerations are always 0
   double as_f = 0;
-  double pd_f = car->getTargetLaneCenter();
-  double vd_f = 0;
   double ad_f = 0;
 
   double delta_t = 0;
-  bool valid = false;
 
+  bool valid = false;
   while (!valid) {
     // Increase the distance and reset time if no valid path is found.
-    if (delta_t > max_delta_t) {
+    if (delta_t > time_limit) {
       delta_t = 0;
-      ps_f += search_dist_step;
+      ps_f += dist_step;
     }
 
-    delta_t += search_time_step;
+    delta_t += 10 * time_step; // use a course time grid for searching
 
-    std::vector<double> dynamics_s1 = {ps_f, vs_f, as_f};
-    std::vector<double> dynamics_d1 = {pd_f, vd_f, ad_f};
+    std::vector<double> dyn_s_f = {ps_f, vs_f, as_f};
+    std::vector<double> dyn_d_f = {pd_f, vd_f, ad_f};
 
-    coeff_s = jerkMinimizingTrajectory(dynamics_s0, dynamics_s1, delta_t);
-    coeff_d = jerkMinimizingTrajectory(dynamics_d0, dynamics_d1, delta_t);
+    coeff_s = jerkMinimizingTrajectory(dyn_s, dyn_s_f, delta_t);
+    coeff_d = jerkMinimizingTrajectory(dyn_d, dyn_d_f, delta_t);
 
     // For a given ps_f, the algorithm guarantees that is a valid path exists, the first
     // valid path found takes the shortest time.
-    valid = validatePath(coeff_s, coeff_d, delta_t, time_step,
-                         car->max_speed_, car->max_acceleration_, car->max_jerk_);
+    valid = validatePath(coeff_s, coeff_d, delta_t, time_step, speed_limit, acc_limit, jerk_limit);
   }
 
   return computeJmtPath(coeff_s, coeff_d, delta_t, time_step);

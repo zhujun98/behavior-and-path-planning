@@ -38,7 +38,7 @@ TEST_F(TestPathOptimizer, keepLane) {
   double ps0 = 100;
   double pd0 = 7;
 
-  car_.updateParameters({0, 0, 0, 0, ps0, pd0}); // start at the center of lane 2, but not centered
+  car_.updateParameters({0, 0, 0, 0, ps0, pd0}); // start at lane 2, but not centered
   auto path_sd = PathOptimizer::startUp(&car_);
 
   std::vector<double> path_s = path_sd.first;
@@ -56,9 +56,8 @@ TEST_F(TestPathOptimizer, keepLane) {
   }
   car_.extendPath({path_s, path_d});
 
-  // keepLane only estimate the dynamics from the path
+  // keepLane estimates the dynamics from the path
   path_sd = PathOptimizer::keepLane(&car_);
-
   path_s = path_sd.first;
   path_d = path_sd.second;
 
@@ -70,16 +69,14 @@ TEST_F(TestPathOptimizer, keepLane) {
   ASSERT_NEAR(max_speed, vs_f, 1e-3);
   ASSERT_NEAR(0, as_f, 0.2); // as_f is an estimation so that it differs from the JMT value
 
-  // mock a path which the speed of the end state is 20 m/s
+  // mock a path which the speed of the end state is max_speed
   for (auto i=0; i<5; ++i) {
-    path_s.push_back(ps0 + i * time_step_ * 10);
+    path_s.push_back(ps0 + i * time_step_ * max_speed);
     path_d.push_back(pd0);
   }
   car_.extendPath({path_s, path_d});
 
-  // keepLane only estimate the dynamics from the path
   path_sd = PathOptimizer::keepLane(&car_);
-
   path_s = path_sd.first;
   path_d = path_sd.second;
 
@@ -88,6 +85,37 @@ TEST_F(TestPathOptimizer, keepLane) {
   length = path_s.size();
   vs_f = (path_s[length - 1] - path_s[length - 2]) / time_step_;
   as_f = (path_s[length - 1] + path_s[length - 3] - 2 * path_s[length - 2]) / time_step_ / time_step_;
+  ASSERT_NEAR(max_speed, vs_f, 1e-3);
+  ASSERT_NEAR(0, as_f, 0.2); // as_f is an estimation so that it differs from the JMT value
+}
+
+TEST_F(TestPathOptimizer, changeLane) {
+  double max_speed = car_.getMaxSpeed();
+  double ps0 = 100;
+  double pd0 = 6;
+  car_.updateParameters({0, 0, 0, 0, 100, 6}); // start at the center of lane 2
+
+  std::vector<double> path_s;
+  std::vector<double> path_d;
+
+  // mock a path
+  for (auto i = 0; i < 5; ++i) {
+    path_s.push_back(ps0 + i * time_step_ * max_speed);
+    path_d.push_back(pd0);
+  }
+  car_.extendPath({path_s, path_d});
+
+  car_.setTargetLaneId(1);
+  // changeLane estimates the dynamics from the path
+  auto path_sd = PathOptimizer::changeLane(&car_);
+  path_s = path_sd.first;
+  path_d = path_sd.second;
+
+  // test lane has been changed
+  ASSERT_NEAR(path_d.back(), car_.getTargetLaneCenter(), 1e-3);
+  std::size_t n = path_s.size();
+  double vs_f = (path_s[n - 1] - path_s[n - 2]) / time_step_;
+  double as_f = (path_s[n - 1] + path_s[n - 3] - 2 * path_s[n - 2]) / time_step_ / time_step_;
   ASSERT_NEAR(max_speed, vs_f, 1e-3);
   ASSERT_NEAR(0, as_f, 0.2); // as_f is an estimation so that it differs from the JMT value
 }
