@@ -163,7 +163,7 @@ void Car::update(const std::vector<double>& localization,
   updateClosestVehicles(sensor_fusion);
   updateUnprocessedPath();
 
-  info();
+//  info();
 
   state_->onUpdate(*this);
   std::unique_ptr<State> state(state_->getNextState(*this));
@@ -252,6 +252,9 @@ void Car::updateClosestVehicles(const std::vector<std::vector<double>>& sensor_f
     if (std::abs(d_ps) > max_tracking_dist_) continue;
 
     uint16_t id = map_->getLaneId(v[6]);
+    // Sensor fusion could return data with d outside of the lanes.
+    if (id == 0 || id > map_->n_lanes) continue;
+
     double vs = std::sqrt(v[3]*v[3] + v[4]*v[4]); // an estimation
     if (d_ps > 0) {
       // front vehicle
@@ -289,18 +292,18 @@ void Car::truncatePath(unsigned int n_keep) {
 }
 
 void Car::extendPath(trajectory&& traj) {
-  //  std::cout << "Old path: \n";
-  //  for (auto i=0; i<path_s_.size(); ++i)
-  //    std::cout << path_s_[i] << ", " << path_d_[i] << "\n";
-  //  std::cout << std::endl;
+//  std::cout << "Old path: \n";
+//  for (auto i=0; i<path_s_.size(); ++i)
+//    std::cout << path_s_[i] << ", " << path_d_[i] << "\n";
+//  std::cout << std::endl;
 
   path_s_.insert(path_s_.end(), traj.first.begin(), traj.first.end());
   path_d_.insert(path_d_.end(), traj.second.begin(), traj.second.end());
 
-  //  std::cout << "New path: \n";
-  //  for (auto i=0; i<path_s_.size(); ++i)
-  //    std::cout << path_s_[i] << ", " << path_d_[i] << "\n";
-  //  std::cout << std::endl;
+//  std::cout << "New path: \n";
+//  for (auto i=0; i<path_s_.size(); ++i)
+//    std::cout << path_s_[i] << ", " << path_d_[i] << "\n";
+//  std::cout << std::endl;
 }
 
 dynamics Car::estimateFinalDynamics() const {
