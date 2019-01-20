@@ -7,6 +7,12 @@
 #include <cmath>
 #include <assert.h>
 
+using position = std::pair<double, double>;
+using trajectory = std::pair<std::vector<double>, std::vector<double>>;
+using polynomial_coeff = std::vector<double>;
+using dynamics = std::pair<std::vector<double>, std::vector<double>>;
+
+
 //
 // For converting back and forth between radians and degrees.
 //

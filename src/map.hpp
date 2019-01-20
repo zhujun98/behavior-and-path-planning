@@ -26,10 +26,10 @@ struct Map {
 
   double max_s;  // maximum Frenet coordinate s, in meter
 
-  Map(const std::string& map_file, double max_s=6945.554) : n_lanes(3), lane_width(4), max_s(max_s) {
+  Map(const std::string& file_path, double max_s=6945.554) : n_lanes(3), lane_width(4), max_s(max_s) {
     // Read waypoints data
-    std::ifstream ifs(map_file.c_str(), std::ifstream::in);
-    if (!ifs) throw std::invalid_argument("Cannot open the map file: " + map_file);
+    std::ifstream ifs(file_path.c_str(), std::ifstream::in);
+    if (!ifs) throw std::invalid_argument("Cannot open the map file: " + file_path);
 
     double px;
     double py;

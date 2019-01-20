@@ -1,4 +1,4 @@
-# Behavior and path Planning
+# Behavior and Path Planning
 [![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
    
 Jun Zhu
@@ -16,6 +16,10 @@ is trying to go 50 MPH, it should take a little over 5 minutes to complete 1
 loop. Also the car should not experience total acceleration over 10 m/s^2 and 
 jerk over 10 m/s^3.
 
+## Dependencies
+
+- [uWebSockets](https://github.com/uNetworking/uWebSockets)
+
 ## Setup and run
 
 Download the [simulator](https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2) which contains the Path Planning Project.
@@ -32,6 +36,8 @@ $ ./run_app
 
 ## Highway map
 The map data of the highway is listed in [highway_map.csv](data/highway_map.csv). Each row of the data contains  [x, y, s, dx, dy] values for a waypoint, where x and y are the coordinates in the global coordinate system, s is the longitudinal coordinate along the reference trajectory, dx and dy define the x and y components of the unit vector d which is normal (pointing to the right of the traffic direction) to the reference trajectory.
+
+![highway map](./data/highway_map.png)
 
 ## Simulator output
 

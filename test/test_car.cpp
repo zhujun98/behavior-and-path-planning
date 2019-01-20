@@ -15,7 +15,7 @@ class TestCar : public testing::Test {
 protected:
   Car car_;
 
-  TestCar() : car_(Map("../../data/highway_map.csv")) {}
+  TestCar() : car_("../../data/highway_map.csv") {}
 };
 
 
@@ -50,24 +50,24 @@ TEST_F(TestCar, updateClosestVehicles) {
   car_.updateClosestVehicles(sensor_fusion);
   auto closest_front_vehicles = car_.getClosestFrontVehicles();
   auto closest_rear_vehicles = car_.getClosestRearVehicles();
-  ASSERT_THAT(closest_front_vehicles[1].first, ElementsAre(20, 4, 0));
-  ASSERT_THAT(closest_rear_vehicles[1].first, ElementsAre(10, 3, 0));
-  ASSERT_THAT(closest_front_vehicles[2].first, ElementsAre(25, 3, 0));
-  ASSERT_THAT(closest_rear_vehicles[2].first, ElementsAre(5, 2, 0));
-  ASSERT_THAT(closest_front_vehicles[3].first, ElementsAre(30, 4, 0));
-  ASSERT_THAT(closest_rear_vehicles[3].first, ElementsAre());
+  ASSERT_THAT(closest_front_vehicles.at(1).first, ElementsAre(8, 4, 0));
+  ASSERT_THAT(closest_rear_vehicles.at(1).first, ElementsAre(-2, 3, 0));
+  ASSERT_THAT(closest_front_vehicles.at(2).first, ElementsAre(13, 3, 0));
+  ASSERT_THAT(closest_rear_vehicles.at(2).first, ElementsAre(-7, 2, 0));
+  ASSERT_THAT(closest_front_vehicles.at(3).first, ElementsAre(18, 4, 0));
+  ASSERT_THAT(closest_rear_vehicles.at(3).first, ElementsAre(-Car::inf_dist, 0, 0));
 
   // move to a new position
   car_.updateParameters({0, 0, 0, 0, 121, 6});
   car_.updateClosestVehicles(sensor_fusion);
   closest_front_vehicles = car_.getClosestFrontVehicles();
   closest_rear_vehicles = car_.getClosestRearVehicles();
-  ASSERT_THAT(closest_front_vehicles[1].first, ElementsAre());
-  ASSERT_THAT(closest_rear_vehicles[1].first, ElementsAre());
-  ASSERT_THAT(closest_front_vehicles[2].first, ElementsAre());
-  ASSERT_THAT(closest_rear_vehicles[2].first, ElementsAre(25, 3, 0));
-  ASSERT_THAT(closest_front_vehicles[3].first, ElementsAre());
-  ASSERT_THAT(closest_rear_vehicles[3].first, ElementsAre(30, 4, 0));
+  ASSERT_THAT(closest_front_vehicles[1].first, ElementsAre(Car::inf_dist, 0, 0));
+  ASSERT_THAT(closest_rear_vehicles[1].first, ElementsAre(-Car::inf_dist, 0, 0));
+  ASSERT_THAT(closest_front_vehicles[2].first, ElementsAre(Car::inf_dist, 0, 0));
+  ASSERT_THAT(closest_rear_vehicles[2].first, ElementsAre(-96, 3, 0));
+  ASSERT_THAT(closest_front_vehicles[3].first, ElementsAre(Car::inf_dist, 0, 0));
+  ASSERT_THAT(closest_rear_vehicles[3].first, ElementsAre(-91, 4, 0));
 }
 
 }
