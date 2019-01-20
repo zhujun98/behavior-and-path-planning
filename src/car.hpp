@@ -26,12 +26,9 @@
 #include <map>
 #include <memory>
 
-#include "map.hpp"
 #include "utilities.hpp"
-
-using trajectory = std::pair<std::vector<double>, std::vector<double>>;
-using polynomial_coeff = std::vector<double>;
-using dynamics = std::pair<std::vector<double>, std::vector<double>>;
+#include "map.hpp"
+#include "path_optimizer.hpp"
 
 
 class Car {
@@ -47,8 +44,6 @@ class Car {
   class StateStartUp;
   class StateKeepLane;
   class StateChangeLane;
-
-  friend class PathOptimizer;
 
   bool is_initialized_;
 
@@ -70,9 +65,11 @@ class Car {
   double as_; // in m/s^2
   double ad_; // in m/s^2
 
-  Map map_;
+  std::unique_ptr<Map> map_;
 
-  std::unique_ptr<State> state_; // vehicle state
+  std::unique_ptr<State> state_;
+
+  std::unique_ptr<PathOptimizer> path_opt_;
 
   // key: lane ID, value: vehicle dynamics
   std::map<uint16_t, dynamics> closest_front_cars_;
@@ -84,11 +81,7 @@ class Car {
   std::vector<double> path_d_;
 
   // ignore cars which are too far away (not detectable in real life)
-  double max_tracking_distance = 100; // in m
-
-  double max_speed_= mph2mps(47.5); // maximum speed (m/s)
-  double max_acceleration_ = 9.5; // maximum acceleration (m/s^2)
-  double max_jerk_ = 9.5; // maximum jerk (m/s^3)
+  double max_tracking_dist_ = 100; // in m
 
   /**
    * Estimate the dynamics of car at the path end.
@@ -145,7 +138,9 @@ class Car {
   static State* createState(States name);
 
 public:
-  explicit Car(const Map& map, double time_step=0.02);
+  static double inf_dist; // a big number represents infinite distance
+
+  explicit Car(const std::string& file_path, double time_step=0.02);
 
   ~Car();
 
@@ -182,8 +177,8 @@ public:
    */
   uint16_t getOptimizedLaneId() const;
 
-  std::map<uint16_t, dynamics> getClosestFrontVehicles() const;
-  std::map<uint16_t, dynamics> getClosestRearVehicles() const;
+  const std::map<uint16_t, dynamics>& getClosestFrontVehicles() const;
+  const std::map<uint16_t, dynamics>& getClosestRearVehicles() const;
 
   uint16_t getCurrentLaneId() const;
   double getCurrentLaneCenter() const;
@@ -193,71 +188,7 @@ public:
   double getTargetLaneCenter() const;
 
   double getCurrentSpeed() const;
-  double getMaxSpeed() const;
 };
 
-/*
- * PathOptimizer
- */
-
-class PathOptimizer {
-
-  PathOptimizer();
-
-public:
-
-  ~PathOptimizer();
-
-  /**
-   * Validate a JMT path.
-   */
-  static bool validatePath(const polynomial_coeff& coeff_s, const polynomial_coeff& coeff_d,
-                           double delta_t, double time_step,
-                           double speed_limit, double acceleration_limit, double jerk_limit);
-
-  /**
-   * Compute the trajectory in the Frenet coordinate system.
-   */
-  static trajectory
-  computeJmtPath(const polynomial_coeff& coeff_s, const polynomial_coeff& coeff_d,
-                 double delta_t, double time_step);
-
-  /**
-   * Get the optimized path when starting up.
-   */
-  static trajectory startUp(Car* car);
-
-  /**
-   * Get the optimized path when keeping lane.
-   */
-  static trajectory keepLane(Car* car);
-
-  /**
-   * Get the optimized path when changing lane.
-   */
-  static trajectory changeLane(Car* car);
-
-  /**
-   * Search the optimized JMT path for a given condition.
-   *
-   * :param dyn_s: initial longitudinal dynamics
-   * :param dyn_d: initial transverse dynamics
-   * :param ps_f: final longitudinal position
-   * :param pd_f: final transverse position
-   * :param vs_f: final longitudinal speed
-   * :param vd_f: final transverse speed
-   * :param time_step: step in search valid time span of a path (in second).
-   * :param dist_step: step in searching valid ps (in meter).
-   * :param time_limit: time span limit for the path
-   * :param speed_limit: upper limit of speed
-   * :param acc_limit: upper limit of acceleration
-   * :param jerk_limit upper limit of jerk
-   */
-  static trajectory
-  searchOptimizedJMT(const std::vector<double>& dyn_s, const std::vector<double>& dyn_d,
-                     double ps_f, double vs_f, double pd_f, double vd_f,
-                     double time_step, double dist_step, double time_limit,
-                     double speed_limit, double acc_limit, double jerk_limit);
-};
 
 #endif //PATH_PLANNING_CAR_H

@@ -6,6 +6,7 @@ set(SOURCES main.cpp)
 
 set(CAR_SOURCES
     car.cpp
+    path_optimizer.cpp
     jmt.cpp
     trajectory.cpp
 )

@@ -6,8 +6,6 @@
 #include "utilities.hpp"
 #include "spline/spline.h"
 
-using position = std::pair<double, double>;
-
 
 /**
  * Calculate the index of the closest waypoint.
