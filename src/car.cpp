@@ -186,13 +186,20 @@ void Car::updateParameters(const std::vector<double>& localization) {
   double pd = localization[5];
 
   if (is_initialized_) {
-    ax_ = (vx - vx_) / time_step_;
-    ay_ = (vy - vy_) / time_step_;
+    double dx = px - px_;
+    double dy = py - py_;
+    // estimate dt
+    double dt;
+    if (std::abs(dx) > std::abs(dy)) dt = dx / vx;
+    else dt = dy / vy;
 
-    double vs = (ps - ps_) / time_step_;
-    double vd = (pd - pd_) / time_step_;
-    as_ = (vs - vs_) / time_step_;
-    ad_ = (vd - vd_) / time_step_;
+    ax_ = (vx - vx_) / dt;
+    ay_ = (vy - vy_) / dt;
+
+    double vs = (ps - ps_) / dt;
+    double vd = (pd - pd_) / dt;
+    as_ = (vs - vs_) / dt;
+    ad_ = (vd - vd_) / dt;
     vs_ = vs;
     vd_ = vd;
   } else {
@@ -418,7 +425,7 @@ uint16_t Car::getOptimizedLaneId() const {
 
   const auto& front_dyn = closest_front_cars_.at(current_id);
   // Do not change lane if the front car is far away or significantly faster
-  if (front_dyn.first[0] > 1.5 * vs_ || front_dyn.first[1] > 1.2 * vs_)
+  if (front_dyn.first[0] > 3.0 * vs_ || front_dyn.first[1] > 1.2 * vs_)
     return current_id;
 
   double opt_dist = 0; // farthest distance to the front car
