@@ -1,4 +1,5 @@
 #include <vector>
+#include <chrono>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -12,16 +13,17 @@ namespace {
 
 class QuickTest : public testing::Test {
 protected:
-  void SetUp() override { start_time_ = time(nullptr); }
+  void SetUp() override { start_time_ = std::chrono::system_clock::now(); }
 
   void TearDown() override {
-    const time_t end_time = time(nullptr);
+    auto end_time = std::chrono::system_clock::now();
 
-    EXPECT_TRUE(end_time - start_time_ <= 0.1) << "The test took too long.";
+    auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time_).count();
+    EXPECT_TRUE(dt <= 200) << "The test took too long: " << dt << " milliseconds!";
   }
 
   // The UTC time (in seconds) when the test starts
-  time_t start_time_;
+  std::chrono::time_point<std::chrono::system_clock> start_time_;
 };
 
 class TestPathOptimizer : public QuickTest {
@@ -87,6 +89,54 @@ TEST_F(TestPathOptimizer, keepLane2) {
   double vs_f = (path_sd.first[n - 1] - path_sd.first[n - 2]) / time_step_;
   double as_f = (path_sd.first[n - 1] + path_sd.first[n - 3] - 2 * path_sd.first[n - 2]) / time_step_ / time_step_;
   ASSERT_NEAR(speed_limit_, vs_f, 1e-3);
+  ASSERT_NEAR(0, as_f, 0.2); // as_f is an estimation so that it differs from the JMT value
+}
+
+TEST_F(TestPathOptimizer, keepLane3) {
+  double ps = 100;
+  double vs = speed_limit_;
+  double pd = 6; // started at lane 2 and centered
+  double vd = 0;
+  double pd_f = 6; // lane center
+
+  double front_car_d_ps = 30; // < 2 * vs
+  double front_car_vs = 15;
+  dynamics dyn_front_car {{front_car_d_ps, front_car_vs, 0}, {0, 0, 0}};
+
+  auto path_sd = opt_.keepLane({{ps, vs, 0}, {pd, vd, 0}}, dyn_front_car, pd_f);
+  ASSERT_TRUE(!path_sd.first.empty()); // path can be found
+
+  // test the car will stay at the lane center
+  ASSERT_NEAR(path_sd.second.back(), pd_f, 1e-3);
+
+  std::size_t n = path_sd.first.size();
+  double vs_f = (path_sd.first[n - 1] - path_sd.first[n - 2]) / time_step_;
+  double as_f = (path_sd.first[n - 1] + path_sd.first[n - 3] - 2 * path_sd.first[n - 2]) / time_step_ / time_step_;
+  ASSERT_NEAR(front_car_vs, vs_f, 1e-3);
+  ASSERT_NEAR(0, as_f, 0.2); // as_f is an estimation so that it differs from the JMT value
+}
+
+TEST_F(TestPathOptimizer, keepLane4) {
+  double ps = 100;
+  double vs = speed_limit_;
+  double pd = 6; // started at lane 2 and centered
+  double vd = 0;
+  double pd_f = 6; // lane center
+
+  double front_car_d_ps = 5;
+  double front_car_vs = 10;
+  dynamics dyn_front_car {{front_car_d_ps, front_car_vs, 0}, {0, 0, 0}};
+
+  auto path_sd = opt_.keepLane({{ps, vs, 0}, {pd, vd, 0}}, dyn_front_car, pd_f);
+  ASSERT_TRUE(!path_sd.first.empty()); // path can be found
+
+  // test the car will stay at the lane center
+  ASSERT_NEAR(path_sd.second.back(), pd_f, 1e-3);
+
+  std::size_t n = path_sd.first.size();
+  double vs_f = (path_sd.first[n - 1] - path_sd.first[n - 2]) / time_step_;
+  double as_f = (path_sd.first[n - 1] + path_sd.first[n - 3] - 2 * path_sd.first[n - 2]) / time_step_ / time_step_;
+  ASSERT_NEAR(front_car_vs, vs_f, 1e-3);
   ASSERT_NEAR(0, as_f, 0.2); // as_f is an estimation so that it differs from the JMT value
 }
 
