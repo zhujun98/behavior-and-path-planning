@@ -407,10 +407,7 @@ void Car::info() const {
 }
 
 uint16_t Car::getOptimizedLaneId() const {
-  // Lane change will not be considered if the distance to the front
-  // vehicle is large.
-  double dist_threshold = 50;
-  double prediction_time = 5;
+  double prediction_time = 4;
 
   // This function does not take care of whether it is feasible to change
   // lane in order to reach the optimized lane.
@@ -419,14 +416,14 @@ uint16_t Car::getOptimizedLaneId() const {
 
   const auto& front_dyn = closest_front_cars_.at(current_id);
   // Do not change lane if the front car is far away or significantly faster
-  if (front_dyn.first[0] > dist_threshold || front_dyn.first[1] > 1.2 * vs_)
+  if (front_dyn.first[0] > 2.0 * vs_ || front_dyn.first[1] > 1.2 * vs_)
     return current_id;
 
   double opt_dist = 0; // farthest distance to the front car
   uint16_t opt_id = current_id; // lane id with the farthest distance to the front car
 
   // bonus for the current lane
-  double bonus = 0.5 * front_dyn.first[1];
+  double bonus = front_dyn.first[1];
 
   // from the left lane to the right lane (prefer to overtake via the left lane)
   for (uint16_t i=1; i<=n_lanes; ++i) {
