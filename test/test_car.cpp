@@ -42,7 +42,9 @@ TEST_F(TestCar, updateClosestVehicles) {
     {3, 0, 0, 4, 0, 20, 2},
     {4, 0, 0, 0, 2, 5, 6},
     {5, 0, 0, 0, 3, 25, 6},
-    {6, 0, 0, 0, 4, 30, 10}
+    {6, 0, 0, 0, 4, 30, 10},
+    {7, 0, 0, 0, 0, 100, -2}, // left of lane 1
+    {8, 0, 0, 0, 0, 10, 30} // right of lane 3
   };
 
   // move the car to s = 12 m, d = 2 m (lane 1)

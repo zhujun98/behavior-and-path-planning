@@ -187,7 +187,6 @@ public:
   void setTargetLaneId(uint16_t id);
   double getTargetLaneCenter() const;
 
-  double getCurrentSpeed() const;
 };
 
 

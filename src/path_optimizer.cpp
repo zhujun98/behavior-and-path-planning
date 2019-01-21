@@ -107,47 +107,33 @@ trajectory  PathOptimizer::startUp(dynamics&& dyn) {
 }
 
 trajectory PathOptimizer::keepLane(dynamics&& dyn, const dynamics& closest_front_car, double pd_f) {
-
-  double min_dist_no_car = 30; // min advance in s if there is no front car
-
-  double safe_distance = 10 + dyn.first[1]; // safe distance (in meter) after a front car
-
-  double d_ps = min_dist_no_car;
+  // the default value assumes that the front car is far away (it takes more than 2 seconds to reach it)
+  double d_ps = 2.0 * dyn.first[1];
   double vs_f = speed_limit_;
-
-  double d_ps_front_car = closest_front_car.first[0];
-  double vs_front_car = closest_front_car.first[1];
-  if (d_ps_front_car < safe_distance) {
-    double frac = d_ps_front_car / safe_distance;
-    d_ps = dyn.first[0] + frac * d_ps_front_car;
-    vs_f = std::min(vs_f, frac * vs_front_car);
+  if (closest_front_car.first[0] <= d_ps) {
+    d_ps = closest_front_car.first[0];
+    vs_f = closest_front_car.first[1];
   }
 
   double ps_f = dyn.first[0] + d_ps;
   double vd_f = 0;
 
-  return searchOptimizedJMT({dyn.first, dyn.second}, ps_f, vs_f, pd_f, vd_f, 1.0, 5.0);
+  return searchOptimizedJMT({dyn.first, dyn.second}, ps_f, vs_f, pd_f, vd_f, 1.0, 4.0);
 }
 
 trajectory PathOptimizer::changeLane(dynamics&& dyn, const dynamics& closest_front_car, double pd_f) {
-  double min_dist_no_car = 30; // min advance in s if there is no front car
-
-  double safe_distance = 10 + dyn.first[1]; // safe distance (in meter) after a front car
-
-  double d_ps = min_dist_no_car;
+  double d_ps = dyn.first[1];
   double vs_f = speed_limit_;
-
-  double d_ps_front_car = closest_front_car.first[0];
-  double vs_front_car = closest_front_car.first[1];
-  if (d_ps_front_car < safe_distance) {
-    double frac = d_ps_front_car / safe_distance;
-    d_ps = frac * d_ps_front_car;
-    vs_f = std::min(vs_f, frac * vs_front_car);
+  if (closest_front_car.first[0] < d_ps) {
+    d_ps = closest_front_car.first[0];
+    vs_f = closest_front_car.first[1];
   }
+
   double ps_f = dyn.first[0] + d_ps;
   double vd_f = 0;
 
-  return searchOptimizedJMT({dyn.first, dyn.second}, ps_f, vs_f, pd_f, vd_f, 1.0, 5.0);
+  // change lane should take place as quickly as possible
+  return searchOptimizedJMT({dyn.first, dyn.second}, ps_f, vs_f, pd_f, vd_f, 1.0, 4.0);
 }
 
 trajectory
@@ -173,7 +159,7 @@ PathOptimizer::searchOptimizedJMT(dynamics&& dyn, double ps_f, double vs_f, doub
       if (ps_f - dyn.first[0] > time_limit * speed_limit_) return {{}, {}};
     }
 
-    delta_t += 5 * time_step_; // use a course time grid for searching
+    delta_t += 10 * time_step_; // use a course time grid for searching
     if (delta_t * speed_limit_ < ps_f - dyn.first[0]) continue;
 
     std::vector<double> dyn_s_f = {ps_f, vs_f, as_f};

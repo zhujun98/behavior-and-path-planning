@@ -10,6 +10,7 @@ class Car::State {
 
 protected:
   uint16_t tick_ = 0;
+  uint16_t max_tick_ = 10; // determine the frequency of planning new path
 
   State() = default;
 
@@ -41,7 +42,7 @@ public:
   ~StateStartUp() override = default;
 
   State* getNextState(Car &car) override {
-    if (car.getCurrentSpeed() > 10)
+    if (car.vs_ > 10)
       return createState(States::KL);
     else return nullptr;
   }
@@ -51,9 +52,8 @@ public:
   }
 
   void onUpdate(Car &car) override {
-    if (tick_ == 0) car.startUp();
-    ++tick_;
-    if (tick_ == 5) tick_ = 0;
+    if (tick_++ == 0) car.startUp();
+    if (tick_ == max_tick_) tick_ = 0;
   }
 
   void onExit(Car& car) override {
@@ -85,9 +85,8 @@ public:
   }
 
   void onUpdate(Car &car) override {
-    if (tick_ == 0) car.keepLane();
-    ++tick_;
-    if (tick_ == 5) tick_ = 0;
+    if (tick_++ == 0) car.keepLane();
+    if (tick_ == max_tick_) tick_ = 0;
   }
 
   void onExit(Car& car) override {
@@ -99,7 +98,7 @@ public:
 class Car::StateChangeLane : public Car::State {
 
   uint16_t nf_ = 0; // number of failures of finding lane change path
-  uint16_t max_attempt_ = 5;
+  uint16_t max_attempt_ = 3;
 
 public:
 
@@ -119,10 +118,13 @@ public:
   }
 
   void onUpdate(Car& car) override {
-    if (!car.changeLane()) {
-      ++nf_;
-      std::cout << "Failed to find a path! Number of attempts: " << nf_ << "\n";
-    } else nf_ = 0;
+    if (tick_++ == 0) {
+      if (!car.changeLane()) {
+        ++nf_;
+        std::cout << "Failed to find a path! Number of attempts: " << nf_ << "\n";
+      } else nf_ = 0;
+    }
+    if (tick_ == max_tick_) tick_ = 0;
   }
 
   void onExit(Car& car) override {
@@ -184,13 +186,20 @@ void Car::updateParameters(const std::vector<double>& localization) {
   double pd = localization[5];
 
   if (is_initialized_) {
-    ax_ = (vx - vx_) / time_step_;
-    ay_ = (vy - vy_) / time_step_;
+    double dx = px - px_;
+    double dy = py - py_;
+    // estimate dt
+    double dt;
+    if (std::abs(dx) > std::abs(dy)) dt = dx / vx;
+    else dt = dy / vy;
 
-    double vs = (ps - ps_) / time_step_;
-    double vd = (pd - pd_) / time_step_;
-    as_ = (vs - vs_) / time_step_;
-    ad_ = (vd - vd_) / time_step_;
+    ax_ = (vx - vx_) / dt;
+    ay_ = (vy - vy_) / dt;
+
+    double vs = (ps - ps_) / dt;
+    double vd = (pd - pd_) / dt;
+    as_ = (vs - vs_) / dt;
+    ad_ = (vd - vd_) / dt;
     vs_ = vs;
     vd_ = vd;
   } else {
@@ -407,10 +416,7 @@ void Car::info() const {
 }
 
 uint16_t Car::getOptimizedLaneId() const {
-  // Lane change will not be considered if the distance to the front
-  // vehicle is large.
-  double dist_threshold = 50;
-  double prediction_time = 5;
+  double prediction_time = 4;
 
   // This function does not take care of whether it is feasible to change
   // lane in order to reach the optimized lane.
@@ -419,14 +425,14 @@ uint16_t Car::getOptimizedLaneId() const {
 
   const auto& front_dyn = closest_front_cars_.at(current_id);
   // Do not change lane if the front car is far away or significantly faster
-  if (front_dyn.first[0] > dist_threshold || front_dyn.first[1] > 1.2 * vs_)
+  if (front_dyn.first[0] > 3.0 * vs_ || front_dyn.first[1] > 1.2 * vs_)
     return current_id;
 
   double opt_dist = 0; // farthest distance to the front car
   uint16_t opt_id = current_id; // lane id with the farthest distance to the front car
 
   // bonus for the current lane
-  double bonus = 0.5 * front_dyn.first[1];
+  double bonus = front_dyn.first[1];
 
   // from the left lane to the right lane (prefer to overtake via the left lane)
   for (uint16_t i=1; i<=n_lanes; ++i) {
@@ -498,5 +504,3 @@ double Car::getCurrentLaneCenter() const { return map_->getLaneCenter(map_->getL
 void Car::setTargetLaneId(uint16_t id) { target_lane_id_ = id; }
 uint16_t Car::getTargetLaneId() const { return target_lane_id_; }
 double Car::getTargetLaneCenter() const { return map_->getLaneCenter(target_lane_id_); }
-
-double Car::getCurrentSpeed() const { return vs_; }
