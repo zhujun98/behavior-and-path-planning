@@ -52,7 +52,7 @@ public:
   }
 
   void onUpdate(Car &car) override {
-    if (++tick_ == 0) car.startUp();
+    if (tick_++ == 0) car.startUp();
     if (tick_ == max_tick_) tick_ = 0;
   }
 
@@ -85,7 +85,7 @@ public:
   }
 
   void onUpdate(Car &car) override {
-    if (++tick_ == 0) car.keepLane();
+    if (tick_++ == 0) car.keepLane();
     if (tick_ == max_tick_) tick_ = 0;
   }
 
@@ -118,7 +118,7 @@ public:
   }
 
   void onUpdate(Car& car) override {
-    if (++tick_ == 0) {
+    if (tick_++ == 0) {
       if (!car.changeLane()) {
         ++nf_;
         std::cout << "Failed to find a path! Number of attempts: " << nf_ << "\n";
