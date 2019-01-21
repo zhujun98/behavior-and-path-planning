@@ -10,6 +10,7 @@ class Car::State {
 
 protected:
   uint16_t tick_ = 0;
+  uint16_t max_tick_ = 10; // determine the frequency of planning new path
 
   State() = default;
 
@@ -51,9 +52,8 @@ public:
   }
 
   void onUpdate(Car &car) override {
-    if (tick_ == 0) car.startUp();
-    ++tick_;
-    if (tick_ == 5) tick_ = 0;
+    if (++tick_ == 0) car.startUp();
+    if (tick_ == max_tick_) tick_ = 0;
   }
 
   void onExit(Car& car) override {
@@ -85,9 +85,8 @@ public:
   }
 
   void onUpdate(Car &car) override {
-    if (tick_ == 0) car.keepLane();
-    ++tick_;
-    if (tick_ == 5) tick_ = 0;
+    if (++tick_ == 0) car.keepLane();
+    if (tick_ == max_tick_) tick_ = 0;
   }
 
   void onExit(Car& car) override {
@@ -99,7 +98,7 @@ public:
 class Car::StateChangeLane : public Car::State {
 
   uint16_t nf_ = 0; // number of failures of finding lane change path
-  uint16_t max_attempt_ = 5;
+  uint16_t max_attempt_ = 3;
 
 public:
 
@@ -119,10 +118,13 @@ public:
   }
 
   void onUpdate(Car& car) override {
-    if (!car.changeLane()) {
-      ++nf_;
-      std::cout << "Failed to find a path! Number of attempts: " << nf_ << "\n";
-    } else nf_ = 0;
+    if (++tick_ == 0) {
+      if (!car.changeLane()) {
+        ++nf_;
+        std::cout << "Failed to find a path! Number of attempts: " << nf_ << "\n";
+      } else nf_ = 0;
+    }
+    if (tick_ == max_tick_) tick_ = 0;
   }
 
   void onExit(Car& car) override {
