@@ -42,7 +42,7 @@ public:
   ~StateStartUp() override = default;
 
   State* getNextState(Car &car) override {
-    if (car.getCurrentSpeed() > 10)
+    if (car.vs_ > 10)
       return createState(States::KL);
     else return nullptr;
   }
@@ -504,5 +504,3 @@ double Car::getCurrentLaneCenter() const { return map_->getLaneCenter(map_->getL
 void Car::setTargetLaneId(uint16_t id) { target_lane_id_ = id; }
 uint16_t Car::getTargetLaneId() const { return target_lane_id_; }
 double Car::getTargetLaneCenter() const { return map_->getLaneCenter(target_lane_id_); }
-
-double Car::getCurrentSpeed() const { return vs_; }
