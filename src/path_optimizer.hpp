@@ -46,11 +46,16 @@ public:
 
   /**
    * Get the optimized path when keeping lane.
+   *
+   * :param closest_front_car: dynamics of the closest front car at the current lane.
    */
   trajectory keepLane(dynamics&& dyn, const dynamics& closest_front_car, double pd_f);
 
   /**
    * Get the optimized path when changing lane.
+   *
+   * :param closest_front_car: dynamics of the closest front car at the target lane.
+
    */
   trajectory changeLane(dynamics&& dyn, const dynamics& closest_front_car, double pd_f);
 

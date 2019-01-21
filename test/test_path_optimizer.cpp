@@ -140,7 +140,8 @@ TEST_F(TestPathOptimizer, keepLane4) {
   ASSERT_NEAR(0, as_f, 0.2); // as_f is an estimation so that it differs from the JMT value
 }
 
-TEST_F(TestPathOptimizer, changeLane) {
+// begin at a high speed
+TEST_F(TestPathOptimizer, changeLane1) {
   double ps = 100;
   double vs = speed_limit_;
   double pd = 6; // start at the center of lane 2
@@ -152,16 +153,39 @@ TEST_F(TestPathOptimizer, changeLane) {
 
   dynamics dyn_front_car {{1e6, 0, 0}, {0, 0, 0}};
   auto path_sd = opt_.changeLane({{ps, vs, 0}, {pd, vd, 0}}, dyn_front_car, pd_f);
-  path_s = path_sd.first;
-  path_d = path_sd.second;
-  ASSERT_TRUE(!path_s.empty());
+  ASSERT_TRUE(!path_sd.first.empty());
 
   // test lane has been changed
-  ASSERT_NEAR(path_d.back(), pd_f, 1e-3);
+  ASSERT_NEAR(path_sd.second.back(), pd_f, 1e-3);
 
-  std::size_t n = path_s.size();
-  double vs_f = (path_s[n - 1] - path_s[n - 2]) / time_step_;
-  double as_f = (path_s[n - 1] + path_s[n - 3] - 2 * path_s[n - 2]) / time_step_ / time_step_;
+  std::size_t n = path_sd.first.size();
+  double vs_f = (path_sd.first[n - 1] - path_sd.first[n - 2]) / time_step_;
+  double as_f = (path_sd.first[n - 1] + path_sd.first[n - 3] - 2 * path_sd.first[n - 2]) / time_step_ / time_step_;
+  ASSERT_NEAR(speed_limit_, vs_f, 1e-3);
+  ASSERT_NEAR(0, as_f, 0.2); // as_f is an estimation so that it differs from the JMT value
+}
+
+// begin at a low speed
+TEST_F(TestPathOptimizer, changeLane2) {
+  double ps = 100;
+  double vs = 0.5 * speed_limit_;
+  double pd = 6; // start at the center of lane 2
+  double vd = 0;
+  double pd_f = 2; // the center of lane 1
+
+  std::vector<double> path_s;
+  std::vector<double> path_d;
+
+  dynamics dyn_front_car {{20, 0.5 * speed_limit_, 0}, {0, 0, 0}};
+  auto path_sd = opt_.changeLane({{ps, vs, 0}, {pd, vd, 0}}, dyn_front_car, pd_f);
+  ASSERT_TRUE(!path_sd.first.empty());
+
+  // test lane has been changed
+  ASSERT_NEAR(path_sd.second.back(), pd_f, 1e-3);
+
+  std::size_t n = path_sd.first.size();
+  double vs_f = (path_sd.first[n - 1] - path_sd.first[n - 2]) / time_step_;
+  double as_f = (path_sd.first[n - 1] + path_sd.first[n - 3] - 2 * path_sd.first[n - 2]) / time_step_ / time_step_;
   ASSERT_NEAR(speed_limit_, vs_f, 1e-3);
   ASSERT_NEAR(0, as_f, 0.2); // as_f is an estimation so that it differs from the JMT value
 }
