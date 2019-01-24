@@ -1,9 +1,9 @@
 #ifndef BEHAVIOR_AND_PATH_PLANNING_JMT_H
 #define BEHAVIOR_AND_PATH_PLANNING_JMT_H
 
-#include "eigen3/Eigen/Dense"
+#include <vector>
 
-using polynomial_coeff = std::vector<double>;
+#include "common.hpp"
 
 /**
  * Find the coefficients of a quinted polynomial which minimizes the

@@ -106,7 +106,8 @@ trajectory  PathOptimizer::startUp(dynamics&& dyn) {
   return {path_s, path_d};
 }
 
-trajectory PathOptimizer::keepLane(dynamics&& dyn, const dynamics& closest_front_car, double pd_f) {
+trajectory
+PathOptimizer::keepLane(dynamics&& dyn, const dynamics& closest_front_car, double pd_f) {
   // the default value assumes that the front car is far away (it takes more than 2 seconds to reach it)
   double d_ps = 2.0 * dyn.first[1];
   double vs_f = speed_limit_;
@@ -121,7 +122,8 @@ trajectory PathOptimizer::keepLane(dynamics&& dyn, const dynamics& closest_front
   return searchOptimizedJMT({dyn.first, dyn.second}, ps_f, vs_f, pd_f, vd_f, 1.0, 4.0);
 }
 
-trajectory PathOptimizer::changeLane(dynamics&& dyn, const dynamics& closest_front_car, double pd_f) {
+trajectory
+PathOptimizer::changeLane(dynamics&& dyn, const dynamics& closest_front_car, double pd_f) {
   double d_ps = dyn.first[1];
   double vs_f = speed_limit_;
   if (closest_front_car.first[0] < d_ps) {

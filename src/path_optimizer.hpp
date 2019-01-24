@@ -5,14 +5,10 @@
 #ifndef PROJECT_PATH_OPTIMIZER_H
 #define PROJECT_PATH_OPTIMIZER_H
 
-#include <iostream>
 #include <vector>
 
-#include "utilities.hpp"
+#include "common.hpp"
 
-/*
- * PathOptimizer
- */
 
 class PathOptimizer {
 

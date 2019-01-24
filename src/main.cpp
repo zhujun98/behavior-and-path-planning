@@ -4,17 +4,30 @@
 #include <chrono>
 #include <thread>
 #include <vector>
-#include "eigen3/Eigen/Core"
-#include "eigen3/Eigen/QR"
+
 #include "json.hpp"
 
-#include "utilities.hpp"
 #include "car.hpp"
-#include "map.hpp"
+#include "utilities.hpp"
+
+
+/**
+ * Get the JSON data from the SocketIO event.
+ */
+inline std::string parseSocketData(const std::string& s) {
+  auto found_null = s.find("null");
+  auto b1 = s.find_first_of('[');
+  auto b2 = s.find_first_of('}');
+  if (found_null != std::string::npos) {
+    return "";
+  } else if (b1 != std::string::npos && b2 != std::string::npos) {
+    return s.substr(b1, b2 - b1 + 2);
+  }
+  return "";
+}
+
 
 int main() {
-
-//  testPathPlanner();
 
   uWS::Hub h;
 
@@ -32,7 +45,7 @@ int main() {
         const nlohmann::json json_data = nlohmann::json::parse(socket_data);
 
         std::string event = json_data[0].get<std::string>();
-        
+
         if (event == "telemetry") {
           // Car's localization data (without noise).
           double x = json_data[1]["x"];  // in m

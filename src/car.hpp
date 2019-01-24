@@ -26,13 +26,13 @@
 #include <map>
 #include <memory>
 
-#include "utilities.hpp"
-#include "map.hpp"
-#include "path_optimizer.hpp"
+#include "common.hpp"
+
+class Map;
+class PathOptimizer;
 
 
 class Car {
-
   //
   // CL: change lane (to left or right)
   // KL: keep lane

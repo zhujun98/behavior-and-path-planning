@@ -1,7 +1,8 @@
 #include "car.hpp"
+#include "map.hpp"
 #include "path_optimizer.hpp"
 #include "trajectory.hpp"
-#include "map.hpp"
+#include "utilities.hpp"
 
 
 double Car::inf_dist = 1.0e6;

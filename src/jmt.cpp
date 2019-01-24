@@ -1,9 +1,9 @@
-#include "eigen3/Eigen/Dense"
+#include "Eigen/Dense"
 
 #include "jmt.hpp"
 
 
-polynomial_coeff
+std::vector<double>
 jerkMinimizingTrajectory(const std::vector<double>& state0, const std::vector<double>& state1, double dt) {
   double dt2 = dt*dt;
   double dt3 = dt2*dt;

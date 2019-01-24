@@ -1,26 +1,24 @@
-project(behavior_and_path_planning)
-
-OPTION(BUILD_TESTS "test suit" ON)
-
-set(SOURCES main.cpp)
-
-set(CAR_SOURCES
+add_library(car STATIC
     car.cpp
     path_optimizer.cpp
     jmt.cpp
     trajectory.cpp
+    map.hpp
+    utilities.hpp)
+
+target_include_directories(car
+    PUBLIC
+        ${CURRENT_SOURCE_DIR}/
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/third_party/eigen3
+        ${PROJECT_SOURCE_DIR}/third_party/spline
 )
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    include_directories(/usr/local/include)
-    include_directories(/usr/local/opt/openssl/include)
-    link_directories(/usr/local/lib)
-    link_directories(/usr/local/opt/openssl/lib)
-    link_directories(/usr/local/Cellar/libuv/1.11.0/lib)
-endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+add_executable(run_app main.cpp)
 
-set(TARGET run_app)
-add_library(car STATIC ${CAR_SOURCES})
-add_executable(${TARGET} ${SOURCES})
+target_include_directories(run_app
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/third_party/json
+)
 
-target_link_libraries(${TARGET} car z ssl uv uWS)
+target_link_libraries(run_app PRIVATE car z ssl uv uWS)
