@@ -21,14 +21,12 @@
 #define PATH_PLANNING_CAR_H
 
 #include <iostream>
-#include <vector>
-#include <list>
-#include <map>
 #include <memory>
 
 #include "common.hpp"
+#include "map.hpp"
 
-class Map;
+
 class PathOptimizer;
 
 
@@ -65,23 +63,24 @@ class Car {
   double as_; // in m/s^2
   double ad_; // in m/s^2
 
-  std::unique_ptr<Map> map_;
+  double inf_dist_ = 1.0e6; // in m
+
+  std::shared_ptr<Map> map_;
 
   std::unique_ptr<State> state_;
 
   std::unique_ptr<PathOptimizer> path_opt_;
 
   // key: lane ID, value: vehicle dynamics
-  std::map<uint16_t, dynamics> closest_front_cars_;
-  std::map<uint16_t, dynamics> closest_rear_cars_;
+  cars_on_road closest_front_cars_;
+  cars_on_road closest_rear_cars_;
 
   uint16_t target_lane_id_; // target lane ID
 
+  std::vector<double> path_x_;
+  std::vector<double> path_y_;
   std::vector<double> path_s_;
   std::vector<double> path_d_;
-
-  // ignore cars which are too far away (not detectable in real life)
-  double max_tracking_dist_ = 100; // in m
 
   /**
    * Estimate the dynamics of car at the path end.
@@ -122,25 +121,26 @@ class Car {
   bool changeLane();
 
   /**
-   * Check whether the given path could collide with a given car.
-   */
-  bool checkCollision(const trajectory& path, const dynamics& dyn) const;
-
-  /**
-   * Check whether the given path could collide the front car in the current lane
-   * or the cars in the target lane.
-   */
-  bool checkAllCollisions(const trajectory& path) const;
-
-  /**
    * construct a new state
    */
   static State* createState(States name);
 
 public:
-  static double inf_dist; // a big number represents infinite distance
 
-  explicit Car(const std::string& file_path, double time_step=0.02);
+  /**
+   * Constructor.
+   *
+   * @param file_path: path of the map file
+   * @param time_step: time step in s
+   * @param speed_limit: maximum speed in m/s
+   * @param acc_limit: maximum acceleration in m^2/s
+   * @param jerk_limit: maximum jerk in m^3/s
+   */
+  explicit Car(const std::string& file_path,
+               double time_step,
+               double speed_limit,
+               double acc_limit,
+               double jerk_limit);
 
   ~Car();
 
@@ -177,17 +177,15 @@ public:
    */
   uint16_t getOptimizedLaneId() const;
 
-  const std::map<uint16_t, dynamics>& getClosestFrontVehicles() const;
-  const std::map<uint16_t, dynamics>& getClosestRearVehicles() const;
+  const cars_on_road& getClosestFrontVehicles() const;
+  const cars_on_road& getClosestRearVehicles() const;
 
   uint16_t getCurrentLaneId() const;
-  double getCurrentLaneCenter() const;
 
   uint16_t getTargetLaneId() const;
   void setTargetLaneId(uint16_t id);
-  double getTargetLaneCenter() const;
 
+  const cars_on_road& getSurroundingVehicles() const;
 };
-
 
 #endif //PATH_PLANNING_CAR_H

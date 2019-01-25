@@ -5,6 +5,7 @@
 #include <gmock/gmock.h>
 
 #include "path_optimizer.hpp"
+#include "map.hpp"
 
 using ::testing::ElementsAre;
 
@@ -29,9 +30,13 @@ protected:
 class TestPathOptimizer : public QuickTest {
 
 protected:
-  double speed_limit_ = 20;
   double time_step_ = 0.02;
-  PathOptimizer opt_{speed_limit_, 10.0, 10.0, time_step_};
+  double speed_limit_ = 20;
+  double acc_limit = 10;
+  double jerk_limit = 10;
+
+  std::shared_ptr<Map> map_ = std::make_shared<Map>("../../data/highway_map.csv");
+  PathOptimizer opt_{map_, time_step_, speed_limit_, acc_limit, jerk_limit};
 
   TestPathOptimizer() = default;
 };
@@ -53,15 +58,17 @@ TEST_F(TestPathOptimizer, keepLane1) {
   double vs = 10; // started at a low speed
   double pd = 7; // started at lane 2, but not centered
   double vd = 0;
-  double pd_f = 6; // lane center
 
-  dynamics dyn_front_car {{1e6, 0, 0}, {0, 0, 0}}; // no front car
+  uint16_t current_lane_id = 2;
 
-  auto path_sd = opt_.keepLane({{ps, vs, 0}, {pd, vd, 0}}, dyn_front_car, pd_f);
+  cars_on_road front_cars {{2, {{1e6, 0, 0}, {0, 0, 0}}}}; // no front car
+  cars_on_road rear_cars {{2, {{1e6, 0, 0}, {0, 0, 0}}}};
+
+  auto path_sd = opt_.keepLane({{ps, vs, 0}, {pd, vd, 0}}, front_cars.at(current_lane_id));
   ASSERT_TRUE(!path_sd.first.empty()); // path can be found
 
   // test the car will finally move to the lane center
-  ASSERT_NEAR(path_sd.second.back(), pd_f, 1e-3);
+  ASSERT_NEAR(path_sd.second.back(), map_->getLaneCenter(current_lane_id), 1e-3);
 
   std::size_t n = path_sd.first.size();
   double vs_f = (path_sd.first[n - 1] - path_sd.first[n - 2]) / time_step_;
@@ -75,15 +82,17 @@ TEST_F(TestPathOptimizer, keepLane2) {
   double vs = speed_limit_;
   double pd = 6; // started at lane 2 and centered
   double vd = 0;
-  double pd_f = 6; // lane center
 
-  dynamics dyn_front_car {{1e6, 0, 0}, {0, 0, 0}}; // no front car
+  uint16_t current_lane_id = 2;
 
-  auto path_sd = opt_.keepLane({{ps, vs, 0}, {pd, vd, 0}}, dyn_front_car, pd_f);
+  cars_on_road front_cars {{2, {{1e6, 0, 0}, {0, 0, 0}}}}; // no front car
+  cars_on_road rear_cars {{2, {{1e6, 0, 0}, {0, 0, 0}}}};
+
+  auto path_sd = opt_.keepLane({{ps, vs, 0}, {pd, vd, 0}}, front_cars.at(current_lane_id));
   ASSERT_TRUE(!path_sd.first.empty()); // path can be found
 
   // test the car will stay at the lane center
-  ASSERT_NEAR(path_sd.second.back(), pd_f, 1e-3);
+  ASSERT_NEAR(path_sd.second.back(), map_->getLaneCenter(current_lane_id), 1e-3);
 
   std::size_t n = path_sd.first.size();
   double vs_f = (path_sd.first[n - 1] - path_sd.first[n - 2]) / time_step_;
@@ -97,17 +106,19 @@ TEST_F(TestPathOptimizer, keepLane3) {
   double vs = speed_limit_;
   double pd = 6; // started at lane 2 and centered
   double vd = 0;
-  double pd_f = 6; // lane center
+
+  uint16_t current_lane_id = 2;
 
   double front_car_d_ps = 30; // < 2 * vs
   double front_car_vs = 15;
-  dynamics dyn_front_car {{front_car_d_ps, front_car_vs, 0}, {0, 0, 0}};
+  cars_on_road front_cars {{2, {{front_car_d_ps, front_car_vs, 0}, {0, 0, 0}}}};
+  cars_on_road rear_cars {{2, {{1e6, 0, 0}, {0, 0, 0}}}};
 
-  auto path_sd = opt_.keepLane({{ps, vs, 0}, {pd, vd, 0}}, dyn_front_car, pd_f);
+  auto path_sd = opt_.keepLane({{ps, vs, 0}, {pd, vd, 0}}, front_cars.at(current_lane_id));
   ASSERT_TRUE(!path_sd.first.empty()); // path can be found
 
   // test the car will stay at the lane center
-  ASSERT_NEAR(path_sd.second.back(), pd_f, 1e-3);
+  ASSERT_NEAR(path_sd.second.back(), map_->getLaneCenter(current_lane_id), 1e-3);
 
   std::size_t n = path_sd.first.size();
   double vs_f = (path_sd.first[n - 1] - path_sd.first[n - 2]) / time_step_;
@@ -121,22 +132,24 @@ TEST_F(TestPathOptimizer, keepLane4) {
   double vs = speed_limit_;
   double pd = 6; // started at lane 2 and centered
   double vd = 0;
-  double pd_f = 6; // lane center
+
+  uint16_t current_lane_id = 2;
 
   double front_car_d_ps = 5;
   double front_car_vs = 10;
-  dynamics dyn_front_car {{front_car_d_ps, front_car_vs, 0}, {0, 0, 0}};
+  cars_on_road front_cars {{2, {{front_car_d_ps, front_car_vs, 0}, {0, 0, 0}}}};
+  cars_on_road rear_cars {{2, {{1e6, 0, 0}, {0, 0, 0}}}};
 
-  auto path_sd = opt_.keepLane({{ps, vs, 0}, {pd, vd, 0}}, dyn_front_car, pd_f);
+  auto path_sd = opt_.keepLane({{ps, vs, 0}, {pd, vd, 0}}, front_cars.at(current_lane_id));
   ASSERT_TRUE(!path_sd.first.empty()); // path can be found
 
   // test the car will stay at the lane center
-  ASSERT_NEAR(path_sd.second.back(), pd_f, 1e-3);
+  ASSERT_NEAR(path_sd.second.back(), map_->getLaneCenter(current_lane_id), 1e-3);
 
   std::size_t n = path_sd.first.size();
   double vs_f = (path_sd.first[n - 1] - path_sd.first[n - 2]) / time_step_;
   double as_f = (path_sd.first[n - 1] + path_sd.first[n - 3] - 2 * path_sd.first[n - 2]) / time_step_ / time_step_;
-  ASSERT_NEAR(front_car_vs, vs_f, 1e-3);
+  ASSERT_NEAR(5.0, vs_f, 1e-3); // = front_car_vs * front_car_d_ps / safe_dist
   ASSERT_NEAR(0, as_f, 0.2); // as_f is an estimation so that it differs from the JMT value
 }
 
@@ -146,17 +159,20 @@ TEST_F(TestPathOptimizer, changeLane1) {
   double vs = speed_limit_;
   double pd = 6; // start at the center of lane 2
   double vd = 0;
-  double pd_f = 2; // the center of lane 1
+
+  uint16_t target_lane_id = 1;
 
   std::vector<double> path_s;
   std::vector<double> path_d;
 
-  dynamics dyn_front_car {{1e6, 0, 0}, {0, 0, 0}};
-  auto path_sd = opt_.changeLane({{ps, vs, 0}, {pd, vd, 0}}, dyn_front_car, pd_f);
+  cars_on_road front_cars {{1, {{1e6, 0, 0}, {0, 0, 0}}}, {2, {{1e6, 0, 0}, {0, 0, 0}}}};
+  cars_on_road rear_cars {{1, {{-1e6, 0, 0}, {0, 0, 0}}}, {2, {{-1e6, 0, 0}, {0, 0, 0}}}};
+
+  auto path_sd = opt_.changeLane({{ps, vs, 0}, {pd, vd, 0}}, front_cars.at(target_lane_id), target_lane_id);
   ASSERT_TRUE(!path_sd.first.empty());
 
   // test lane has been changed
-  ASSERT_NEAR(path_sd.second.back(), pd_f, 1e-3);
+  ASSERT_NEAR(path_sd.second.back(), map_->getLaneCenter(target_lane_id), 1e-3);
 
   std::size_t n = path_sd.first.size();
   double vs_f = (path_sd.first[n - 1] - path_sd.first[n - 2]) / time_step_;
@@ -171,17 +187,20 @@ TEST_F(TestPathOptimizer, changeLane2) {
   double vs = 0.5 * speed_limit_;
   double pd = 6; // start at the center of lane 2
   double vd = 0;
-  double pd_f = 2; // the center of lane 1
+
+  uint16_t target_lane_id = 1;
 
   std::vector<double> path_s;
   std::vector<double> path_d;
 
-  dynamics dyn_front_car {{20, 0.5 * speed_limit_, 0}, {0, 0, 0}};
-  auto path_sd = opt_.changeLane({{ps, vs, 0}, {pd, vd, 0}}, dyn_front_car, pd_f);
+  cars_on_road front_cars {{1, {{20, 0.5 * speed_limit_, 0}, {0, 0, 0}}}, {2, {{1e6, 0, 0}, {0, 0, 0}}}};
+  cars_on_road rear_cars {{1, {{-1e6, 0, 0}, {0, 0, 0}}}, {2, {{-1e6, 0, 0}, {0, 0, 0}}}};
+
+  auto path_sd = opt_.changeLane({{ps, vs, 0}, {pd, vd, 0}}, front_cars.at(target_lane_id), target_lane_id);
   ASSERT_TRUE(!path_sd.first.empty());
 
   // test lane has been changed
-  ASSERT_NEAR(path_sd.second.back(), pd_f, 1e-3);
+  ASSERT_NEAR(path_sd.second.back(), map_->getLaneCenter(target_lane_id), 1e-3);
 
   std::size_t n = path_sd.first.size();
   double vs_f = (path_sd.first[n - 1] - path_sd.first[n - 2]) / time_step_;

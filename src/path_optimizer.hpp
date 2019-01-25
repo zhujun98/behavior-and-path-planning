@@ -1,13 +1,11 @@
-//
-// Created by jun on 1/20/19.
-//
+#ifndef BEHAVIOR_AND_PATH_PLANNING_PATH_OPTIMIZER_H
+#define BEHAVIOR_AND_PATH_PLANNING_PATH_OPTIMIZER_H
 
-#ifndef PROJECT_PATH_OPTIMIZER_H
-#define PROJECT_PATH_OPTIMIZER_H
-
-#include <vector>
+#include <iostream>
+#include <memory>
 
 #include "common.hpp"
+#include "map.hpp"
 
 
 class PathOptimizer {
@@ -17,17 +15,28 @@ class PathOptimizer {
   double jerk_limit_; // maximum jerk (m/s^3)
 
   double time_step_;
+  double time_limit_ = 4.0; // maximum time span of a path (s)
+
+  double dist_step_ = 1.0; // distance step during search (m)
+  // maximum distance is bounded by speed_limit_ * time_limit_
+
+  std::shared_ptr<Map> map_;
+
+  // other vehicles on the road ((s, vs, as), (d, vd, ad))
+  std::shared_ptr<cars_on_road> vehicles_;
 
 public:
 
-  PathOptimizer(double speed_limit, double acc_limit, double jerk_limit, double time_step);
+  PathOptimizer(std::shared_ptr<Map> map,
+                double time_step, double speed_limit, double acc_limit, double jerk_limit);
 
   ~PathOptimizer();
 
   /**
    * Validate a JMT path.
    */
-  bool validatePath(const polynomial_coeff& coeff_s, const polynomial_coeff& coeff_d, double delta_t);
+  bool validatePath(const dynamics& dyn, const polynomial_coeff& coeff_s, const polynomial_coeff& coeff_d,
+                    double delta_t);
 
   /**
    * Compute the trajectory in the Frenet coordinate system.
@@ -42,35 +51,24 @@ public:
 
   /**
    * Get the optimized path when keeping lane.
-   *
-   * :param closest_front_car: dynamics of the closest front car at the current lane.
    */
-  trajectory keepLane(dynamics&& dyn, const dynamics& closest_front_car, double pd_f);
+  trajectory keepLane(dynamics&& dyn, const dynamics& front_vehicle);
 
   /**
    * Get the optimized path when changing lane.
    *
-   * :param closest_front_car: dynamics of the closest front car at the target lane.
-
+   * :param target_lane_id: target lane ID.
    */
-  trajectory changeLane(dynamics&& dyn, const dynamics& closest_front_car, double pd_f);
+  trajectory changeLane(dynamics&& dyn, const dynamics& front_vehicle, uint16_t target_lane_id);
 
   /**
    * Search the optimized JMT path for a given condition.
    *
    * :param dyn: initial vehicle dynamics
-   * :param ps_f: final longitudinal position
-   * :param pd_f: final transverse position
-   * :param vs_f: final longitudinal velocity
-   * :param vd_f: final transverse velocity
-   * :param dist_step: step in searching valid ps (in meter).
-   * :param time_limit: time span limit for the path
+   * :param dyn_f: final vehicle dynamics with minimum allowed s
    */
-  trajectory
-  searchOptimizedJMT(dynamics&& dyn, double ps_f, double vs_f, double pd_f, double vd_f,
-                     double dist_step, double time_limit);
-
+  trajectory searchOptimizedJMT(dynamics&& dyn, dynamics&& dyn_f);
 };
 
 
-#endif //PROJECT_PATH_OPTIMIZER_H
+#endif //BEHAVIOR_AND_PATH_PLANNING_PATH_OPTIMIZER_H

@@ -1,17 +1,15 @@
+#include <cmath>
+#include <vector>
+
 #include "car.hpp"
-#include "map.hpp"
 #include "path_optimizer.hpp"
-#include "trajectory.hpp"
-#include "utilities.hpp"
 
-
-double Car::inf_dist = 1.0e6;
 
 class Car::State {
 
 protected:
   uint16_t tick_ = 0;
-  uint16_t max_tick_ = 10; // determine the frequency of planning new path
+  uint16_t max_tick_ = 5; // determine the frequency of planning new path
 
   State() = default;
 
@@ -74,6 +72,7 @@ public:
   State*getNextState(Car &car) override {
     auto opt_id = car.getOptimizedLaneId();
     if (opt_id != car.getCurrentLaneId()) {
+      std::cout << "Optimized lane ID is: " << opt_id << std::endl;
       car.setTargetLaneId(opt_id);
       return createState(States::CL);
     }
@@ -83,6 +82,7 @@ public:
 
   void onEnter(Car& car) override {
     std::cout << "Enter state: *** KEEP LANE ***" << std::endl;
+    car.setTargetLaneId(car.getCurrentLaneId());
   }
 
   void onUpdate(Car &car) override {
@@ -148,13 +148,20 @@ Car::State* Car::createState(States name) {
 }
 
 
-Car::Car(const std::string& file_path, double time_step) :
+Car::Car(const std::string& file_path,
+         double time_step, double speed_limit, double acc_limit, double jerk_limit) :
   is_initialized_(false),
   time_step_(time_step),
-  map_(new Map(file_path)),
+  map_(std::make_shared<Map>(file_path)),
   state_(createState(States::ST)),
-  path_opt_(new PathOptimizer(mph2mps(47.5), 9.5, 9.5, time_step))
+  path_opt_(new PathOptimizer(map_, time_step, speed_limit, acc_limit, jerk_limit))
 {
+  // initializing closest vehicles
+  for (auto i = 1; i <= map_->nLanes(); ++i) {
+    closest_front_cars_[i] = {{inf_dist_, 0, 0}, {0, 0, 0}};
+    closest_rear_cars_[i] = {{-inf_dist_, 0, 0}, {0, 0, 0}};
+  }
+
   state_->onEnter(*this);
 }
 
@@ -212,11 +219,6 @@ void Car::updateParameters(const std::vector<double>& localization) {
     as_ = 0;
     ad_ = 0;
 
-    for (auto i = 1; i <= map_->n_lanes; ++i) {
-      closest_front_cars_[i] = {{inf_dist, 0, 0}, {0, 0, 0}};
-      closest_rear_cars_[i] = {{-inf_dist, 0, 0}, {0, 0, 0}};
-    }
-
     is_initialized_ = true;
   }
 
@@ -233,7 +235,7 @@ void Car::updateParameters(const std::vector<double>& localization) {
 void Car::updateClosestVehicles(const std::vector<std::vector<double>>& sensor_fusion) {
   for (auto& v : closest_front_cars_) {
     auto& dyn_s = v.second.first;
-    dyn_s[0] = inf_dist;
+    dyn_s[0] = inf_dist_;
     dyn_s[1] = 0;
     dyn_s[2] = 0;
 
@@ -244,7 +246,7 @@ void Car::updateClosestVehicles(const std::vector<std::vector<double>>& sensor_f
   }
   for (auto& v : closest_rear_cars_) {
     auto& dyn_s = v.second.first;
-    dyn_s[0] = - inf_dist;
+    dyn_s[0] = - inf_dist_;
     dyn_s[1] = 0;
     dyn_s[2] = 0;
 
@@ -259,21 +261,19 @@ void Car::updateClosestVehicles(const std::vector<std::vector<double>>& sensor_f
     // TODO: Fix when a new lap starts
     double d_ps = v[5] - ps_;
 
-    if (std::abs(d_ps) > max_tracking_dist_) continue;
-
     uint16_t id = map_->getLaneId(v[6]);
     // Sensor fusion could return data with d outside of the lanes.
-    if (id == 0 || id > map_->n_lanes) continue;
+    if (id == 0 || id > map_->nLanes()) continue;
 
     double vs = std::sqrt(v[3]*v[3] + v[4]*v[4]); // an estimation
     if (d_ps > 0) {
       // front vehicle
       dynamics& dyn = closest_front_cars_[id];
-      if (d_ps < dyn.first[0]) dyn = {{d_ps, vs, 0}, {0, 0, 0}};
+      if (d_ps < dyn.first[0]) dyn = {{d_ps, vs, 0}, {v[6], 0, 0}};
     } else {
       // rear vehicle
       dynamics& dyn = closest_rear_cars_[id];
-      if (d_ps > dyn.first[0]) dyn = {{d_ps, vs, 0}, {0, 0, 0}};
+      if (d_ps > dyn.first[0]) dyn = {{d_ps, vs, 0}, {v[6], 0, 0}};
     }
   }
 }
@@ -283,7 +283,7 @@ void Car::updateUnprocessedPath() {
   if (!path_s_.empty()) {
     // the path includes the starting point
     // TODO: check
-    if (path_s_.back() > map_->max_s && path_s_.front() > ps_) ps_ += map_->max_s;
+    if (path_s_.back() > map_->maxS() && path_s_.front() > ps_) ps_ +=  map_->maxS();
 
     auto it_s = std::lower_bound(path_s_.begin(), path_s_.end(), ps_);
     auto it_d = std::next(path_d_.begin(), std::distance(path_s_.begin(), it_s));
@@ -358,8 +358,7 @@ bool Car::keepLane() {
   truncatePath(5);
 
   auto new_path = path_opt_->keepLane(estimateFinalDynamics(),
-                                      closest_front_cars_.at(getCurrentLaneId()),
-                                      getCurrentLaneCenter());
+                                      closest_front_cars_.at(getCurrentLaneId()));
 
   if (new_path.first.empty()) {
     std::cerr << "Failed to find a path for keepLane! \n";
@@ -372,18 +371,14 @@ bool Car::keepLane() {
 bool Car::changeLane() {
   truncatePath(5);
 
-  auto new_path = path_opt_->keepLane(estimateFinalDynamics(),
-                                      closest_front_cars_.at(getTargetLaneId()),
-                                      getTargetLaneCenter());
+  auto new_path = path_opt_->changeLane(estimateFinalDynamics(),
+                                        closest_front_cars_.at(getTargetLaneId()),
+                                        target_lane_id_);
 
-  if (new_path.first.empty() || checkAllCollisions(new_path)) {
-    new_path = path_opt_->keepLane(estimateFinalDynamics(),
-                                   closest_front_cars_.at(getCurrentLaneId()),
-                                   getCurrentLaneCenter());
-
+  if (new_path.first.empty()) {
+    std::cerr << "Failed to find a path for changeLane! \n";
     return false;
   }
-
   extendPath(std::move(new_path));
   return true;
 }
@@ -392,7 +387,7 @@ trajectory Car::getPathXY() const {
   std::vector<double> path_x;
   std::vector<double> path_y;
   for (std::size_t i = 0; i < path_s_.size(); ++i) {
-    position pxy = frenetToCartesian(path_s_[i], path_d_[i], map_->s, map_->max_s, map_->x, map_->y);
+    position pxy = map_->frenetToCartesian(path_s_[i], path_d_[i]);
     path_x.push_back(pxy.first);
     path_y.push_back(pxy.second);
   }
@@ -407,7 +402,7 @@ void Car::info() const {
             << "ps = " << ps_ << ", " << "pd = " << pd_ << ", "
             << "vs = " << vs_ << ", " << "vd = " << vd_ << "\n";
 
-  for (uint16_t i=1; i<=map_->n_lanes; ++i) {
+  for (uint16_t i=1; i<=map_->nLanes(); ++i) {
     std::cout << "Lane " << i << ": ";
     std::cout << closest_front_cars_.at(i).first[0] << " m to the closest front car, ";
     std::cout << closest_rear_cars_.at(i).first[0] << " m to the closest rear car.\n";
@@ -419,13 +414,11 @@ void Car::info() const {
 uint16_t Car::getOptimizedLaneId() const {
   double prediction_time = 4;
 
-  // This function does not take care of whether it is feasible to change
-  // lane in order to reach the optimized lane.
-  uint16_t n_lanes = map_->n_lanes;
+  uint16_t n_lanes = map_->nLanes();
   uint16_t current_id = getCurrentLaneId();
 
   const auto& front_dyn = closest_front_cars_.at(current_id);
-  // Do not change lane if the front car is far away or significantly faster
+  // Do not change lane if the front car is far away or very close or significantly faster
   if (front_dyn.first[0] > 3.0 * vs_ || front_dyn.first[1] > 1.2 * vs_)
     return current_id;
 
@@ -450,58 +443,24 @@ uint16_t Car::getOptimizedLaneId() const {
     }
   }
 
-  std::cout << "Optimized land ID is: " << opt_id << std::endl;
-
   // only allow to change to the next lane
   if (opt_id - current_id > 1) opt_id = current_id + 1u;
   if (current_id - opt_id > 1) opt_id = current_id - 1u;
+
+  if (opt_id != current_id) {
+    auto& rear_car = closest_rear_cars_.at(opt_id);
+    double d_vs = rear_car.first[1] - vs_;
+    // rear car is fast and too close
+    if (rear_car.first[0] > -3.0 || 2.0 * d_vs + rear_car.first[0] > 0) return current_id;
+  }
+
   return opt_id;
 }
 
-bool Car::checkCollision(const trajectory& path, const dynamics& dyn) const {
-
-  double safe_dist = 10; // safe distance between vehicles (in m)
-
-  double ps = dyn.first[0];
-  double vs = dyn.first[1];
-  double pd = dyn.second[0];
-  double vd = dyn.second[1];
-
-  for (uint16_t i=0; i<path.first.size(); ++i) {
-    ps += vs * time_step_;
-    pd += vd * time_step_;
-
-    // two vehicles are in different lanes
-    if (std::abs(pd - path.second[i]) >= map_->lane_width) continue;
-
-    if (distance(path.first[i], path.second[i], ps, pd) < safe_dist) return true;
-  }
-
-  return false;
-}
-
-bool Car::checkAllCollisions(const trajectory& path) const {
-  uint16_t current_id = getCurrentLaneId();
-  uint16_t target_id = getTargetLaneId();
-
-  // check the front vehicle in the current line
-  if (checkCollision(path, closest_front_cars_.at(current_id))) return true;
-
-  // check the front and rear vehicles in the target line
-  if (target_id != current_id) {
-    if (checkCollision(path, closest_front_cars_.at(target_id))) return true;
-    if (checkCollision(path, closest_rear_cars_.at(target_id))) return true;
-  }
-
-  return false;
-}
-
-const std::map<uint16_t, dynamics>& Car::getClosestFrontVehicles() const { return closest_front_cars_; }
-const std::map<uint16_t, dynamics>& Car::getClosestRearVehicles() const { return closest_rear_cars_; }
+const cars_on_road& Car::getClosestFrontVehicles() const { return closest_front_cars_; }
+const cars_on_road& Car::getClosestRearVehicles() const { return closest_rear_cars_; }
 
 uint16_t Car::getCurrentLaneId() const { return map_->getLaneId(pd_); }
-double Car::getCurrentLaneCenter() const { return map_->getLaneCenter(map_->getLaneId(pd_)); }
 
 void Car::setTargetLaneId(uint16_t id) { target_lane_id_ = id; }
 uint16_t Car::getTargetLaneId() const { return target_lane_id_; }
-double Car::getTargetLaneCenter() const { return map_->getLaneCenter(target_lane_id_); }

@@ -14,7 +14,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_subdirectory(src)
 
-OPTION(BUILD_TESTS "test suit" ON)
+OPTION(BUILD_TESTS "test suit" OFF)
 
 if(BUILD_TESTS)
     enable_testing()

@@ -31,7 +31,12 @@ int main() {
 
   uWS::Hub h;
 
-  Car car("../../data/highway_map.csv");
+  double speed_limit = mph2mps(47.5);
+  double acc_limit = 9.5;
+  double jerk_limit= 9.5;
+  double time_step = 0.02;
+
+  Car car("../../data/highway_map.csv", time_step, speed_limit, acc_limit, jerk_limit);
 
   h.onMessage([&car](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.

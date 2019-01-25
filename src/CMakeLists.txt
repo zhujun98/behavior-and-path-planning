@@ -2,8 +2,7 @@ add_library(car STATIC
     car.cpp
     path_optimizer.cpp
     jmt.cpp
-    trajectory.cpp
-    map.hpp
+    map.cpp
     utilities.hpp)
 
 target_include_directories(car
