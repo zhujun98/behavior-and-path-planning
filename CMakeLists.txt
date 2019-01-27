@@ -1,13 +1,20 @@
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required(VERSION 3.1)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -g")
+if(${CMAKE_VERSION} VERSION_LESS 3.13)
+    cmake_policy(VERSION ${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION})
+else()
+    cmake_policy(VERSION 3.13)
+endif()
 
-OPTION(BUILD_TESTS "test suit" ON)
+project(behavior_and_path_planning VERSION 2.0 LANGUAGES CXX)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_subdirectory(src)
+
+OPTION(BUILD_TESTS "test suit" OFF)
 
 if(BUILD_TESTS)
     enable_testing()

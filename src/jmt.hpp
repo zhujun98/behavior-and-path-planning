@@ -1,9 +1,7 @@
 #ifndef BEHAVIOR_AND_PATH_PLANNING_JMT_H
 #define BEHAVIOR_AND_PATH_PLANNING_JMT_H
 
-#include "eigen3/Eigen/Dense"
-
-using polynomial_coeff = std::vector<double>;
+#include "common.hpp"
 
 /**
  * Find the coefficients of a quinted polynomial which minimizes the
@@ -24,7 +22,7 @@ using polynomial_coeff = std::vector<double>;
  *         s(t) = p0 + p1*t + p2*t**2 + p3*t**3 + p4*t**4 + p5*t**5
  */
 polynomial_coeff
-jerkMinimizingTrajectory(const std::vector<double>& state0, const std::vector<double>& state1, double dt);
+jerkMinimizingTrajectory(const motion& state0, const motion& state1, double dt);
 
 /**
  * Evaluate the ith derivative of a polynomial

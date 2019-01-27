@@ -1,10 +1,10 @@
-#include "eigen3/Eigen/Dense"
+#include "Eigen/Dense"
 
 #include "jmt.hpp"
 
 
-polynomial_coeff
-jerkMinimizingTrajectory(const std::vector<double>& state0, const std::vector<double>& state1, double dt) {
+std::vector<double>
+jerkMinimizingTrajectory(const motion& state0, const motion& state1, double dt) {
   double dt2 = dt*dt;
   double dt3 = dt2*dt;
   double dt4 = dt3*dt;
@@ -45,6 +45,10 @@ double evalPolynomialDerivative(const polynomial_coeff& p, double t, unsigned or
 double evalTrajectory(const polynomial_coeff& p, double t) {
   return evalPolynomialDerivative(p, t, 0);
 }
+
+// The following three functions are not used since, in the simulator,
+// speed, acceleration and jerk are calculated by comparing adjacent
+// waypoint values.
 
 double evalVelocity(const polynomial_coeff& p, double t) {
   return evalPolynomialDerivative(p, t, 1);

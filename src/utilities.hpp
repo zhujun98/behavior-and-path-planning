@@ -7,11 +7,6 @@
 #include <cmath>
 #include <assert.h>
 
-using position = std::pair<double, double>;
-using trajectory = std::pair<std::vector<double>, std::vector<double>>;
-using polynomial_coeff = std::vector<double>;
-using dynamics = std::pair<std::vector<double>, std::vector<double>>;
-
 
 //
 // For converting back and forth between radians and degrees.
@@ -40,21 +35,6 @@ inline double square_distance(double px0, double py0, double px1, double py1) {
  */
 inline double distance(double px0, double py0, double px1, double py1) {
   return std::sqrt(square_distance(px0, py0, px1, py1));
-}
-
-/**
- * Get the JSON data from the SocketIO event.
- */
-inline std::string parseSocketData(const std::string& s) {
-  auto found_null = s.find("null");
-  auto b1 = s.find_first_of('[');
-  auto b2 = s.find_first_of('}');
-  if (found_null != std::string::npos) {
-    return "";
-  } else if (b1 != std::string::npos && b2 != std::string::npos) {
-    return s.substr(b1, b2 - b1 + 2);
-  }
-  return "";
 }
 
 #endif //PATH_PLANNING_UTILITIES_H
