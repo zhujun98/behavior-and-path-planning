@@ -18,7 +18,7 @@ jerk over 10 m/s^3.
 
 ## Dependencies
 
-- [uWebSockets](https://github.com/uNetworking/uWebSockets)
+- [uWebSockets](https://github.com/uNetworking/uWebSockets) **v0.14.8**
 
 ## Setup and run
 
