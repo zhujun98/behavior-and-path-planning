@@ -19,6 +19,8 @@ jerk over 10 m/s^3.
 ## Dependencies
 
 - [uWebSockets](https://github.com/uNetworking/uWebSockets) **v0.14.8**
+- [Boost/log](https://www.boost.org/doc/libs/1_67_0/libs/log/doc/html/log/tutorial.html) **1.67.0**
+- [GTest](https://github.com/google/googletest)
 
 ## Setup and run
 

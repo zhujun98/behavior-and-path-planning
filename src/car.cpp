@@ -1,6 +1,8 @@
 #include <cmath>
 #include <vector>
 
+#include <boost/log/trivial.hpp>
+
 #include "car.hpp"
 #include "path_optimizer.hpp"
 
@@ -47,7 +49,7 @@ public:
   }
 
   void onEnter(Car& car) override {
-    std::cout << "Enter state: *** ON ***" << std::endl;
+    BOOST_LOG_TRIVIAL(info) << "Enter state: *** ON ***";
   }
 
   void onUpdate(Car &car) override {
@@ -56,7 +58,7 @@ public:
   }
 
   void onExit(Car& car) override {
-    std::cout << "Exit state: *** ON ***" << std::endl;
+    BOOST_LOG_TRIVIAL(info) << "Exit state: *** ON ***";
   }
 };
 
@@ -72,7 +74,7 @@ public:
   State*getNextState(Car &car) override {
     auto opt_id = car.getOptimizedLaneId();
     if (opt_id != car.getCurrentLaneId()) {
-      std::cout << "Optimized lane ID is: " << opt_id << std::endl;
+      BOOST_LOG_TRIVIAL(debug) << "Optimized lane ID is: " << opt_id;
       car.setTargetLaneId(opt_id);
       return createState(States::CL);
     }
@@ -81,7 +83,7 @@ public:
   }
 
   void onEnter(Car& car) override {
-    std::cout << "Enter state: *** KEEP LANE ***" << std::endl;
+    BOOST_LOG_TRIVIAL(info) << "Enter state: *** KEEP LANE ***";
     car.setTargetLaneId(car.getCurrentLaneId());
   }
 
@@ -91,7 +93,7 @@ public:
   }
 
   void onExit(Car& car) override {
-    std::cout << "Exit state: *** KEEP LANE ***" << std::endl;
+    BOOST_LOG_TRIVIAL(info) << "Exit state: *** KEEP LANE ***";
   }
 };
 
@@ -114,22 +116,23 @@ public:
   }
 
   void onEnter(Car& car) override {
-    std::cout << "Enter state: *** CHANGE LANE *** from Lane-" << car.getCurrentLaneId()
-              << " to Lane-" << car.getTargetLaneId() << std::endl;
+    BOOST_LOG_TRIVIAL(info)
+      << "Enter state: *** CHANGE LANE *** from Lane-" << car.getCurrentLaneId()
+      << " to Lane-" << car.getTargetLaneId() << std::endl;
   }
 
   void onUpdate(Car& car) override {
     if (tick_++ == 0) {
       if (!car.changeLane()) {
         ++nf_;
-        std::cout << "Failed to find a path! Number of attempts: " << nf_ << "\n";
+        BOOST_LOG_TRIVIAL(warning) << "Failed to find a path! Number of attempts: " << nf_ << "\n";
       } else nf_ = 0;
     }
     if (tick_ == max_tick_) tick_ = 0;
   }
 
   void onExit(Car& car) override {
-    std::cout << "Exit state: *** CHANGE LANE *** " << std::endl;
+    BOOST_LOG_TRIVIAL(info) << "Exit state: *** CHANGE LANE *** ";
   }
 };
 
@@ -370,7 +373,7 @@ bool Car::keepLane() {
                                       closest_front_cars_.at(getCurrentLaneId()));
 
   if (new_path.first.empty()) {
-    std::cerr << "Failed to find a path for keepLane! \n";
+    BOOST_LOG_TRIVIAL(error) << "Failed to find a path for keepLane!";
     return false;
   }
   extendPath(std::move(new_path));
@@ -385,7 +388,7 @@ bool Car::changeLane() {
                                         target_lane_id_);
 
   if (new_path.first.empty()) {
-    std::cerr << "Failed to find a path for changeLane! \n";
+    BOOST_LOG_TRIVIAL(error) << "Failed to find a path for changeLane!";
     return false;
   }
   extendPath(std::move(new_path));
