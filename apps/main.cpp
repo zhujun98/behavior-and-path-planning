@@ -40,7 +40,8 @@ int main(int argc, char* argv[]) {
   double jerk_limit= 9.5;
   double time_step = 0.02;
 
-  Car car("../../data/" + map_name, time_step, speed_limit, acc_limit, jerk_limit);
+  Car car(time_step, speed_limit, acc_limit, jerk_limit);
+  car.loadMap("../../data/" + map_name);
 
   // Note: the first argument is a pointer, while in the earlier version it is passed by value!
   h.onMessage([&car](uWS::WebSocket<uWS::SERVER>* ws, char *data, size_t length, uWS::OpCode opCode) {

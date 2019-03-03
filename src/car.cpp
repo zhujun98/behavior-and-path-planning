@@ -148,27 +148,36 @@ Car::State* Car::createState(States name) {
 }
 
 
-Car::Car(const std::string& file_path,
-         double time_step, double speed_limit, double acc_limit, double jerk_limit) :
+Car::Car(double time_step, double speed_limit, double acc_limit, double jerk_limit) :
   is_initialized_(false),
   time_step_(time_step),
-  map_(std::make_shared<Map>(file_path)),
-  state_(createState(States::ST)),
-  path_opt_(new PathOptimizer(map_, time_step, speed_limit, acc_limit, jerk_limit))
+  speed_limit_(speed_limit),
+  acc_limit_(acc_limit),
+  jerk_limit_(jerk_limit),
+  state_(createState(States::ST))
 {
-  // initializing closest vehicles
-  for (auto i = 1; i <= map_->nLanes(); ++i) {
-    closest_front_cars_[i] = {{inf_dist_, 0, 0}, {0, 0, 0}};
-    closest_rear_cars_[i] = {{-inf_dist_, 0, 0}, {0, 0, 0}};
-  }
-
   state_->onEnter(*this);
 }
 
 Car::~Car() = default;
 
+void Car::loadMap(const std::string &file_path) {
+  map_ = std::make_shared<Map>(file_path);
+
+  path_opt_.reset(new PathOptimizer(map_, time_step_, speed_limit_, acc_limit_, jerk_limit_));
+
+  // initializing closest vehicles
+  for (auto i = 1; i <= map_->nLanes(); ++i) {
+    closest_front_cars_[i] = {{inf_dist_, 0, 0}, {0, 0, 0}};
+    closest_rear_cars_[i] = {{-inf_dist_, 0, 0}, {0, 0, 0}};
+  }
+}
+
 void Car::update(const std::vector<double>& localization,
                  const std::vector<std::vector<double>>& sensor_fusion) {
+
+  if (not map_) return;
+
   updateParameters(localization);
   updateClosestVehicles(sensor_fusion);
   updateUnprocessedPath();

@@ -30,7 +30,7 @@ Run the simulator and
 $ mkdir build && cd build
 $ cmake .. && make -j4
 $ cd src
-$ ./run_app MAP_FILE # The default MAP_FILE is ../../data/highway_map.csv
+$ ./run_app MAP_FILE # The default MAP_FILE is "../../data/highway_map.csv"
 ```
 
 ## Highway map

@@ -47,6 +47,10 @@ class Car {
 
   double time_step_; // timestep in second
 
+  double speed_limit_; // maximum speed (m/s)
+  double acc_limit_; // maximum acceleration (m/s^2)
+  double jerk_limit_; // maximum jerk (m/s^3)
+
   // parameters in Cartisian coordinate system
   double px_; // in m
   double py_; // in m
@@ -130,19 +134,24 @@ public:
   /**
    * Constructor.
    *
-   * @param file_path: path of the map file
    * @param time_step: time step in s
    * @param speed_limit: maximum speed in m/s
    * @param acc_limit: maximum acceleration in m^2/s
    * @param jerk_limit: maximum jerk in m^3/s
    */
-  explicit Car(const std::string& file_path,
-               double time_step,
+  explicit Car(double time_step,
                double speed_limit,
                double acc_limit,
                double jerk_limit);
 
   ~Car();
+
+  /**
+   * Load a map.
+   *
+   * @param file_path: path of the map file
+   */
+  void loadMap(const std::string& file_path);
 
   /**
    * Update all parameters and states.

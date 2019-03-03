@@ -15,7 +15,9 @@ class TestCar : public testing::Test {
 protected:
   Car car_;
 
-  TestCar() : car_("../../data/highway_map.csv", 0, 0, 0, 0) {}
+  TestCar() : car_(0, 0, 0, 0) {
+    car_.loadMap("../../data/highway_map.csv");
+  }
 };
 
 
