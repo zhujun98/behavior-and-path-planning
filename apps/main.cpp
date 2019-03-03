@@ -27,7 +27,11 @@ inline std::string parseSocketData(const std::string& s) {
 }
 
 
-int main() {
+int main(int argc, char* argv[]) {
+
+  std::string map_name;
+  if (argc >=2 ) map_name = argv[1];
+  else map_name = "highway_map.csv";
 
   uWS::Hub h;
 
@@ -36,7 +40,7 @@ int main() {
   double jerk_limit= 9.5;
   double time_step = 0.02;
 
-  Car car("../../data/highway_map.csv", time_step, speed_limit, acc_limit, jerk_limit);
+  Car car("../../data/" + map_name, time_step, speed_limit, acc_limit, jerk_limit);
 
   // Note: the first argument is a pointer, while in the earlier version it is passed by value!
   h.onMessage([&car](uWS::WebSocket<uWS::SERVER>* ws, char *data, size_t length, uWS::OpCode opCode) {

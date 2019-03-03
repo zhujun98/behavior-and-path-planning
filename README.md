@@ -29,9 +29,8 @@ Run the simulator and
 ```
 $ mkdir build && cd build
 $ cmake .. && make -j4
-# It is required to run the app in a directory which can find the map file in "../../data/MAP_FILE".
 $ cd src
-$ ./run_app
+$ ./run_app MAP_FILE # The default MAP_FILE is ../../data/highway_map.csv
 ```
 
 ## Highway map
