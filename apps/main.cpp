@@ -8,7 +8,6 @@
 #include "json.hpp"
 
 #include "car.hpp"
-#include "utilities.hpp"
 
 
 /**
@@ -25,6 +24,17 @@ inline std::string parseSocketData(const std::string& s) {
   }
   return "";
 }
+
+/**
+ * For converting back and forth between radians and degrees.
+ */
+inline double deg2rad(double x) { return x * pi() / 180; }
+inline double rad2deg(double x) { return x * 180 / pi(); }
+
+/**
+ * Convert speed from MPH to m/s.
+ */
+inline double mph2mps(double v) { return v * 4.0 / 9; }
 
 
 int main(int argc, char* argv[]) {

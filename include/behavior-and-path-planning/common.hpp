@@ -5,6 +5,8 @@
 #include <array>
 #include <map>
 
+constexpr double pi() { return M_PI; }
+
 using position = std::pair<double, double>;
 using trajectory = std::pair<std::vector<double>, std::vector<double>>;
 using motion = std::array<double, 3>;

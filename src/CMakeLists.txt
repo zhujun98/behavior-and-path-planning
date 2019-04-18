@@ -9,9 +9,8 @@ target_include_directories(car
     PUBLIC
         ${PROJECT_SOURCE_DIR}/include/behavior-and-path-planning
     PRIVATE
-        ${CURRENT_SOURCE_DIR}/
-        ${PROJECT_SOURCE_DIR}/third_party/eigen3
-        ${PROJECT_SOURCE_DIR}/third_party/spline
+        ${CMAKE_CURRENT_SOURCE_DIR}/third_party/eigen3
+        ${CMAKE_CURRENT_SOURCE_DIR}/third_party/spline
         ${Boost_INCLUDE_DIR}
 )
 

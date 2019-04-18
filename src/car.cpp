@@ -4,6 +4,7 @@
 #include <boost/log/trivial.hpp>
 
 #include "car.hpp"
+#include "map.hpp"
 #include "path_optimizer.hpp"
 
 

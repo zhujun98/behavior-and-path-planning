@@ -24,10 +24,10 @@
 #include <memory>
 
 #include "common.hpp"
-#include "map.hpp"
 
 
 class PathOptimizer;
+class Map;
 
 
 class Car {
