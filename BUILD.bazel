@@ -1,0 +1,24 @@
+cc_library(
+    name = "car",
+    srcs = [
+        "src/car.cpp",
+        "src/jmt.cpp",
+        "src/map.cpp",
+        "src/path_optimizer.cpp",
+    ],
+    hdrs = glob([
+        "src/jmt.hpp",
+        "src/map.hpp",
+        "src/path_optimizer.hpp",
+        "src/utilities.hpp",
+        "src/third_party/eigen3/Eigen/**",
+        "src/third_party/spline/spline.h",
+        "include/behavior-and-path-planning/car.hpp",
+        "include/behavior-and-path-planning/common.hpp",
+    ]),
+    copts = [
+        "-Iinclude/behavior-and-path-planning",
+        "-Isrc/third_party/eigen3",
+        "-Isrc/third_party/spline"
+    ],
+)

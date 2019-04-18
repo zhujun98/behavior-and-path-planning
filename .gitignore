@@ -4,3 +4,5 @@ cmake-build-debug
 .idea
 .ipynb_checkpoints
 third_party/eigen3/*
+
+bazel-*
