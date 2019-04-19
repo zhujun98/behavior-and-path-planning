@@ -18,13 +18,21 @@ jerk over 10 m/s^3.
 
 ## Dependencies
 
-- [uWebSockets](https://github.com/uNetworking/uWebSockets) **v0.14.8**
+- [uWebSockets](https://github.com/uNetworking/uWebSockets) **0.14.8**
+- [Eigen3](https://eigen.tuxfamily.org/dox/) **3.3.7**
 - [Boost/log](https://www.boost.org/doc/libs/1_67_0/libs/log/doc/html/log/tutorial.html) **1.67.0**
 
 ## Download
 
 ```sh
-$ git clone --recursive https://github.com/zhujun98/behavior-and-path-planning.git
+$ git clone https://github.com/zhujun98/behavior-and-path-planning.git
+```
+
+Update submodules ([Eigen3](https://eigen.tuxfamily.org/dox/))
+
+```sh
+$ git submodule init
+$ git submodule update
 ```
 
 ## Build, install and run
