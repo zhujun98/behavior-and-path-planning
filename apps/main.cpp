@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
 
   std::string map_name;
   if (argc >=2 ) map_name = argv[1];
-  else map_name = "highway_map.csv";
+  else map_name = "data/highway_map.csv";
 
   uWS::Hub h;
 
@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
   double time_step = 0.02;
 
   Car car(time_step, speed_limit, acc_limit, jerk_limit);
-  car.loadMap("../../data/" + map_name);
+  car.loadMap(map_name);
 
   // Note: the first argument is a pointer, while in the earlier version it is passed by value!
   h.onMessage([&car](uWS::WebSocket<uWS::SERVER>* ws, char *data, size_t length, uWS::OpCode opCode) {

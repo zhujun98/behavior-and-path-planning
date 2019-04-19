@@ -1,0 +1,15 @@
+cc_binary(
+    name = "run_app",
+    srcs = ["main.cpp"],
+    data = ["//data:highway_map.csv", "//data:highway_map_bosch1.csv"],
+    copts = [
+        "-Iinclude/behavior-and-path-planning",
+        "-Ithird_party/json"
+    ],
+    deps = [
+        "@uWebSocket//:uWS",
+        "//include/behavior-and-path-planning:include",
+        "//third_party:third_party",
+        "//src:car"
+    ],
+)

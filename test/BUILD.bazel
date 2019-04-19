@@ -1,0 +1,13 @@
+cc_test(
+    name = "UnitTest",
+    srcs = glob(["*.cpp"]),
+    data = ["//data:highway_map.csv"],
+    copts = [
+        "-Isrc",
+        "-Iinclude/behavior-and-path-planning"
+    ],
+    deps = [
+        "//src:car",
+        "@gtest//:gtest",
+    ],
+)

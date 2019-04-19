@@ -105,6 +105,7 @@ std::size_t Map::nextWaypoint(double x, double y, double yaw) {
 }
 
 
+
 position Map::cartesianToFrenet(double x, double y, double yaw) {
   std::size_t next_wpt = nextWaypoint(x, y, yaw);
   std::size_t prev_wpt;

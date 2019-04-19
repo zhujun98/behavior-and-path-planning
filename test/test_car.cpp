@@ -1,7 +1,7 @@
 #include <vector>
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 #include "car.hpp"
 
@@ -16,7 +16,7 @@ protected:
   Car car_;
 
   TestCar() : car_(0, 0, 0, 0) {
-    car_.loadMap("../../data/highway_map.csv");
+    car_.loadMap("data/highway_map.csv");
   }
 };
 

@@ -1,0 +1,4 @@
+exports_files([
+    "highway_map.csv",
+    "highway_map_bosch1.csv"
+])

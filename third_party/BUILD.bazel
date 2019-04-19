@@ -1,0 +1,5 @@
+cc_library(
+    name = "third_party",
+    hdrs = ["json/json.hpp"],
+    visibility = ["//apps:__pkg__"],
+)

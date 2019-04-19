@@ -1,0 +1,36 @@
+# "-I" in "copts" must always be the path from the WORKSPACE folder
+# no matter whether the BUILD file is.
+#
+# The path in "deps" use "//" to indicate the path starting from the
+# WORKSPACE FOLDER.
+
+cc_library(
+    name = "car",
+    srcs = [
+        "car.cpp",
+        "jmt.cpp",
+        "map.cpp",
+        "path_optimizer.cpp",
+    ],
+    hdrs = glob([
+        "jmt.hpp",
+        "map.hpp",
+        "path_optimizer.hpp",
+        "utilities.hpp",
+        "third_party/eigen3/Eigen/**",
+        "third_party/spline/spline.h",
+    ]),
+    copts = [
+        "-Iinclude/behavior-and-path-planning",
+        "-Isrc/third_party/eigen3",
+        "-Isrc/third_party/spline"
+    ],
+    deps = [
+        "//include/behavior-and-path-planning:include",
+        "@boost//:log"
+    ],
+    visibility = [
+        "//test:__pkg__",
+        "//apps:__pkg__"
+    ],
+)

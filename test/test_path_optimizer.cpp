@@ -1,8 +1,8 @@
 #include <vector>
 #include <chrono>
 
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 #include "path_optimizer.hpp"
 #include "map.hpp"
@@ -35,7 +35,7 @@ protected:
   double acc_limit = 10;
   double jerk_limit = 10;
 
-  std::shared_ptr<Map> map_ = std::make_shared<Map>("../../data/highway_map.csv");
+  std::shared_ptr<Map> map_ = std::make_shared<Map>("data/highway_map.csv");
   PathOptimizer opt_{map_, time_step_, speed_limit_, acc_limit, jerk_limit};
 
   TestPathOptimizer() = default;

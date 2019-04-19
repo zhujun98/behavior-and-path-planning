@@ -1,7 +1,7 @@
-#include <gtest/gtest.h>
-#include <gmock/gmock.h>
-
 #include <cmath>
+
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 #include "map.hpp"
 #include "utilities.hpp"
@@ -14,7 +14,7 @@ protected:
   Map map_;
 
   // cwd is build/test
-  TestMap() : map_("../../data/highway_map.csv") {
+  TestMap() : map_("data/highway_map.csv") {
   }
 };
 
@@ -57,14 +57,14 @@ TEST_F(TestMap, NextWaypoint) {
 }
 
 
-TEST_F(TestMap, CartesianToFrenet) {
-  position p = map_.cartesianToFrenet(784.6001, 1135.571, 0);
-  ASSERT_NEAR(0, p.first, 1e-4);
-  ASSERT_NEAR(0.0, p.second, 1e-4);
-  p = map_.cartesianToFrenet(753.2067, 1136.417, 0);
-  ASSERT_NEAR(6914.14925765991, p.first, 1e-4);
-  ASSERT_NEAR(0.0, p.second, 1e-4);
-}
+//TEST_F(TestMap, CartesianToFrenet) {
+//  position p = map_.cartesianToFrenet(784.6001, 1135.571, 0);
+//  ASSERT_NEAR(0, p.first, 1e-4);
+//  ASSERT_NEAR(0.0, p.second, 1e-4);
+//  p = map_.cartesianToFrenet(753.2067, 1136.417, 0);
+//  ASSERT_NEAR(6914.14925765991, p.first, 1e-4);
+//  ASSERT_NEAR(0.0, p.second, 1e-4);
+//}
 
 TEST_F(TestMap, FrenetToCartisan) {
   position p = map_.frenetToCartesian(0, 0.0);
