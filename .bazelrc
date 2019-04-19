@@ -1,0 +1,3 @@
+startup --batch_cpu_scheduling
+build --jobs 4 --ram_utilization_factor 50
+test --jobs 4 --test_output all
