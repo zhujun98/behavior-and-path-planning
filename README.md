@@ -20,19 +20,38 @@ jerk over 10 m/s^3.
 
 - [uWebSockets](https://github.com/uNetworking/uWebSockets) **v0.14.8**
 - [Boost/log](https://www.boost.org/doc/libs/1_67_0/libs/log/doc/html/log/tutorial.html) **1.67.0**
-- [GTest](https://github.com/google/googletest)
 
-## Setup and run
+## Download
 
-Download the [simulator](https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2) which contains the Path Planning Project.
+```sh
+$ git clone --recursive https://github.com/zhujun98/behavior-and-path-planning.git
+```
 
-Run the simulator and 
+## Build, install and run
+
+- Download the [simulator](https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2)
+
+- Install [uWebSockets](https://github.com/uNetworking/uWebSockets)
+```sh
+$ ./install-ubuntu.sh
+```
+
+### With [CMake](https://cmake.org/)
 
 ```
 $ mkdir build && cd build
 $ cmake .. && make -j4
-$ cd src
-$ ./run_app MAP_FILE # The default MAP_FILE is "../../data/highway_map.csv"
+$ cd apps
+$ ./run_app MAP_FILE # the default MAP_FILE is "data/highway_map.csv"
+```
+
+### With [Bazel](https://bazel.build/)
+
+Install [Bazel](https://bazel.build/) following the [official instruction](https://docs.bazel.build/versions/master/install-ubuntu.html#installing-menu) and then type
+
+```
+$ bazel build ...
+$ bazel run apps:run_app MAP_FILE
 ```
 
 ## Highway map
