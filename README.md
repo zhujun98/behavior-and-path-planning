@@ -42,7 +42,7 @@ $ git submodule update
 
 - Install [uWebSockets](https://github.com/uNetworking/uWebSockets)
 ```sh
-$ ./install-ubuntu.sh
+$ ./scripts/install_uWS_ubuntu.sh
 ```
 
 ### With [CMake](https://cmake.org/)

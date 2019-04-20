@@ -24,6 +24,6 @@ script:
   # Check versions of gcc, g++ and cmake
   - gcc -v && g++ -v && cmake --version
   # install uWS and its dependencies
-  - ./install_uWS_ubuntu.sh
+  - ./scripts/install_uWS_ubuntu.sh
   # Run your build commands next
   - mkdir build && cd build && cmake .. && make
