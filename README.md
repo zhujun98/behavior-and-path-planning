@@ -1,6 +1,7 @@
 # Behavior and Path Planning
 [![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
-   
+[![Build Status](https://travis-ci.org/zhujun98/behavior-and-path-planning.svg?branch=master)](https://travis-ci.org/zhujun98/behavior-and-path-planning)
+
 Jun Zhu
 
 In this project, the goal is to safely navigate around a virtual highway with 
