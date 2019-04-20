@@ -12,7 +12,7 @@ class Car::State {
 
 protected:
   uint16_t tick_ = 0;
-  uint16_t max_tick_ = 5; // determine the frequency of planning new path
+  uint16_t max_tick_ = kPathPlanningInterval;
 
   State() = default;
 
@@ -44,7 +44,7 @@ public:
   ~StateStartUp() override = default;
 
   State* getNextState(Car &car) override {
-    if (car.vs_ > 10)
+    if (car.vs_ > kMaxStartUpSpeed)
       return createState(States::KL);
     else return nullptr;
   }
@@ -102,7 +102,7 @@ public:
 class Car::StateChangeLane : public Car::State {
 
   uint16_t nf_ = 0; // number of failures of finding lane change path
-  uint16_t max_attempt_ = 3;
+  uint16_t max_attempt_ = kChangeLaneMaxAttempts;
 
 public:
 

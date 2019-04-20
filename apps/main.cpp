@@ -26,10 +26,10 @@ inline std::string parseSocketData(const std::string& s) {
 }
 
 /**
- * For converting back and forth between radians and degrees.
+ * Convert degree to Radian.
  */
 inline double deg2rad(double x) { return x * pi() / 180; }
-inline double rad2deg(double x) { return x * 180 / pi(); }
+
 
 /**
  * Convert speed from MPH to m/s.
@@ -45,12 +45,7 @@ int main(int argc, char* argv[]) {
 
   uWS::Hub h;
 
-  double speed_limit = mph2mps(47.5);
-  double acc_limit = 9.5;
-  double jerk_limit= 9.5;
-  double time_step = 0.02;
-
-  Car car(time_step, speed_limit, acc_limit, jerk_limit);
+  Car car(kTimeStep, mph2mps(kMaxSpeedInMPH), kMaxAcc, kMaxJerk);
   car.loadMap(map_name);
 
   // Note: the first argument is a pointer, while in the earlier version it is passed by value!
