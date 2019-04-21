@@ -24,5 +24,7 @@ script:
   # install dependencies
   - ./scripts/install_uWS_ubuntu.sh
   - ./scripts/install_boost.sh
-  # Run your build commands next
-  - mkdir build && cd build && cmake .. && make
+  # Build the project
+  - mkdir build && cd build
+  - cmake -DBUILD_TESTS=ON .. && make
+  - cd test && ./run_test

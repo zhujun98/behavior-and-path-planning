@@ -21,6 +21,32 @@ add_subdirectory(apps)
 OPTION(BUILD_TESTS "test suit" OFF)
 
 if(BUILD_TESTS)
+    include(ExternalProject)
+
+    # Download and install GoogleTest
+    set(GOOGLETEST_VERSION 1.8.1)
+    ExternalProject_Add(
+        googletest
+        URL https://github.com/google/googletest/archive/release-${GOOGLETEST_VERSION}.zip
+        PREFIX ${CMAKE_CURRENT_BINARY_DIR}/googletest
+        # Disable install step
+        INSTALL_COMMAND ""
+        # Wrap download, configure and build steps in a script to log output
+        LOG_DOWNLOAD ON
+        LOG_CONFIGURE ON
+        LOG_BUILD ON
+    )
+
+    # Specify include dir
+    ExternalProject_Get_Property(googletest source_dir)
+    # message(${source_dir})
+    set(GTEST_INCLUDE_DIR ${source_dir}/googletest/include)
+    set(GMOCK_INCLUDE_DIR ${source_dir}/googlemock/include)
+
+    # Specify link libraries
+    ExternalProject_Get_Property(googletest binary_dir)
+    set(GTEST_LIBS_DIR ${binary_dir}/googlemock/gtest)
+
     enable_testing()
     add_subdirectory(test)
 endif()
