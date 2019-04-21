@@ -23,4 +23,3 @@ new_local_repository(
     path = "/usr/",
     build_file = "bazel/uWS.BUILD",
 )
-

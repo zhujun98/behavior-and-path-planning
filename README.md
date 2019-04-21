@@ -21,7 +21,7 @@ jerk over 10 m/s^3.
 
 - [uWebSockets](https://github.com/uNetworking/uWebSockets) **0.14.8**
 - [Eigen3](https://eigen.tuxfamily.org/dox/) **3.3.7**
-- [Boost/log](https://www.boost.org/doc/libs/1_67_0/libs/log/doc/html/log/tutorial.html) **1.67.0**
+- [Boost](https://www.boost.org/) **1.67.0**
 
 ## Download
 
@@ -42,12 +42,20 @@ $ git submodule update
 
 - Install [uWebSockets](https://github.com/uNetworking/uWebSockets)
 ```sh
-$ ./install-ubuntu.sh
+$ ./scripts/install_uWS_ubuntu.sh
 ```
 
 ### With [CMake](https://cmake.org/)
 
+First install [boost](https://www.boost.org/):
+
+```sh
+$ ./scripts/install_boost.sh
 ```
+
+Then build the project:
+
+```sh
 $ mkdir build && cd build
 $ cmake .. && make -j4
 $ cd apps

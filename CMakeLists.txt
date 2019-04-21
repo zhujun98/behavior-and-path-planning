@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(BOOST_ROOT $ENV{HOME}/Install/boost)
+set(BOOST_ROOT third_party/boost)
 find_package(Boost 1.67.0 COMPONENTS log REQUIRED)
 
 add_subdirectory(src)
