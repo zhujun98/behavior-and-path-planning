@@ -7,13 +7,11 @@ compiler:
 addons:
   apt:
     sources:
-      - sourceline: 'ppa:mhier/libboost-latest'
       - ubuntu-toolchain-r-test
     packages:
       - gcc-6
       - g++-6
       - cmake
-      - boost1.67
 script:
   # Link gcc-6 and g++-6 to their standard commands
   - sudo ln -s /usr/bin/gcc-6 /usr/local/bin/gcc
@@ -23,7 +21,8 @@ script:
   - export CXX=/usr/bin/g++-6
   # Check versions of gcc, g++ and cmake
   - gcc -v && g++ -v && cmake --version
-  # install uWS and its dependencies
+  # install dependencies
   - ./scripts/install_uWS_ubuntu.sh
+  - ./scripts/install_boost.sh
   # Run your build commands next
   - mkdir build && cd build && cmake .. && make
