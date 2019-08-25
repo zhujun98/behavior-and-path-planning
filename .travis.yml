@@ -23,7 +23,6 @@ script:
   - gcc -v && g++ -v && cmake --version
   # install dependencies
   - ./scripts/install_uWS_ubuntu.sh
-  - ./scripts/install_boost.sh
   # Build the project
   - mkdir build && cd build
   - cmake -DBUILD_TESTS=ON .. && make

@@ -21,7 +21,6 @@ jerk over 10 m/s^3.
 
 - [uWebSockets](https://github.com/uNetworking/uWebSockets) **0.14.8**
 - [Eigen3](https://eigen.tuxfamily.org/dox/) **3.3.7**
-- [Boost](https://www.boost.org/) **1.67.0**
 
 ## Download
 
@@ -47,19 +46,27 @@ $ ./scripts/install_uWS_ubuntu.sh
 
 ### With [CMake](https://cmake.org/)
 
-First install [boost](https://www.boost.org/):
-
-```sh
-$ ./scripts/install_boost.sh
-```
-
-Then build the project:
-
 ```sh
 $ mkdir build && cd build
 $ cmake .. && make -j4
 $ cd apps
 $ ./run_app MAP_FILE # the default MAP_FILE is "data/highway_map.csv"
+```
+
+To use [boost.log](https://www.boost.org/doc/libs/1_67_0/libs/log/doc/html/index.html) in this project:
+
+```sh
+$ ./scripts/install_boost.sh
+$ mkdir build && cd build
+$ cmake -DWITH_BOOST .. && make -j4
+```
+
+To build and run the test:
+
+```shell script
+$ mkdir build && cd build
+$ cmake -DBUILD_TESTS .. && make -j4
+$ make unittest
 ```
 
 ### With [Bazel](https://bazel.build/)
