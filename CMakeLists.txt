@@ -16,6 +16,8 @@ include(ExternalProject)
 
 OPTION(WITH_BOOST "use boost library" OFF)
 
+OPTION(BUILD_VISUALIZATION "build with visualization toolkit" OFF)
+
 if(WITH_BOOST)
     if(${CMAKE_VERSION} VERSION_LESS 3.13)
         add_definitions(-DWITH_BOOST)
@@ -29,6 +31,10 @@ endif()
 
 add_subdirectory(src)
 add_subdirectory(apps)
+
+if(BUILD_VISUALIZATION)
+    include(downloadZeroMQ.cmake.in)
+endif()
 
 OPTION(BUILD_TESTS "test suit" OFF)
 
