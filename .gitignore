@@ -1,6 +1,8 @@
 term3_sim*
 bosch_track1*
+build
 cmake-build-debug
+cmake-build-release
 .idea
 .ipynb_checkpoints
 
