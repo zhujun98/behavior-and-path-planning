@@ -27,4 +27,4 @@ script:
   # Build the project
   - mkdir build && cd build
   - cmake -DBUILD_TESTS=ON .. && make
-  - cd test && ./run_test
+  - make unittest
