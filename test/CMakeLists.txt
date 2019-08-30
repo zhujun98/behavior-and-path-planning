@@ -1,9 +1,9 @@
 # Download and unpack googletest at configure time
-configure_file(downloadGTest.cmake.in googletest-download/CMakeLists.txt)
+configure_file(downloadGTest.cmake.in googletest-stage/CMakeLists.txt)
 execute_process(
     COMMAND ${CMAKE_COMMAND} -G ${CMAKE_GENERATOR} .
     RESULT_VARIABLE result
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-stage
 )
 if (result)
     message(FATAL_ERROR "CMAKE step for gtest failed: ${result}")
@@ -12,7 +12,7 @@ endif()
 execute_process(
     COMMAND ${CMAKE_COMMAND} --build .
     RESULT_VARIABLE result
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-stage
 )
 if (result)
     message(FATAL_ERROR "BUILD step for gtest failed: ${result}")
@@ -28,12 +28,6 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 add_subdirectory("${CMAKE_BINARY_DIR}/googletest-src"
                  "${CMAKE_BINARY_DIR}/googletest-build" EXCLUDE_FROM_ALL)
 
-set(GTEST_INCLUDE_DIRS "${gtest_SOURCE_DIR}/include")
-set(GMOCK_INCLUDE_DIRS "${gmock_SOURCE_DIR}/include")
-
-message(STATUS "gtest include directories: ${GTEST_INCLUDE_DIRS}")
-
-
 find_package(Threads REQUIRED)
 
 add_executable(run_test
@@ -48,14 +42,13 @@ add_executable(run_test
 target_include_directories(run_test
     PRIVATE
         ${PROJECT_SOURCE_DIR}/src
-        ${GTEST_INCLUDE_DIRS}
-        ${GMOCK_INCLUDE_DIRS}
 )
 
 target_link_libraries(run_test
     PRIVATE
         car
         gtest
+        gmock
         pthread)
 
 add_custom_target(unittest COMMAND run_test DEPENDS run_test)
