@@ -1,8 +1,7 @@
 # Behavior and Path Planning
 [![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
-[![Build Status](https://travis-ci.org/zhujun98/behavior-and-path-planning.svg?branch=master)](https://travis-ci.org/zhujun98/behavior-and-path-planning)
+[![Build Status](https://travis-ci.com/zhujun98/behavior-and-path-planning.svg?branch=master)](https://travis-ci.com/zhujun98/behavior-and-path-planning)
 
-Jun Zhu
 
 In this project, the goal is to safely navigate around a virtual highway with 
 other vehicles that are driving +-10 MPH of the 50 MPH speed limit. You will be 
